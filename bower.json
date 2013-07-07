@@ -1,0 +1,14 @@
+{
+    "name": "better-ajaxify",
+    "version": "0.9.5",
+    "main": [
+        "src/better-ajaxify.js"
+    ],
+    "ignore": [
+        ".*",
+        "test"
+    ],
+    "dependencies": {
+        "better-dom": "~1.1.0"
+    }
+}

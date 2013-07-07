@@ -1,0 +1,9 @@
+.DS_Store
+*.sublime-workspace
+node_modules
+bower_components
+dist
+coverage
+*.log
+.grunt
+_SpecRunner.html

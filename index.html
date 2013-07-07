@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>better-ajaxify demo</title>
+    <style>
+    html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+    }
+
+    body {
+        display: table;
+    }
+
+    .table-cell {
+        display: table-cell; 
+        vertical-align: top;
+    }
+    </style>
+</head>
+<body>
+    <nav style="width: 200px; background: yellow" class="table-cell">
+        <ul>
+            <li><a href="/better-ajaxify/demo/page1.html">page 1</a></li>
+            <li><a href="/better-ajaxify/demo/page2.html">page 2</a></li>
+            <li><a href="/better-ajaxify/demo/page3.html">page 3</a></li>
+        </ul>
+    </nav>
+    <section style="padding-left: 20px;" data-ajaxify="on" id="content" class="table-cell">
+        <h1>Home page</h1>
+        TAJS is a program analysis tool that can infer detailed and sound type information for JavaScript programs using abstract interpretation.
+    </section>
+    <script src="bower_components/better-dom/better-dom.js" data-htc="bower_components/better-dom/better-dom.htc"></script>
+    <script src="src/better-ajaxify.js"></script>
+</body>
+</html>
