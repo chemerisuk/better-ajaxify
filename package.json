@@ -1,7 +1,7 @@
 {
     "name": "better-ajaxify",
     "description": "Ajax websites engine for better-dom",
-    "version": "0.9.5",
+    "version": "1.0.0",
     "author": "Maksim Chemerisuk",
     "license": "MIT",
     "repository": {
