@@ -1,14 +1,8 @@
-/*!
- * better-ajaxify (https://github.com/chemerisuk/better-ajaxify)
- * Ajax websites engine for better-dom
- *
- * Copyright (c) 2013 Maksim Chemerisuk
- */
 (function(DOM, location, history) {
     "use strict";
 
-    var I18N_ERROR_TIMEOUT = "i18n:ajaxify-timeout",
-        I18N_ERROR_UNKNOWN = "i18n:ajaxify-unknown",
+    var I18N_ERROR_TIMEOUT = "ajaxify-timeout",
+        I18N_ERROR_UNKNOWN = "ajaxify-unknown",
         // internal data structures
         containers = DOM.findAll("[data-ajaxify=on]"),
         containersCache = {},
@@ -78,7 +72,7 @@
                                     response = JSON.parse(response);
                                     response.url = response.url || url;
                                 } catch(err) {
-                                    // response is a string
+                                    // response is a text content
                                 }
                             }
                             
@@ -113,14 +107,20 @@
         throw "Each [data-ajaxify=on] element must have unique id attribute";
     }
 
-    DOM.on("click(target,defaultPrevented) a", function(link, defaultPrevented) {
+    // use mousedown/touchstart for faster ajax request
+    DOM.on((DOM.supports("onmousedown") ? "mousedown" : "touchstart") + "(target,defaultPrevented) a", function(link, defaultPrevented) {
         if (!defaultPrevented && !link.get("target") && link.get("host") === location.host) {
             var url = link.get("href").split("#")[0];
 
             if (url !== location.href.split("#")[0]) {
                 loadContent(link, url);
             }
-            
+        }
+    });
+
+    DOM.on("click(target,defaultPrevented) a", function(link, defaultPrevented) {
+        if (!defaultPrevented && !link.get("target") && link.get("host") === location.host) {
+            // prevent default behavior for links
             if (!location.hash) return false;
         }
     });

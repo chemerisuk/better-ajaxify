@@ -51,7 +51,7 @@ describe("delegation", function() {
             DOM.on("click(defaultPrevented)", spy2);
 
             sandbox.set("<a href='test'>123</a>");
-            sandbox.find("a").fire("click");
+            sandbox.find("a").fire("mousedown").fire("click");
             expect(spy).toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
         });

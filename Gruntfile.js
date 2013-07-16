@@ -2,7 +2,7 @@ module.exports = function(grunt) {
     "use strict";
 
     var pkg = grunt.file.readJSON("package.json"),
-        gruntDeps = function(name) {
+        gruntDependencies = function(name) {
             return !name.indexOf("grunt-") && name !== "grunt-template-jasmine-istanbul";
         };
 
@@ -53,6 +53,7 @@ module.exports = function(grunt) {
             },
             updateBranches: {
                 command: [
+                    "git add -A",
                     // commit all changes
                     "git commit -am 'version <%= pkg.version %>'",
                     // checkout pages branch
@@ -77,10 +78,29 @@ module.exports = function(grunt) {
                     "git push origin v<%= pkg.version %>"
                 ].join(" && ")
             }
+        },
+        copy: {
+            publish: {
+                files: [{ src: ["src/*"], dest: ".", expand: true, flatten: true }],
+                options: {
+                    processContent: function(content, srcpath) {
+                        return grunt.template.process(
+                            "/**\n" +
+                            " * @file " + srcpath.split("/").pop() + "\n" +
+                            " * @version <%= pkg.version %> <%= grunt.template.today('isoDateTime') %>\n" +
+                            " * @overview <%= pkg.description %>\n" +
+                            " * @copyright <%= pkg.author %> <%= grunt.template.today('yyyy') %>\n" +
+                            " * @license <%= pkg.license %>\n" +
+                            " * @see <%= pkg.repository.url %>\n" +
+                            " */\n"
+                        ) + content;
+                    }
+                }
+            }
         }
     });
 
-    Object.keys(pkg.devDependencies).filter(gruntDeps).forEach(grunt.loadNpmTasks);
+    Object.keys(pkg.devDependencies).filter(gruntDependencies).forEach(grunt.loadNpmTasks);
 
     grunt.registerTask("test", ["jshint", "jasmine:unit"]);
     grunt.registerTask("dev", ["test", "shell:openCoverage", "watch"]);
@@ -100,11 +120,13 @@ module.exports = function(grunt) {
             "test",
             "updateFileVersion:package.json",
             "updateFileVersion:bower.json",
+            "copy:publish",
             "clean:bower",
             "shell:updateBranches",
             "clean:bower",
             "shell:bower",
-            "shell:finishBranches"
+            "shell:finishBranches",
+            "shell:bower"
         ]);
     });
 };

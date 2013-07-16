@@ -1,6 +1,8 @@
-better-ajaxify
+better-ajaxify [![Build Status](https://api.travis-ci.org/chemerisuk/better-ajaxify.png?branch=master)](http://travis-ci.org/chemerisuk/better-ajaxify)
 ==============
 > Ajax websites engine for [better-dom](https://github.com/chemerisuk/better-dom)
+
+Demo: http://chemerisuk.github.io/better-ajaxify/
 
 Installing
 ----------
@@ -8,13 +10,15 @@ Use [bower](http://bower.io/) to download this extension with all required depen
 
     bower install better-ajaxify
 
-This will clone the latest version of the better-ajaxify into the `bower_components` directory at the root of your project.
+This will clone the latest version of the __better-ajaxify__ into the `bower_components` directory at the root of your project.
 
 Then append the following html elements on your page:
 
 ```html
 <html>
 <head>
+    ...
+    <!--[if IE]><script src="bower_components/html5shiv/dist/html5shiv.js"></script><![endif]-->
 </head>
 <body>
     ...
@@ -23,7 +27,3 @@ Then append the following html elements on your page:
 </body>
 </html>
 ```
-
-Demo
-----
-http://chemerisuk.github.io/better-ajaxify/
