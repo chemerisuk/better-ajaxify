@@ -48,7 +48,7 @@ describe("delegation", function() {
                 return false;
             });
 
-            DOM.on("click(defaultPrevented)", spy2);
+            DOM.on("click", ["defaultPrevented"], spy2);
 
             sandbox.set("<a href='test'>123</a>");
             sandbox.find("a").fire("mousedown").fire("click");
@@ -89,7 +89,7 @@ describe("delegation", function() {
                 return false;
             });
 
-            DOM.on("submit(defaultPrevented)", spy2);
+            DOM.on("submit", ["defaultPrevented"], spy2);
 
             sandbox.set("<form action='test' method='post'><input name='1' value='2'></form>");
             waits(WAIT_FOR_WATCH_TIME);
@@ -108,7 +108,7 @@ describe("delegation", function() {
                 return false;
             });
 
-            DOM.on("submit(defaultPrevented)", spy2);
+            DOM.on("submit", ["defaultPrevented"], spy2);
 
             sandbox.set("<form method='get' action='test?a=b'></form>");
             waits(WAIT_FOR_WATCH_TIME);
