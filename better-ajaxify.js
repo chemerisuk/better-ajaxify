@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version 1.0.0 2013-07-16T23:17:26
+ * @version 1.0.1 2013-08-27T15:10:40
  * @overview Ajax websites engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -17,7 +17,7 @@
         // helpers
         switchContent = (function() {
             var currentLocation = location.href.split("#")[0];
-            
+
             return function(url, title, data) {
                 var cacheEntry = {};
 
@@ -51,10 +51,10 @@
 
                     if (xhr) {
                         xhr.abort(); // abort previous request if it's still in progress
-                        
+
                         clearTimeout(timerId);
                     }
-                    
+
                     xhr = new XMLHttpRequest();
 
                     timerId = setTimeout(function() {
@@ -62,18 +62,18 @@
 
                         sender.fire("ajaxify:error", I18N_ERROR_TIMEOUT);
                     }, 15000);
-                    
+
                     xhr.onerror = function() {
                         sender.fire("ajaxify:error", I18N_ERROR_UNKNOWN);
                     };
-                    
+
                     xhr.onreadystatechange = function() {
                         if (xhr.readyState === 4) {
                             var status = xhr.status,
                                 response = xhr.responseText;
 
                             sender.fire("ajaxify:loadend", xhr);
-                            
+
                             if (status > 0) {
                                 // try to parse response
                                 try {
@@ -83,7 +83,7 @@
                                     // response is a text content
                                 }
                             }
-                            
+
                             if (status >= 200 && status < 300 || status === 304) {
                                 sender.fire("ajaxify:success", response);
                             } else {
@@ -95,14 +95,14 @@
                             xhr = null; // memory cleanup
                         }
                     };
-                    
+
                     xhr.open(data ? "POST" : "GET", data ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
                     xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-                    
+
                     if (data) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                    
+
                     sender.fire("ajaxify:loadstart", xhr);
-                    
+
                     xhr.send(data);
                 }
             };
@@ -116,7 +116,7 @@
     }
 
     // use mousedown/touchstart for faster ajax request
-    DOM.on((DOM.supports("onmousedown") ? "mousedown" : "touchstart") + "(target,defaultPrevented) a", function(link, defaultPrevented) {
+    DOM.on((DOM.supports("onmousedown") ? "mousedown" : "touchstart") + " a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
         if (!defaultPrevented && !link.get("target") && link.get("host") === location.host) {
             var url = link.get("href").split("#")[0];
 
@@ -126,14 +126,14 @@
         }
     });
 
-    DOM.on("click(target,defaultPrevented) a", function(link, defaultPrevented) {
+    DOM.on("click a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
         if (!defaultPrevented && !link.get("target") && link.get("host") === location.host) {
             // prevent default behavior for links
             if (!location.hash) return false;
         }
     });
 
-    DOM.on("submit(target,defaultPrevented)", function(form, defaultPrevented) {
+    DOM.on("submit", ["target", "defaultPrevented"], function(form, defaultPrevented) {
         if (!defaultPrevented && !form.get("target")) {
             var url = form.get("action"),
                 queryString = form.toQueryString();
@@ -149,7 +149,7 @@
         }
     });
 
-    DOM.on("ajaxify:success(detail)", function(response) {
+    DOM.on("ajaxify:success", ["detail"], function(response) {
         if (typeof response === "object") {
             switchContent(response.url, response.title, response.html);
             // update browser url
@@ -165,9 +165,9 @@
         window.addEventListener("popstate", function(e) {
             var url = location.href.split("#")[0],
                 state = e.state;
-            
+
             if (!state) return;
-            
+
             if (url in containersCache) {
                 switchContent(url, state.title, containersCache[url]);
             } else {
@@ -179,7 +179,7 @@
         history.replaceState({title: DOM.getTitle()}, DOM.getTitle());
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart(target,defaultPrevented)", function(sender, defaultPrevented) {
+        DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], function(sender, defaultPrevented) {
             if (!defaultPrevented && sender.get("method") !== "post") {
                 // load a new page in legacy browsers
                 if (sender.matches("form")) {
