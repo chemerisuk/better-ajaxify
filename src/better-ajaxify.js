@@ -109,7 +109,7 @@
 
     // use mousedown/touchstart for faster ajax request
     DOM.on((DOM.supports("onmousedown") ? "mousedown" : "touchstart") + " a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
-        if (!defaultPrevented && !link.get("target") && link.get("host") === location.host) {
+        if (!defaultPrevented && !link.get("target")) {
             var url = link.get("href").split("#")[0];
 
             if (url !== location.href.split("#")[0]) {
@@ -119,7 +119,7 @@
     });
 
     DOM.on("click a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
-        if (!defaultPrevented && !link.get("target") && link.get("host") === location.host) {
+        if (!defaultPrevented && !link.get("target")) {
             // prevent default behavior for links
             if (!location.hash) return false;
         }

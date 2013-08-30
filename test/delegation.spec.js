@@ -15,40 +15,58 @@ describe("delegation", function() {
     });
 
     describe("links", function() {
-        it("should skip clicks in some cases", function() {
+        it("should skip clicks on a element with target attribute", function() {
             var spy2 = jasmine.createSpy("click").andReturn(false);
 
-            DOM.on("click", spy2);
+            DOM.on("mousedown", spy2);
 
             sandbox.set("<a target=_blank>123</a>");
-            sandbox.find("a").fire("click");
+            sandbox.find("a").fire("mousedown");
             expect(spy).not.toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
+        });
+
+        it("should skip links if default action was prevented", function() {
+            var spy2 = jasmine.createSpy("click").andReturn(false);
+
+            DOM.on("mousedown", spy2);
+
+            sandbox.set("<a href='test' onmousedown='return false'>123</a>");
+            sandbox.find("a").fire("mousedown");
+            expect(spy).not.toHaveBeenCalled();
+            expect(spy2).toHaveBeenCalled();
+        });
+
+        it("should allow links from a different domain", function() {
+            var spy2 = jasmine.createSpy("click").andReturn(false);
+
+            DOM.on("mousedown", spy2);
 
             sandbox.set("<a href='http://google.com'>123</a>");
-            sandbox.find("a").fire("click");
-            expect(spy).not.toHaveBeenCalled();
+            sandbox.find("a").fire("mousedown");
+            expect(spy).toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
+        });
 
-            sandbox.set("<a href='test' onclick='return false'>123</a>");
-            sandbox.find("a").fire("click");
-            expect(spy).not.toHaveBeenCalled();
-            expect(spy2).toHaveBeenCalled();
+        it("should skip anchors", function() {
+            var spy2 = jasmine.createSpy("click").andReturn(false);
+
+            DOM.on("mousedown", spy2);
 
             sandbox.set("<a href='#test'>123</a>");
-            sandbox.find("a").fire("click");
+            sandbox.find("a").fire("mousedown").fire("click");
             expect(spy).not.toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
         });
 
         it("should prevent default clicks and send ajax-request instead", function() {
-            var spy2 = jasmine.createSpy("click").andCallFake(function(defaultPrevented) {
+            var spy2 = jasmine.createSpy("mousedown").andCallFake(function(defaultPrevented) {
                 expect(defaultPrevented).toBe(true);
                 // cancel click anyway
                 return false;
             });
 
-            DOM.on("click", ["defaultPrevented"], spy2);
+            DOM.on("mousedown", ["defaultPrevented"], spy2);
 
             sandbox.set("<a href='test'>123</a>");
             sandbox.find("a").fire("mousedown").fire("click");
