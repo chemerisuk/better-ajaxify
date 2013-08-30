@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version 1.0.1 2013-08-27T15:10:40
+ * @version 1.0.2 2013-08-30T11:45:08
  * @overview Ajax websites engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -117,7 +117,7 @@
 
     // use mousedown/touchstart for faster ajax request
     DOM.on((DOM.supports("onmousedown") ? "mousedown" : "touchstart") + " a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
-        if (!defaultPrevented && !link.get("target") && link.get("host") === location.host) {
+        if (!defaultPrevented && !link.get("target")) {
             var url = link.get("href").split("#")[0];
 
             if (url !== location.href.split("#")[0]) {
@@ -127,7 +127,7 @@
     });
 
     DOM.on("click a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
-        if (!defaultPrevented && !link.get("target") && link.get("host") === location.host) {
+        if (!defaultPrevented && !link.get("target")) {
             // prevent default behavior for links
             if (!location.hash) return false;
         }
