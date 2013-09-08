@@ -108,8 +108,10 @@
     }
 
     // use mousedown/touchstart for faster ajax request
-    DOM.on((DOM.supports("onmousedown") ? "mousedown" : "touchstart") + " a", function(link, defaultPrevented) {
-        if (!defaultPrevented && !link.get("target")) {
+    DOM.on((DOM.supports("ontouchstart") ? "touchstart": "click") + " a", function(link, cancel) {
+        if (!link.matches("a")) link = link.parent("a");
+
+        if (!cancel && !link.get("target")) {
             var url = link.get("href");
 
             if (!url) return;
@@ -118,19 +120,14 @@
 
             if (url !== location.href.split("#")[0]) {
                 loadContent(link, url);
+                // prevent default behavior for links
+                return false;
             }
         }
     });
 
-    DOM.on("click a", function(link, defaultPrevented) {
-        if (!defaultPrevented && !link.get("target")) {
-            // prevent default behavior for links
-            if (!location.hash) return false;
-        }
-    });
-
-    DOM.on("submit", function(form, defaultPrevented) {
-        if (!defaultPrevented && !form.get("target")) {
+    DOM.on("submit", function(form, cancel) {
+        if (!cancel && !form.get("target")) {
             var url = form.get("action"),
                 queryString = form.toQueryString();
 
