@@ -2,7 +2,7 @@
     "use strict";
 
     var // internal data structures
-        containers = DOM.findAll("[data-ajaxify=on]"),
+        containers = DOM.findAll("[data-ajaxify]"),
         containersCache = {},
         // helpers
         switchContent = (function() {
@@ -12,14 +12,14 @@
                 var cacheEntry = {};
 
                 containers.each(function(el, index) {
-                    var id = el.get("id"),
-                        value = data[id];
+                    var key = el.getData("ajaxify"),
+                        value = data[key];
 
                     if (typeof value === "string") {
                         value = el.clone().set(value);
                     }
 
-                    cacheEntry[id] = el.replace(value);
+                    cacheEntry[key] = el.replace(value);
                     // update value in the internal collection
                     containers[index] = value;
                 });
@@ -97,10 +97,6 @@
         makePair = function(name, value) {
             return encodeURIComponent(name) + "=" + encodeURIComponent(value);
         };
-
-    if (containers.some(function(el) { return !el.get("id") })) {
-        throw "Each [data-ajaxify=on] element must have unique id attribute";
-    }
 
     // use mousedown/touchstart for faster ajax request
     DOM.on((DOM.supports("ontouchstart") ? "touchstart": "click") + " a", function(link, cancel) {
