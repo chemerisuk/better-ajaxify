@@ -1,9 +1,7 @@
 (function(DOM, location, history) {
     "use strict";
 
-    var I18N_ERROR_TIMEOUT = "ajaxify-timeout",
-        I18N_ERROR_UNKNOWN = "ajaxify-unknown",
-        // internal data structures
+    var // internal data structures
         containers = DOM.findAll("[data-ajaxify=on]"),
         containersCache = {},
         // helpers
@@ -52,11 +50,11 @@
                     timerId = setTimeout(function() {
                         xhr.abort();
 
-                        sender.fire("ajaxify:error", I18N_ERROR_TIMEOUT);
+                        sender.fire("ajaxify:abort", xhr);
                     }, 15000);
 
                     xhr.onerror = function() {
-                        sender.fire("ajaxify:error", I18N_ERROR_UNKNOWN);
+                        sender.fire("ajaxify:error", xhr);
                     };
 
                     xhr.onreadystatechange = function() {
@@ -66,20 +64,17 @@
 
                             sender.fire("ajaxify:loadend", xhr);
 
-                            if (status > 0) {
-                                // try to parse response
+                            if (status >= 200 && status < 300 || status === 304) {
                                 try {
                                     response = JSON.parse(response);
                                     response.url = response.url || url;
                                 } catch(err) {
                                     // response is a text content
+                                } finally {
+                                    sender.fire("ajaxify:success", response);
                                 }
-                            }
-
-                            if (status >= 200 && status < 300 || status === 304) {
-                                sender.fire("ajaxify:success", response);
                             } else {
-                                sender.fire("ajaxify:error", response);
+                                sender.fire("ajaxify:error", xhr);
                             }
 
                             clearTimeout(timerId);
