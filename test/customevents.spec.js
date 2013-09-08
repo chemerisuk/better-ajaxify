@@ -25,4 +25,27 @@ describe("Custom events", function() {
             expect(spy).not.toHaveBeenCalled();
         });
     });
+
+    describe("ajaxify:fetch", function() {
+        var spy;
+
+        beforeEach(function() {
+            spy = spyOn(XMLHttpRequest.prototype, "send");
+        });
+
+        it("should trigger ajax request", function() {
+            DOM.fire("ajaxify:fetch", "test");
+            expect(spy).toHaveBeenCalled();
+        });
+
+        it("should respect defaultPrevented", function() {
+            var cancelSpy = jasmine.createSpy("cancel").andReturn(false);
+
+            DOM.once("ajaxify:fetch", cancelSpy);
+            DOM.fire("ajaxify:fetch", "test");
+
+            expect(cancelSpy).toHaveBeenCalled();
+            expect(spy).not.toHaveBeenCalled();
+        });
+    });
 });

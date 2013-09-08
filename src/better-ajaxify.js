@@ -179,7 +179,7 @@
         history.replaceState({title: DOM.getTitle()}, DOM.getTitle());
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], function(sender, defaultPrevented) {
+        DOM.on("ajaxify:loadstart", function(sender, defaultPrevented) {
             if (!defaultPrevented && sender.get("method") !== "post") {
                 // load a new page in legacy browsers
                 if (sender.matches("form")) {
