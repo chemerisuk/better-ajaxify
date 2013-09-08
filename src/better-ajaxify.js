@@ -36,22 +36,24 @@
             var lockedEl, xhr, timerId;
 
             return function(sender, url, data) {
+                var abortXHR = function() {
+                    xhr.abort();
+
+                    sender.fire("ajaxify:abort", xhr);
+                };
+
                 if (lockedEl !== sender) {
                     lockedEl = sender;
 
                     if (xhr) {
-                        xhr.abort(); // abort previous request if it's still in progress
-
+                        // abort previous request if it's still in progress
                         clearTimeout(timerId);
+
+                        abortXHR();
                     }
 
                     xhr = new XMLHttpRequest();
-
-                    timerId = setTimeout(function() {
-                        xhr.abort();
-
-                        sender.fire("ajaxify:abort", xhr);
-                    }, 15000);
+                    timerId = setTimeout(abortXHR, 15000);
 
                     xhr.onerror = function() {
                         sender.fire("ajaxify:error", xhr);
@@ -102,35 +104,49 @@
     DOM.on((DOM.supports("ontouchstart") ? "touchstart": "click") + " a", function(link, cancel) {
         if (!link.matches("a")) link = link.parent("a");
 
-        if (!cancel && !link.get("target")) {
-            var url = link.get("href");
+        if (cancel || link.get("target")) return;
 
-            if (!url) return;
+        var url = link.get("href");
 
+        if (url) {
             url = url.split("#")[0];
 
             if (url !== location.href.split("#")[0]) {
-                loadContent(link, url);
                 // prevent default behavior for links
-                return false;
+                return !link.fire("ajaxify:fetch");
             }
         }
     });
 
     DOM.on("submit", function(form, cancel) {
         if (!cancel && !form.get("target")) {
-            var url = form.get("action"),
-                queryString = form.toQueryString();
-
-            if (form.get("method") === "get") {
-                url += (~url.indexOf("?") ? "&" : "?") + queryString;
-                queryString = null;
-            }
-
-            loadContent(form, url, queryString);
-
-            return false;
+            return !form.fire("ajaxify:fetch");
         }
+    });
+
+    DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], function(url, target, cancel) {
+        if (cancel) return;
+
+        var queryString;
+
+        if (typeof url !== "string") {
+            if (target.matches("a")) {
+                url = target.get("href");
+            } else if (target.matches("form")) {
+                url = target.get("action");
+                queryString = target.toQueryString();
+
+                if (target.get("method") === "get") {
+                    url += (~url.indexOf("?") ? "&" : "?") + queryString;
+                } else {
+                    queryString = null;
+                }
+            } else {
+                throw "Illegal ajaxify:fetch event";
+            }
+        }
+
+        loadContent(target, url, queryString);
     });
 
     DOM.on("ajaxify:success", ["detail"], function(response) {
