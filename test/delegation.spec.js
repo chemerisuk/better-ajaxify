@@ -48,12 +48,17 @@ describe("delegation", function() {
             expect(spy2).toHaveBeenCalled();
         });
 
-        it("should skip anchors", function() {
+        it("should skip anchors and links without href", function() {
             var spy2 = jasmine.createSpy("click").andReturn(false);
 
             DOM.on("mousedown", spy2);
 
             sandbox.set("<a href='#test'>123</a>");
+            sandbox.find("a").fire("mousedown").fire("click");
+            expect(spy).not.toHaveBeenCalled();
+            expect(spy2).toHaveBeenCalled();
+
+            sandbox.set("<a>123</a>");
             sandbox.find("a").fire("mousedown").fire("click");
             expect(spy).not.toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();

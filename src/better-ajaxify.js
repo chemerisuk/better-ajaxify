@@ -103,14 +103,18 @@
             return encodeURIComponent(name) + "=" + encodeURIComponent(value);
         };
 
-    if (containers.some(function(el) { return !el.get("id"); })) {
+    if (containers.some(function(el) { return !el.get("id") })) {
         throw "Each [data-ajaxify=on] element must have unique id attribute";
     }
 
     // use mousedown/touchstart for faster ajax request
-    DOM.on((DOM.supports("onmousedown") ? "mousedown" : "touchstart") + " a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
+    DOM.on((DOM.supports("onmousedown") ? "mousedown" : "touchstart") + " a", function(link, defaultPrevented) {
         if (!defaultPrevented && !link.get("target")) {
-            var url = link.get("href").split("#")[0];
+            var url = link.get("href");
+
+            if (!url) return;
+
+            url = url.split("#")[0];
 
             if (url !== location.href.split("#")[0]) {
                 loadContent(link, url);
@@ -118,14 +122,14 @@
         }
     });
 
-    DOM.on("click a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
+    DOM.on("click a", function(link, defaultPrevented) {
         if (!defaultPrevented && !link.get("target")) {
             // prevent default behavior for links
             if (!location.hash) return false;
         }
     });
 
-    DOM.on("submit", ["target", "defaultPrevented"], function(form, defaultPrevented) {
+    DOM.on("submit", function(form, defaultPrevented) {
         if (!defaultPrevented && !form.get("target")) {
             var url = form.get("action"),
                 queryString = form.toQueryString();
@@ -232,4 +236,7 @@
         }
     });
 
+    if (typeof define === "function" && define.amd) {
+        define("better-ajaxify", ["better-dom"], function() {});
+    }
 }(window.DOM, location, history));
