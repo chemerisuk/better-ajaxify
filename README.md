@@ -1,6 +1,6 @@
 better-ajaxify [![Build Status](https://api.travis-ci.org/chemerisuk/better-ajaxify.png?branch=master)](http://travis-ci.org/chemerisuk/better-ajaxify)
 ==============
-> Ajax websites engine for [better-dom](https://github.com/chemerisuk/better-dom)
+> SEO-friendly ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
 Demo: http://chemerisuk.github.io/better-ajaxify/
 
@@ -64,3 +64,5 @@ Browser support
 * Firefox 16+
 * Opera 12.10+
 * IE8+
+
+For the fastest UX the plugin uses [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history), so browsers that don't support it get only part of virtues.
