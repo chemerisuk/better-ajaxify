@@ -48,13 +48,13 @@ Server should respond in json format. It's useful to check for existance of the 
 
 Custom events
 -------------
-The library exposes custom events for advanced interaction. Also you can use `ajaxify:fetch` to trigger fetching a url programmatically.
+The library exposes custom events below for advanced interaction:
 
 * `ajaxify:fetch` is triggered every time a new content is loaded. `target` of this event is the element that fired loading a new page. The event could be used programmatically, for example `DOM.fire("ajaxify:fetch", url_to_load)`
-* `ajaxify:loadstart` is triggered before doing an ajax call. `detail` if this event is particular instance of `XMLHttpRequest` object. It can be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc.
-* `ajaxify:loadend` is triggered after an every ajax call. `detail` if this event is particular instance of `XMLHttpRequest` object
+* `ajaxify:loadstart` is triggered before doing an ajax call. `detail` if this event is particular instance of XMLHttpRequest object. It can be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc.
+* `ajaxify:loadend` is triggered after an every ajax call. `detail` if this event is particular instance of XMLHttpRequest object
 * `ajaxify:success` is triggered only if server returned succesfull response code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `detail` of this event may be a javascript object of raw response string
-* `ajaxify:error` is triggered only if server returned unsuccesfull response code. `detail` if this event is particular instance of `XMLHttpRequest` object
+* `ajaxify:error` is triggered only if server returned unsuccesfull response code. `detail` if this event is particular instance of XMLHttpRequest object
 * `ajaxify:abort` is triggered when response was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds
 
 Browser support
