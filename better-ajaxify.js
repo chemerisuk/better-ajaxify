@@ -1,7 +1,7 @@
 /**
  * @file better-ajaxify.js
- * @version 1.0.2 2013-08-30T11:45:08
- * @overview Ajax websites engine for better-dom
+ * @version 1.1.0 2013-09-09T18:09:20
+ * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
  * @see https://github.com/chemerisuk/better-ajaxify
@@ -9,10 +9,8 @@
 (function(DOM, location, history) {
     "use strict";
 
-    var I18N_ERROR_TIMEOUT = "ajaxify-timeout",
-        I18N_ERROR_UNKNOWN = "ajaxify-unknown",
-        // internal data structures
-        containers = DOM.findAll("[data-ajaxify=on]"),
+    var // internal data structures
+        containers = DOM.findAll("[data-ajaxify]"),
         containersCache = {},
         // helpers
         switchContent = (function() {
@@ -22,14 +20,14 @@
                 var cacheEntry = {};
 
                 containers.each(function(el, index) {
-                    var id = el.get("id"),
-                        value = data[id];
+                    var key = el.getData("ajaxify"),
+                        value = data[key];
 
                     if (typeof value === "string") {
                         value = el.clone().set(value);
                     }
 
-                    cacheEntry[id] = el.replace(value);
+                    cacheEntry[key] = el.replace(value);
                     // update value in the internal collection
                     containers[index] = value;
                 });
@@ -46,25 +44,27 @@
             var lockedEl, xhr, timerId;
 
             return function(sender, url, data) {
+                var abortXHR = function() {
+                    xhr.abort();
+
+                    sender.fire("ajaxify:abort", xhr);
+                };
+
                 if (lockedEl !== sender) {
                     lockedEl = sender;
 
                     if (xhr) {
-                        xhr.abort(); // abort previous request if it's still in progress
-
+                        // abort previous request if it's still in progress
                         clearTimeout(timerId);
+
+                        abortXHR();
                     }
 
                     xhr = new XMLHttpRequest();
-
-                    timerId = setTimeout(function() {
-                        xhr.abort();
-
-                        sender.fire("ajaxify:error", I18N_ERROR_TIMEOUT);
-                    }, 15000);
+                    timerId = setTimeout(abortXHR, 15000);
 
                     xhr.onerror = function() {
-                        sender.fire("ajaxify:error", I18N_ERROR_UNKNOWN);
+                        sender.fire("ajaxify:error", xhr);
                     };
 
                     xhr.onreadystatechange = function() {
@@ -74,20 +74,17 @@
 
                             sender.fire("ajaxify:loadend", xhr);
 
-                            if (status > 0) {
-                                // try to parse response
+                            if (status >= 200 && status < 300 || status === 304) {
                                 try {
                                     response = JSON.parse(response);
                                     response.url = response.url || url;
                                 } catch(err) {
                                     // response is a text content
+                                } finally {
+                                    sender.fire("ajaxify:success", response);
                                 }
-                            }
-
-                            if (status >= 200 && status < 300 || status === 304) {
-                                sender.fire("ajaxify:success", response);
                             } else {
-                                sender.fire("ajaxify:error", response);
+                                sender.fire("ajaxify:error", xhr);
                             }
 
                             clearTimeout(timerId);
@@ -111,42 +108,53 @@
             return encodeURIComponent(name) + "=" + encodeURIComponent(value);
         };
 
-    if (containers.some(function(el) { return !el.get("id"); })) {
-        throw "Each [data-ajaxify=on] element must have unique id attribute";
-    }
-
     // use mousedown/touchstart for faster ajax request
-    DOM.on((DOM.supports("onmousedown") ? "mousedown" : "touchstart") + " a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
-        if (!defaultPrevented && !link.get("target")) {
-            var url = link.get("href").split("#")[0];
+    DOM.on((DOM.supports("ontouchstart") ? "touchstart": "click") + " a", function(link, cancel) {
+        if (!link.matches("a")) link = link.parent("a");
+
+        if (cancel || link.get("target")) return;
+
+        var url = link.get("href");
+
+        if (url) {
+            url = url.split("#")[0];
 
             if (url !== location.href.split("#")[0]) {
-                loadContent(link, url);
+                // prevent default behavior for links
+                return !link.fire("ajaxify:fetch");
             }
         }
     });
 
-    DOM.on("click a", ["target", "defaultPrevented"], function(link, defaultPrevented) {
-        if (!defaultPrevented && !link.get("target")) {
-            // prevent default behavior for links
-            if (!location.hash) return false;
+    DOM.on("submit", function(form, cancel) {
+        if (!cancel && !form.get("target")) {
+            return !form.fire("ajaxify:fetch");
         }
     });
 
-    DOM.on("submit", ["target", "defaultPrevented"], function(form, defaultPrevented) {
-        if (!defaultPrevented && !form.get("target")) {
-            var url = form.get("action"),
-                queryString = form.toQueryString();
+    DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], function(url, target, cancel) {
+        if (cancel) return;
 
-            if (form.get("method") === "get") {
-                url += (~url.indexOf("?") ? "&" : "?") + queryString;
-                queryString = null;
+        var queryString;
+
+        if (typeof url !== "string") {
+            if (target.matches("a")) {
+                url = target.get("href");
+            } else if (target.matches("form")) {
+                url = target.get("action");
+                queryString = target.toQueryString();
+
+                if (target.get("method") === "get") {
+                    url += (~url.indexOf("?") ? "&" : "?") + queryString;
+                } else {
+                    queryString = null;
+                }
+            } else {
+                throw "Illegal ajaxify:fetch event";
             }
-
-            loadContent(form, url, queryString);
-
-            return false;
         }
+
+        loadContent(target, url, queryString);
     });
 
     DOM.on("ajaxify:success", ["detail"], function(response) {
@@ -179,7 +187,7 @@
         history.replaceState({title: DOM.getTitle()}, DOM.getTitle());
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], function(sender, defaultPrevented) {
+        DOM.on("ajaxify:loadstart", function(sender, defaultPrevented) {
             if (!defaultPrevented && sender.get("method") !== "post") {
                 // load a new page in legacy browsers
                 if (sender.matches("form")) {
@@ -240,4 +248,7 @@
         }
     });
 
+    if (typeof define === "function" && define.amd) {
+        define("better-ajaxify", ["better-dom"], function() {});
+    }
 }(window.DOM, location, history));
