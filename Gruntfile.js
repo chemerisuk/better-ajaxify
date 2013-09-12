@@ -84,6 +84,14 @@ module.exports = function(grunt) {
                 files: [{ src: ["src/*"], dest: ".", expand: true, flatten: true }],
                 options: {
                     processContent: function(content, srcpath) {
+                        if (~srcpath.indexOf(pkg.name + ".js")) {
+                            content += grunt.template.process("\n" +
+                            "// include AMD ceremony\n" +
+                            "if (typeof define === \"function\" && define.amd) {\n" +
+                            "    define(\"<%= pkg.name %>\", [\"better-dom\"], function() {});\n" +
+                            "}\n"); // include empty space
+                        }
+
                         return grunt.template.process(
                             "/**\n" +
                             " * @file " + srcpath.split("/").pop() + "\n" +

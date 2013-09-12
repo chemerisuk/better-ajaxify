@@ -138,7 +138,6 @@
 
                 if (target.get("method") === "get") {
                     url += (~url.indexOf("?") ? "&" : "?") + queryString;
-                } else {
                     queryString = null;
                 }
             } else {
@@ -239,8 +238,4 @@
             }, "");
         }
     });
-
-    if (typeof define === "function" && define.amd) {
-        define("better-ajaxify", ["better-dom"], function() {});
-    }
 }(window.DOM, location, history));
