@@ -1,6 +1,6 @@
 {
     "name": "better-ajaxify",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "main": [
         "better-ajaxify.js"
     ],

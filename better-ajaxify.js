@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version 1.1.0 2013-09-09T18:09:20
+ * @version 1.1.1 2013-09-12T11:54:04
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -146,7 +146,6 @@
 
                 if (target.get("method") === "get") {
                     url += (~url.indexOf("?") ? "&" : "?") + queryString;
-                } else {
                     queryString = null;
                 }
             } else {
@@ -247,8 +246,9 @@
             }, "");
         }
     });
-
-    if (typeof define === "function" && define.amd) {
-        define("better-ajaxify", ["better-dom"], function() {});
-    }
 }(window.DOM, location, history));
+
+// include AMD ceremony
+if (typeof define === "function" && define.amd) {
+    define("better-ajaxify", ["better-dom"], function() {});
+}
