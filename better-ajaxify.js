@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version 1.1.1 2013-09-12T11:54:04
+ * @version 1.1.2 2013-09-13T14:23:52
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -108,8 +108,7 @@
             return encodeURIComponent(name) + "=" + encodeURIComponent(value);
         };
 
-    // use mousedown/touchstart for faster ajax request
-    DOM.on((DOM.supports("ontouchstart") ? "touchstart": "click") + " a", function(link, cancel) {
+    DOM.on("click a", function(link, cancel) {
         if (!link.matches("a")) link = link.parent("a");
 
         if (cancel || link.get("target")) return;
@@ -198,52 +197,41 @@
         });
     }
 
-    DOM.extend("input,select,textarea", {
-        toQueryString: function() {
-            var name = this.get("name"),
-                result = [];
-
-            if (name) { // don't include form fields without names
-                switch(this.get("type")) {
-                case "select-one":
-                case "select-multiple":
-                    this.get("options").each(function(option) {
-                        if (option.get("selected")) {
-                            result.push(makePair(name, option.get()));
-                        }
-                    });
-                    break;
-
-                case "file": // file input
-                case "submit": // submit button
-                case "reset": // reset button
-                case "button": // custom button
-                    break;
-
-                case "radio": // radio button
-                case "checkbox": // checkbox
-                    if (!this.get("checked")) break;
-                    /* falls through */
-                default:
-                    result.push(makePair(name, this.get()));
-                }
-            }
-
-            return result.join("&").replace(/%20/g, "+");
-        }
-    });
-
-    DOM.extend("form,fieldset", {
+    DOM.extend("form", {
         toQueryString: function() {
             return this.get("elements").reduce(function(memo, el) {
-                if (el.toQueryString && !el.matches("fieldset")) {
-                    var str = el.toQueryString();
+                var name = el.get("name");
 
-                    if (str) memo += (memo ? "&" : "") + str;
+                if (name) { // don't include form fields without names
+                    switch(el.get("type")) {
+                    case "select-one":
+                    case "select-multiple":
+                        el.get("options").each(function(option) {
+                            if (option.get("selected")) {
+                                memo.push(makePair(name, option.get()));
+                            }
+                        });
+                        break;
+
+                    case undefined:
+                    case "fieldset": // fieldset
+                    case "file": // file input
+                    case "submit": // submit button
+                    case "reset": // reset button
+                    case "button": // custom button
+                        break;
+
+                    case "radio": // radio button
+                    case "checkbox": // checkbox
+                        if (!el.get("checked")) break;
+                        /* falls through */
+                    default:
+                        memo.push(makePair(name, el.get()));
+                    }
                 }
 
                 return memo;
-            }, "");
+            }, []).join("&").replace(/%20/g, "+");
         }
     });
 }(window.DOM, location, history));
