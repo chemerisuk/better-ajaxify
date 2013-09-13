@@ -57,9 +57,8 @@ describe("toQueryString", function() {
             expect(DOM.find("#f8").toQueryString()).toBe("n8=v8");
         });
 
-        checkForm("<form><input type='text' id='t1' name='n1' value='v1 v2'><input type='text' id='t2' value='v2'></form>", function() {
-            expect(DOM.find("#t1").toQueryString()).toBe("n1=v1+v2");
-            expect(DOM.find("#t2").toQueryString()).toBe("");
+        checkForm("<form id='f9'><input type='hidden' name='n1' value='v1 v2'><input type='text' value='v2'></form>", function() {
+            expect(DOM.find("#f9").toQueryString()).toBe("n1=v1+v2");
         });
     });
 

@@ -190,52 +190,47 @@
         });
     }
 
-    DOM.extend("input,select,textarea", {
-        toQueryString: function() {
-            var name = this.get("name"),
-                result = [];
-
-            if (name) { // don't include form fields without names
-                switch(this.get("type")) {
-                case "select-one":
-                case "select-multiple":
-                    this.get("options").each(function(option) {
-                        if (option.get("selected")) {
-                            result.push(makePair(name, option.get()));
-                        }
-                    });
-                    break;
-
-                case "file": // file input
-                case "submit": // submit button
-                case "reset": // reset button
-                case "button": // custom button
-                    break;
-
-                case "radio": // radio button
-                case "checkbox": // checkbox
-                    if (!this.get("checked")) break;
-                    /* falls through */
-                default:
-                    result.push(makePair(name, this.get()));
-                }
-            }
-
-            return result.join("&").replace(/%20/g, "+");
-        }
-    });
-
-    DOM.extend("form,fieldset", {
+    DOM.extend("form", {
         toQueryString: function() {
             return this.get("elements").reduce(function(memo, el) {
-                if (el.toQueryString && !el.matches("fieldset")) {
-                    var str = el.toQueryString();
+                // if (el.toQueryString && !el.matches("fieldset")) {
+                //     var str = el.toQueryString();
 
-                    if (str) memo += (memo ? "&" : "") + str;
+                //     if (str) memo += (memo ? "&" : "") + str;
+                // }
+
+                var name = el.get("name");
+
+                if (name) { // don't include form fields without names
+                    switch(el.get("type")) {
+                    case "select-one":
+                    case "select-multiple":
+                        el.get("options").each(function(option) {
+                            if (option.get("selected")) {
+                                memo.push(makePair(name, option.get()));
+                            }
+                        });
+                        break;
+
+                    case undefined:
+                    case "fieldset": // fieldset
+                    case "file": // file input
+                    case "submit": // submit button
+                    case "reset": // reset button
+                    case "button": // custom button
+                        break;
+
+                    case "radio": // radio button
+                    case "checkbox": // checkbox
+                        if (!el.get("checked")) break;
+                        /* falls through */
+                    default:
+                        memo.push(makePair(name, el.get()));
+                    }
                 }
 
                 return memo;
-            }, "");
+            }, []).join("&").replace(/%20/g, "+");
         }
     });
 }(window.DOM, location, history));
