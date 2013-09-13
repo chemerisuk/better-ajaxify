@@ -100,8 +100,7 @@
             return encodeURIComponent(name) + "=" + encodeURIComponent(value);
         };
 
-    // use mousedown/touchstart for faster ajax request
-    DOM.on((DOM.supports("ontouchstart") ? "touchstart": "click") + " a", function(link, cancel) {
+    DOM.on("click a", function(link, cancel) {
         if (!link.matches("a")) link = link.parent("a");
 
         if (cancel || link.get("target")) return;
@@ -193,12 +192,6 @@
     DOM.extend("form", {
         toQueryString: function() {
             return this.get("elements").reduce(function(memo, el) {
-                // if (el.toQueryString && !el.matches("fieldset")) {
-                //     var str = el.toQueryString();
-
-                //     if (str) memo += (memo ? "&" : "") + str;
-                // }
-
                 var name = el.get("name");
 
                 if (name) { // don't include form fields without names
