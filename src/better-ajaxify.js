@@ -1,9 +1,9 @@
-(function(DOM, location, history) {
+(function(DOM, location) {
     "use strict";
 
     var // internal data structures
         containers = DOM.findAll("[data-ajaxify]"),
-        containersCache = {},
+        historyData = {},
         // helpers
         switchContent = (function() {
             var currentLocation = location.href.split("#")[0];
@@ -15,16 +15,18 @@
                     var key = el.getData("ajaxify"),
                         value = data[key];
 
-                    if (typeof value === "string") {
-                        value = el.clone().set(value);
-                    }
+                    if (value) {
+                        if (typeof value === "string") {
+                            value = el.clone().set(value);
+                        }
 
-                    cacheEntry[key] = el.replace(value);
-                    // update value in the internal collection
-                    containers[index] = value;
+                        cacheEntry[key] = el.replace(value);
+                        // update value in the internal collection
+                        containers[index] = value;
+                    }
                 });
                 // update old containers to their latest state
-                containersCache[currentLocation] = cacheEntry;
+                historyData[currentLocation] = cacheEntry;
                 // update current location variable
                 currentLocation = url;
                 // update page title
@@ -69,7 +71,13 @@
                             if (status >= 200 && status < 300 || status === 304) {
                                 try {
                                     response = JSON.parse(response);
+
+                                    // populate default values
                                     response.url = response.url || url;
+                                    response.title = response.title || DOM.geTitle();
+                                    response.html = response.html || {};
+
+                                    switchContent(response.url, response.title, response.html);
                                 } catch(err) {
                                     // response is a text content
                                 } finally {
@@ -147,47 +155,15 @@
         loadContent(target, url, queryString);
     });
 
-    DOM.on("ajaxify:success", ["detail"], function(response) {
-        if (typeof response === "object") {
-            switchContent(response.url, response.title, response.html);
-            // update browser url
-            if (response.url !== location.pathname) {
-                history.pushState({title: DOM.getTitle()}, DOM.getTitle(), response.url);
-            } else if (history.replaceState) {
-                history.replaceState({title: DOM.getTitle()}, DOM.getTitle());
-            }
+    DOM.on("ajaxify:history", ["detail"], function(url) {
+        // FIXME: state.title
+        if (url in historyData) {
+            switchContent(url, "", historyData[url]);
+        } else {
+            // TODO: need to trigger partial reload?
+            location.reload();
         }
     });
-
-    if (history.pushState) {
-        window.addEventListener("popstate", function(e) {
-            var url = location.href.split("#")[0],
-                state = e.state;
-
-            if (!state) return;
-
-            if (url in containersCache) {
-                switchContent(url, state.title, containersCache[url]);
-            } else {
-                // TODO: need to trigger partial reload?
-                location.reload();
-            }
-        }, false);
-        // update initial state
-        history.replaceState({title: DOM.getTitle()}, DOM.getTitle());
-    } else {
-        // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", function(sender, defaultPrevented) {
-            if (!defaultPrevented && sender.get("method") !== "post") {
-                // load a new page in legacy browsers
-                if (sender.matches("form")) {
-                    sender.fire("submit");
-                } else {
-                    location.href = sender.get("href");
-                }
-            }
-        });
-    }
 
     DOM.extend("form", {
         toQueryString: function() {
@@ -226,4 +202,4 @@
             }, []).join("&").replace(/%20/g, "+");
         }
     });
-}(window.DOM, location, history));
+}(window.DOM, location));
