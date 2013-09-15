@@ -81,7 +81,7 @@
                                 } catch(err) {
                                     // response is a text content
                                 } finally {
-                                    sender.fire("ajaxify:success", response);
+                                    sender.fire("ajaxify:load", response);
                                 }
                             } else {
                                 sender.fire("ajaxify:error", xhr);

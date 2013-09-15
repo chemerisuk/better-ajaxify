@@ -3,25 +3,25 @@ describe("Custom events", function() {
 
     if (!history.pushState) return;
 
-    describe("ajaxify:success", function() {
+    describe("ajaxify:load", function() {
         it("should update url and containers", function() {
             var spy = spyOn(history, "pushState");
 
-            DOM.fire("ajaxify:success", {url: "a", title: "b"});
+            DOM.fire("ajaxify:load", {url: "a", title: "b"});
             expect(spy).toHaveBeenCalledWith(true, "b", "a");
         });
 
         it("should replace state if url is the same", function() {
             var spy = spyOn(history, "replaceState");
 
-            DOM.fire("ajaxify:success", {url: location.pathname, title: "d"});
+            DOM.fire("ajaxify:load", {url: location.pathname, title: "d"});
             expect(spy).toHaveBeenCalledWith(true, "d");
         });
 
         it("should do nothing if response is not an object", function() {
             var spy = spyOn(history, "pushState");
 
-            DOM.fire("ajaxify:success", "343");
+            DOM.fire("ajaxify:load", "343");
             expect(spy).not.toHaveBeenCalled();
         });
     });

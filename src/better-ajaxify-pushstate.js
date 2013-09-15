@@ -20,7 +20,7 @@
         }
     });
 
-    DOM.on("ajaxify:success", ["detail"], function(response) {
+    DOM.on("ajaxify:load", ["detail"], function(response) {
         if (typeof response === "object") {
             // update browser url
             if (response.url !== location.pathname) {
