@@ -32,14 +32,14 @@
     });
 
     if (history.pushState) {
-        window.addEventListener("popstate", function(e) {
+        window.onpopstate = function(e) {
             var url = location.href.split("#")[0];
 
             // skip initial popstate
             if (!e.state) return;
 
             DOM.fire("ajaxify:history", url);
-        }, false);
+        };
         // update initial state
         history.replaceState(true, DOM.getTitle());
     } else {

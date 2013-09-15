@@ -22,10 +22,10 @@ module.exports = function(grunt) {
                 keepRunner: true
             },
             unit: {
-                src: ["src/*.js"]
+                src: ["src/better-ajaxify.js", "src/better-ajaxify-pushstate.js"]
             },
             coverage: {
-                src: ["src/*.js"],
+                src: ["src/better-ajaxify.js", "src/better-ajaxify-pushstate.js"],
                 options: {
                     template: require("grunt-template-jasmine-istanbul"),
                     templateOptions: {
