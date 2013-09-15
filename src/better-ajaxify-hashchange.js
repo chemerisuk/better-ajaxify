@@ -1,5 +1,5 @@
 (function(DOM, location) {
-    var baseUrl = location.href.split(/\?#/)[0],
+    var baseUrl = location.href.split(/[\?#]/)[0],
         skipHashchange = false;
 
     DOM.on("ajaxify:load", ["detail"], function(response) {
@@ -29,4 +29,8 @@
             DOM.fire("ajaxify:history", baseUrl + location.hash.substr(2));
         }
     };
+
+    if (location.hash) {
+        DOM.fire("ajaxify:fetch", location.href.replace("#/", ""));
+    }
 }(window.DOM, location));
