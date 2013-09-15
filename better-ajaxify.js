@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version v1.1.2 2013-09-15T21:43:08
+ * @version 1.2.1 2013-09-15T21:49:34
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
