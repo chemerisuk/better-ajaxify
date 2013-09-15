@@ -28,6 +28,8 @@ Then append the following html elements on your page:
 </html>
 ```
 
+Depending on requirements you also need to include `better-ajaxify-pushstate` or `better-ajaxify-hashchange`.
+
 Frontend setup
 --------------
 Custom `data-ajaxify` attribute is used to mark html elements that may be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
@@ -54,6 +56,7 @@ The library exposes custom events below for advanced interaction:
 * `ajaxify:loadstart` is triggered before doing an ajax call. `detail` if this event is particular instance of XMLHttpRequest object. It can be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc.
 * `ajaxify:loadend` is triggered after an every ajax call. `detail` if this event is particular instance of XMLHttpRequest object
 * `ajaxify:load` is triggered only if server returned succesfull response code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `detail` of this event may be a javascript object of raw response string
+* `ajaxify:history` is triggered when a user navigates through history in browser. `detail` of this event is target history entry url.
 * `ajaxify:error` is triggered only if server returned unsuccesfull response code. `detail` if this event is particular instance of XMLHttpRequest object
 * `ajaxify:abort` is triggered when response was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds
 
