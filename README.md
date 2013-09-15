@@ -28,7 +28,7 @@ Then append the following html elements on your page:
 </html>
 ```
 
-Depending on requirements you also need to include `better-ajaxify-pushstate` or `better-ajaxify-hashchange`.
+Depending on requirements you also need to include `better-ajaxify-pushstate` or `better-ajaxify-hashchange`. The first file implements havigation via [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) and this is preferred option for web site. The second uses hash to indicate current state, so it could be useful for web applications.
 
 Frontend setup
 --------------
@@ -67,5 +67,3 @@ Browser support
 * Firefox 16+
 * Opera 12.10+
 * IE8+
-
-For the fastest UX the plugin uses [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history), so browsers that don't support it get only part of virtues.
