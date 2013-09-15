@@ -1,42 +1,44 @@
 /**
  * @file better-ajaxify.js
- * @version 1.1.2 2013-09-13T14:23:52
+ * @version 1.2.0 2013-09-15T15:52:30
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
  * @see https://github.com/chemerisuk/better-ajaxify
  */
-(function(DOM, location, history) {
+(function(DOM, location) {
     "use strict";
 
     var // internal data structures
         containers = DOM.findAll("[data-ajaxify]"),
-        containersCache = {},
+        historyData = {},
         // helpers
         switchContent = (function() {
             var currentLocation = location.href.split("#")[0];
 
-            return function(url, title, data) {
-                var cacheEntry = {};
+            return function(url, response) {
+                var cacheEntry = {html: {}, title: response.title};
 
                 containers.each(function(el, index) {
                     var key = el.getData("ajaxify"),
-                        value = data[key];
+                        value = response.html[key];
 
-                    if (typeof value === "string") {
-                        value = el.clone().set(value);
+                    if (value) {
+                        if (typeof value === "string") {
+                            value = el.clone().set(value);
+                        }
+
+                        cacheEntry.html[key] = el.replace(value);
+                        // update value in the internal collection
+                        containers[index] = value;
                     }
-
-                    cacheEntry[key] = el.replace(value);
-                    // update value in the internal collection
-                    containers[index] = value;
                 });
                 // update old containers to their latest state
-                containersCache[currentLocation] = cacheEntry;
+                historyData[currentLocation] = cacheEntry;
                 // update current location variable
                 currentLocation = url;
                 // update page title
-                DOM.setTitle(title);
+                DOM.setTitle(response.title);
             };
         }()),
         loadContent = (function() {
@@ -77,11 +79,17 @@
                             if (status >= 200 && status < 300 || status === 304) {
                                 try {
                                     response = JSON.parse(response);
+
+                                    // populate default values
                                     response.url = response.url || url;
+                                    response.title = response.title || DOM.geTitle();
+                                    response.html = response.html || {};
+
+                                    switchContent(response.url, response);
                                 } catch(err) {
                                     // response is a text content
                                 } finally {
-                                    sender.fire("ajaxify:success", response);
+                                    sender.fire("ajaxify:load", response);
                                 }
                             } else {
                                 sender.fire("ajaxify:error", xhr);
@@ -111,17 +119,8 @@
     DOM.on("click a", function(link, cancel) {
         if (!link.matches("a")) link = link.parent("a");
 
-        if (cancel || link.get("target")) return;
-
-        var url = link.get("href");
-
-        if (url) {
-            url = url.split("#")[0];
-
-            if (url !== location.href.split("#")[0]) {
-                // prevent default behavior for links
-                return !link.fire("ajaxify:fetch");
-            }
+        if (!cancel && !link.get("target")) {
+            return !link.fire("ajaxify:fetch");
         }
     });
 
@@ -155,47 +154,14 @@
         loadContent(target, url, queryString);
     });
 
-    DOM.on("ajaxify:success", ["detail"], function(response) {
-        if (typeof response === "object") {
-            switchContent(response.url, response.title, response.html);
-            // update browser url
-            if (response.url !== location.pathname) {
-                history.pushState({title: DOM.getTitle()}, DOM.getTitle(), response.url);
-            } else if (history.replaceState) {
-                history.replaceState({title: DOM.getTitle()}, DOM.getTitle());
-            }
+    DOM.on("ajaxify:history", ["detail"], function(url) {
+        if (url in historyData) {
+            switchContent(url, historyData[url]);
+        } else {
+            // TODO: need to trigger partial reload?
+            location.reload();
         }
     });
-
-    if (history.pushState) {
-        window.addEventListener("popstate", function(e) {
-            var url = location.href.split("#")[0],
-                state = e.state;
-
-            if (!state) return;
-
-            if (url in containersCache) {
-                switchContent(url, state.title, containersCache[url]);
-            } else {
-                // TODO: need to trigger partial reload?
-                location.reload();
-            }
-        }, false);
-        // update initial state
-        history.replaceState({title: DOM.getTitle()}, DOM.getTitle());
-    } else {
-        // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", function(sender, defaultPrevented) {
-            if (!defaultPrevented && sender.get("method") !== "post") {
-                // load a new page in legacy browsers
-                if (sender.matches("form")) {
-                    sender.fire("submit");
-                } else {
-                    location.href = sender.get("href");
-                }
-            }
-        });
-    }
 
     DOM.extend("form", {
         toQueryString: function() {
@@ -234,9 +200,4 @@
             }, []).join("&").replace(/%20/g, "+");
         }
     });
-}(window.DOM, location, history));
-
-// include AMD ceremony
-if (typeof define === "function" && define.amd) {
-    define("better-ajaxify", ["better-dom"], function() {});
-}
+}(window.DOM, location));
