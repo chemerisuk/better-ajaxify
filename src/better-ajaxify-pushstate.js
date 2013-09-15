@@ -1,6 +1,25 @@
 (function(DOM, location, history) {
     "use strict";
 
+    DOM.find("html").on("ajaxify:fetch a", function(target, cancel) {
+        if (!cancel) {
+            var url = target.get("href");
+
+            if (url) {
+                url = url.split("#")[0];
+
+                // handle anchors
+                if (url !== location.href.split("#")[0]) {
+                    return true;
+                } else {
+                    location.hash = target.get("hash");
+                }
+            }
+
+            return false;
+        }
+    });
+
     DOM.on("ajaxify:success", ["detail"], function(response) {
         if (typeof response === "object") {
             // update browser url
@@ -14,10 +33,10 @@
 
     if (history.pushState) {
         window.addEventListener("popstate", function(e) {
-            var url = location.href.split("#")[0],
-                state = e.state;
+            var url = location.href.split("#")[0];
 
-            if (!state) return;
+            // skip initial popstate
+            if (!e.state) return;
 
             DOM.fire("ajaxify:history", url);
         }, false);

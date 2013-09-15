@@ -111,17 +111,8 @@
     DOM.on("click a", function(link, cancel) {
         if (!link.matches("a")) link = link.parent("a");
 
-        if (cancel || link.get("target")) return;
-
-        var url = link.get("href");
-
-        if (url) {
-            url = url.split("#")[0];
-
-            if (url !== location.href.split("#")[0]) {
-                // prevent default behavior for links
-                return !link.fire("ajaxify:fetch");
-            }
+        if (!cancel && !link.get("target")) {
+            return !link.fire("ajaxify:fetch");
         }
     });
 
