@@ -24,9 +24,9 @@
         if (typeof response === "object") {
             // update browser url
             if (response.url !== location.pathname) {
-                history.pushState({title: DOM.getTitle()}, DOM.getTitle(), response.url);
+                history.pushState(true, response.title, response.url);
             } else if (history.replaceState) {
-                history.replaceState({title: DOM.getTitle()}, DOM.getTitle());
+                history.replaceState(true, response.title);
             }
         }
     });
@@ -41,7 +41,7 @@
             DOM.fire("ajaxify:history", url);
         }, false);
         // update initial state
-        history.replaceState({title: DOM.getTitle()}, DOM.getTitle());
+        history.replaceState(true, DOM.getTitle());
     } else {
         // when url should be changed don't start request in old browsers
         DOM.on("ajaxify:loadstart", function(sender, defaultPrevented) {

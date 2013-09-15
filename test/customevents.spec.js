@@ -8,14 +8,14 @@ describe("Custom events", function() {
             var spy = spyOn(history, "pushState");
 
             DOM.fire("ajaxify:success", {url: "a", title: "b"});
-            expect(spy).toHaveBeenCalledWith({title: "b"}, "b", "a");
+            expect(spy).toHaveBeenCalledWith(true, "b", "a");
         });
 
         it("should replace state if url is the same", function() {
             var spy = spyOn(history, "replaceState");
 
             DOM.fire("ajaxify:success", {url: location.pathname, title: "d"});
-            expect(spy).toHaveBeenCalledWith({title: "d"}, "d");
+            expect(spy).toHaveBeenCalledWith(true, "d");
         });
 
         it("should do nothing if response is not an object", function() {

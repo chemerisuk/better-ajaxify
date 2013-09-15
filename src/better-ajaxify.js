@@ -8,19 +8,19 @@
         switchContent = (function() {
             var currentLocation = location.href.split("#")[0];
 
-            return function(url, title, data) {
-                var cacheEntry = {};
+            return function(url, response) {
+                var cacheEntry = {html: {}, title: response.title};
 
                 containers.each(function(el, index) {
                     var key = el.getData("ajaxify"),
-                        value = data[key];
+                        value = response.html[key];
 
                     if (value) {
                         if (typeof value === "string") {
                             value = el.clone().set(value);
                         }
 
-                        cacheEntry[key] = el.replace(value);
+                        cacheEntry.html[key] = el.replace(value);
                         // update value in the internal collection
                         containers[index] = value;
                     }
@@ -30,7 +30,7 @@
                 // update current location variable
                 currentLocation = url;
                 // update page title
-                DOM.setTitle(title);
+                DOM.setTitle(response.title);
             };
         }()),
         loadContent = (function() {
@@ -77,7 +77,7 @@
                                     response.title = response.title || DOM.geTitle();
                                     response.html = response.html || {};
 
-                                    switchContent(response.url, response.title, response.html);
+                                    switchContent(response.url, response);
                                 } catch(err) {
                                     // response is a text content
                                 } finally {
@@ -147,9 +147,8 @@
     });
 
     DOM.on("ajaxify:history", ["detail"], function(url) {
-        // FIXME: state.title
         if (url in historyData) {
-            switchContent(url, "", historyData[url]);
+            switchContent(url, historyData[url]);
         } else {
             // TODO: need to trigger partial reload?
             location.reload();
