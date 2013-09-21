@@ -63,10 +63,15 @@
 
                     xhr.onreadystatechange = function() {
                         if (xhr.readyState === 4) {
-                            var status = xhr.status,
+                            var innerXhr = xhr,
+                                status = xhr.status,
                                 response = xhr.responseText;
 
-                            sender.fire("ajaxify:loadend", xhr);
+                            // cleanup closure state
+                            lockedEl = xhr = null;
+                            clearTimeout(timerId);
+
+                            sender.fire("ajaxify:loadend", innerXhr);
 
                             if (status >= 200 && status < 300 || status === 304) {
                                 try {
@@ -84,12 +89,8 @@
                                     sender.fire("ajaxify:load", response);
                                 }
                             } else {
-                                sender.fire("ajaxify:error", xhr);
+                                sender.fire("ajaxify:error", innerXhr);
                             }
-
-                            clearTimeout(timerId);
-
-                            xhr = null; // memory cleanup
                         }
                     };
 
