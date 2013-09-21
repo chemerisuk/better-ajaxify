@@ -2,7 +2,7 @@
     "use strict";
 
     var // internal data structures
-        containers = DOM.findAll("[data-ajaxify]"),
+        containers = DOM.mock(),
         historyData = {},
         // helpers
         switchContent = (function() {
@@ -192,5 +192,9 @@
                 return memo;
             }, []).join("&").replace(/%20/g, "+");
         }
+    });
+
+    DOM.ready(function() {
+        containers = DOM.findAll("[data-ajaxify]");
     });
 }(window.DOM, location));
