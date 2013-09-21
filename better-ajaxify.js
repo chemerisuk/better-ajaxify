@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version 1.2.1 2013-09-15T21:49:34
+ * @version 1.2.2 2013-09-21T14:33:56
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -10,7 +10,7 @@
     "use strict";
 
     var // internal data structures
-        containers = DOM.findAll("[data-ajaxify]"),
+        containers = DOM.mock(),
         historyData = {},
         // helpers
         switchContent = (function() {
@@ -71,10 +71,15 @@
 
                     xhr.onreadystatechange = function() {
                         if (xhr.readyState === 4) {
-                            var status = xhr.status,
+                            var innerXhr = xhr,
+                                status = xhr.status,
                                 response = xhr.responseText;
 
-                            sender.fire("ajaxify:loadend", xhr);
+                            // cleanup closure state
+                            lockedEl = xhr = null;
+                            clearTimeout(timerId);
+
+                            sender.fire("ajaxify:loadend", innerXhr);
 
                             if (status >= 200 && status < 300 || status === 304) {
                                 try {
@@ -92,12 +97,8 @@
                                     sender.fire("ajaxify:load", response);
                                 }
                             } else {
-                                sender.fire("ajaxify:error", xhr);
+                                sender.fire("ajaxify:error", innerXhr);
                             }
-
-                            clearTimeout(timerId);
-
-                            xhr = null; // memory cleanup
                         }
                     };
 
@@ -199,5 +200,9 @@
                 return memo;
             }, []).join("&").replace(/%20/g, "+");
         }
+    });
+
+    DOM.ready(function() {
+        containers = DOM.findAll("[data-ajaxify]");
     });
 }(window.DOM, location));
