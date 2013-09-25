@@ -23,7 +23,7 @@ Then append the following html elements on your page:
 <body>
     ...
     <script src="bower_components/better-dom/better-dom.js" data-htc="bower_components/better-dom/better-dom.htc"></script>
-    <script src="bower_components/better-ajaxify/src/better-ajaxify.js"></script>
+    <script src="bower_components/better-ajaxify/dist/better-ajaxify.js"></script>
 </body>
 </html>
 ```
