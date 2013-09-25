@@ -15,6 +15,7 @@
     "latedef": true,
     "nonew": true,
     "lastsemic": true,
+    "strict": true,
 
     "globals": {
         "DOM": true,

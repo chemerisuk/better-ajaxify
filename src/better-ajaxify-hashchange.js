@@ -1,4 +1,6 @@
 (function(DOM, location) {
+    "use strict";
+
     var baseUrl = location.href.split(/[\?#]/)[0],
         skipHashchange = false;
 
@@ -30,7 +32,9 @@
         }
     };
 
-    if (location.hash) {
-        DOM.fire("ajaxify:fetch", location.href.replace("#/", ""));
+    if (~location.hash.indexOf("#/")) {
+        DOM.ready(function() {
+            DOM.fire("ajaxify:fetch", location.href.replace("#/", ""));
+        });
     }
 }(window.DOM, location));

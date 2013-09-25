@@ -81,7 +81,7 @@ module.exports = function(grunt) {
         },
         copy: {
             publish: {
-                files: [{ src: ["src/*"], dest: ".", expand: true, flatten: true }],
+                files: [{ src: ["src/*"], dest: "dist/", expand: true, flatten: true }],
                 options: {
                     processContent: function(content, srcpath) {
                         return grunt.template.process(
