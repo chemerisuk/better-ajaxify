@@ -79,7 +79,7 @@
 
                                     // populate default values
                                     response.url = response.url || url;
-                                    response.title = response.title || DOM.geTitle();
+                                    response.title = response.title || DOM.getTitle();
                                     response.html = response.html || {};
 
                                     switchContent(response.url, response);
