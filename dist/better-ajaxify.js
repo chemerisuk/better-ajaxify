@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version 1.2.3 2013-09-25T15:23:18
+ * @version 1.2.4 2013-09-28T00:25:24
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -87,7 +87,7 @@
 
                                     // populate default values
                                     response.url = response.url || url;
-                                    response.title = response.title || DOM.geTitle();
+                                    response.title = response.title || DOM.getTitle();
                                     response.html = response.html || {};
 
                                     switchContent(response.url, response);
