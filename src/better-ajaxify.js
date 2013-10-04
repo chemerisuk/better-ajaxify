@@ -9,10 +9,9 @@
             var currentLocation = location.href.split("#")[0],
                 // use late binding to determine when element could be removed from DOM
                 attachAjaxifyHandlers = function(el) {
-                    el.on("animationend", el, "_handleAjaxify");
-                    el.on("transitionend", el, "_handleAjaxify");
-                    el.on("webkitAnimationEnd", el, "_handleAjaxify");
-                    el.on("webkitTransitionEnd", el, "_handleAjaxify");
+                    var events = ["animationend", "transitionend", "webkitAnimationEnd", "webkitTransitionEnd"];
+
+                    while (events.length) el.on(events.pop(), el, "_handleAjaxify");
                 };
 
             DOM.ready(function() {
