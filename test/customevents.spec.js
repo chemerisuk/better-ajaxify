@@ -47,5 +47,10 @@ describe("Custom events", function() {
             expect(cancelSpy).toHaveBeenCalled();
             expect(spy).not.toHaveBeenCalled();
         });
+
+        it("should throw error if argument is invalid", function() {
+            // expect(function() { DOM.fire("ajaxify:fetch"); }).toThrow();
+            //expect(function() { DOM.fire("ajaxify:fetch", null); }).toThrow();
+        });
     });
 });

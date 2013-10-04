@@ -6,21 +6,45 @@
         historyData = {},
         // helpers
         switchContent = (function() {
-            var currentLocation = location.href.split("#")[0];
+            var currentLocation = location.href.split("#")[0],
+                // use late binding to determine when element could be removed from DOM
+                attachAjaxifyHandlers = function(el) {
+                    el.on("animationend", el, "_handleAjaxify");
+                    el.on("transitionend", el, "_handleAjaxify");
+                    el.on("webkitAnimationEnd", el, "_handleAjaxify");
+                    el.on("webkitTransitionEnd", el, "_handleAjaxify");
+                };
+
+            DOM.ready(function() {
+                containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers);
+            });
 
             return function(url, response) {
                 var cacheEntry = {html: {}, title: response.title};
 
                 containers.each(function(el, index) {
-                    var key = el.getData("ajaxify"),
+                    var key = el.data("ajaxify"),
                         value = response.html[key];
 
                     if (value) {
                         if (typeof value === "string") {
                             value = el.clone().set(value);
+
+                            attachAjaxifyHandlers(value);
                         }
 
-                        cacheEntry.html[key] = el.replace(value);
+                        el.hide().after(value.hide());
+                        // display value async to show animation
+                        setTimeout(function() { value.show() }, 0);
+                        // postpone removing element from DOM (1 sec is max)
+                        setTimeout(el._handleAjaxify = function() {
+                            if (el.parent().length) {
+                                cacheEntry.html[key] = el.remove();
+                                // no need to listen
+                                delete el._handleAjaxify;
+                            }
+                        }, 1000);
+
                         // update value in the internal collection
                         containers[index] = value;
                     }
@@ -110,17 +134,11 @@
         };
 
     DOM.on("click a", function(link, cancel) {
-        if (!link.matches("a")) link = link.parent("a");
-
-        if (!cancel && !link.get("target")) {
-            return !link.fire("ajaxify:fetch");
-        }
+        if (!cancel && !link.get("target")) return !link.fire("ajaxify:fetch");
     });
 
     DOM.on("submit", function(form, cancel) {
-        if (!cancel && !form.get("target")) {
-            return !form.fire("ajaxify:fetch");
-        }
+        if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch");
     });
 
     DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], function(url, target, cancel) {
@@ -129,9 +147,13 @@
         var queryString;
 
         if (typeof url !== "string") {
+            if (target === DOM || !target.matches("a,form")) {
+                throw "Illegal ajaxify:fetch event";
+            }
+
             if (target.matches("a")) {
                 url = target.get("href");
-            } else if (target.matches("form")) {
+            } else {
                 url = target.get("action");
                 queryString = target.toQueryString();
 
@@ -139,8 +161,6 @@
                     url += (~url.indexOf("?") ? "&" : "?") + queryString;
                     queryString = null;
                 }
-            } else {
-                throw "Illegal ajaxify:fetch event";
             }
         }
 
@@ -192,9 +212,5 @@
                 return memo;
             }, []).join("&").replace(/%20/g, "+");
         }
-    });
-
-    DOM.ready(function() {
-        containers = DOM.findAll("[data-ajaxify]");
     });
 }(window.DOM, location));

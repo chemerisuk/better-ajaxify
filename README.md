@@ -18,11 +18,14 @@ Then append the following html elements on your page:
 <html>
 <head>
     ...
-    <!--[if IE]><script src="bower_components/html5shiv/dist/html5shiv.js"></script><![endif]-->
+    <!--[if IE]>
+        <link href="bower_components/better-dom/dist/better-dom.htc" rel="htc"/>
+        <script src="bower_components/html5shiv/dist/html5shiv.js"></script>
+    <![endif]-->
 </head>
 <body>
     ...
-    <script src="bower_components/better-dom/better-dom.js" data-htc="bower_components/better-dom/better-dom.htc"></script>
+    <script src="bower_components/better-dom/dist/better-dom.js"></script>
     <script src="bower_components/better-ajaxify/dist/better-ajaxify.js"></script>
 </body>
 </html>

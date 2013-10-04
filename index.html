@@ -19,9 +19,24 @@
         display: table-cell;
         vertical-align: top;
     }
+
+    [data-ajaxify=content] {
+        opacity: 1;
+
+        -webkit-transition: all 0.3s;
+        transition: all 0.3s;
+    }
+
+    [data-ajaxify=content][aria-hidden=true] {
+        display: table-cell; /* override display:none */
+        opacity: 0;
+    }
     </style>
-    <!--[if IE]><script src="bower_components/html5shiv/dist/html5shiv.js"></script><![endif]-->
-    <script src="bower_components/better-dom/better-dom.js" data-htc="bower_components/better-dom/better-dom.htc"></script>
+    <!--[if IE]>
+        <link href="bower_components/better-dom/dist/better-dom.htc" rel="htc"/>
+        <script src="bower_components/html5shiv/dist/html5shiv.js"></script>
+    <![endif]-->
+    <script src="bower_components/better-dom/dist/better-dom.js"></script>
     <script src="src/better-ajaxify.js"></script>
     <script src="src/better-ajaxify-pushstate.js"></script>
 </head>

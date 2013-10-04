@@ -17,7 +17,7 @@ module.exports = function(grunt) {
         },
         jasmine: {
             options: {
-                vendor: ["bower_components/better-dom/better-dom.js"],
+                vendor: ["bower_components/better-dom/dist/better-dom.js"],
                 specs: "test/*.spec.js",
                 keepRunner: true
             },
