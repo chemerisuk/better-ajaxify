@@ -8,7 +8,7 @@ Installing
 ----------
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
 
-    bower install better-ajaxify
+    bower install better-ajaxify --save
 
 This will clone the latest version of the __better-ajaxify__ into the `bower_components` directory at the root of your project.
 

@@ -1,42 +1,32 @@
 module.exports = function(grunt) {
     "use strict";
 
-    var pkg = grunt.file.readJSON("package.json"),
-        gruntDependencies = function(name) {
-            return !name.indexOf("grunt-") && name !== "grunt-template-jasmine-istanbul";
-        };
+    var pkg = grunt.file.readJSON("package.json");
 
     grunt.initConfig({
         pkg: pkg,
 
         watch: {
             jasmine: {
-                files: ["src/*.js", "test/*.spec.js"],
-                tasks: ["jasmine:coverage"]
+                files: ["src/*.js", "test/spec/*.spec.js"],
+                tasks: ["karma:coverage:run"]
             }
         },
-        jasmine: {
+        karma: {
             options: {
-                vendor: ["bower_components/better-dom/dist/better-dom.js"],
-                specs: "test/*.spec.js",
-                keepRunner: true
-            },
-            unit: {
-                src: ["src/better-ajaxify.js", "src/better-ajaxify-pushstate.js"]
+                configFile: "test/karma.conf.js"
             },
             coverage: {
-                src: ["src/better-ajaxify.js", "src/better-ajaxify-pushstate.js"],
-                options: {
-                    template: require("grunt-template-jasmine-istanbul"),
-                    templateOptions: {
-                        coverage: "coverage/coverage.json",
-                        report: "coverage"
-                    }
-                }
+                preprocessors: { "src/*.js": "coverage" },
+                reporters: ["coverage", "progress"],
+                background: true
+            },
+            unit: {
+                singleRun: true
             }
         },
         jshint: {
-            all: ["Gruntfile.js", "src/*.js", "test/*.spec.js"],
+            all: ["Gruntfile.js", "src/*.js", "test/spec/*.spec.js"],
             options: {
                 jshintrc: ".jshintrc"
             }
@@ -100,10 +90,12 @@ module.exports = function(grunt) {
         }
     });
 
-    Object.keys(pkg.devDependencies).filter(gruntDependencies).forEach(grunt.loadNpmTasks);
+    Object.keys(pkg.devDependencies).forEach(function(name) {
+        if (!name.indexOf("grunt-")) grunt.loadNpmTasks(name);
+    });
 
-    grunt.registerTask("test", ["jshint", "jasmine:unit"]);
-    grunt.registerTask("dev", ["test", "shell:openCoverage", "watch"]);
+    grunt.registerTask("test", ["jshint", "karma:unit"]);
+    grunt.registerTask("dev", ["jshint", "karma:coverage", "shell:openCoverage", "watch"]);
 
     grunt.registerTask("publish", "Publish a new version at github", function(version) {
         pkg.version = version;

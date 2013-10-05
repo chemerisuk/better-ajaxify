@@ -53,4 +53,14 @@ describe("Custom events", function() {
             //expect(function() { DOM.fire("ajaxify:fetch", null); }).toThrow();
         });
     });
+
+    describe("ajaxify:history", function() {
+        it("should trigger page reload if url is not in history cache", function() {
+            var locationSpy = spyOn(location, "reload");
+
+            DOM.fire("ajaxify:history", "???");
+
+            expect(locationSpy).toHaveBeenCalled();
+        });
+    });
 });
