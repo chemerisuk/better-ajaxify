@@ -70,6 +70,69 @@ describe("XMLHttpRequest", function() {
         });
     });
 
+    describe("ajaxify:load", function() {
+        it("should be triggerred if XHR status is successfull", function() {
+            var spy = jasmine.createSpy("error");
+
+            sendSpy.andCallFake(function() {
+                DOM.on("ajaxify:load", ["detail"], spy);
+
+                this.onreadystatechange.call({readyState: 4, status: 200, responseText: "<a>test</a>"});
+                expect(spy).toHaveBeenCalledWith("<a>test</a>");
+                spy.reset();
+
+                var response = {
+                    title: "test title",
+                    url: "33333",
+                    html: {
+                        a: "asdasda",
+                        b: "234234234"
+                    }
+                };
+
+                spy.andCallFake(function(detail) {
+                    expect(detail).toEqual(response);
+                });
+
+                this.onreadystatechange.call({readyState: 4, status: 304, responseText: JSON.stringify(response)});
+                expect(spy).toHaveBeenCalled();
+                spy.reset();
+
+                DOM.off("ajaxify:load", spy);
+            });
+
+            DOM.fire("ajaxify:fetch", "33333");
+            expect(sendSpy).toHaveBeenCalled();
+        });
+
+        it("should populate response with defaults", function() {
+            var spy = jasmine.createSpy("error");
+
+            sendSpy.andCallFake(function() {
+                DOM.once("ajaxify:load", ["detail"], spy);
+
+                DOM.setTitle("ajaxify:load");
+
+                var response = {};
+
+                spy.andCallFake(function(detail) {
+                    expect(detail.title).toBe("ajaxify:load");
+                    expect(detail.url).toBe("44444");
+                    expect(detail.html).toEqual({});
+                });
+
+                this.onreadystatechange.call({readyState: 4, status: 304, responseText: JSON.stringify(response)});
+                expect(spy).toHaveBeenCalled();
+                spy.reset();
+
+                DOM.off("ajaxify:load", spy);
+            });
+
+            DOM.fire("ajaxify:fetch", "44444");
+            expect(sendSpy).toHaveBeenCalled();
+        });
+    });
+
     it("should process XHR when it's done", function() {
         var spy = jasmine.createSpy("loadend");
 
