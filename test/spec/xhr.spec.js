@@ -28,20 +28,46 @@ describe("XMLHttpRequest", function() {
         expect(sendSpy).toHaveBeenCalledWith(null);
     });
 
-    it("should trigger ajaxify:error on XHR error", function() {
-        var spy = jasmine.createSpy("error");
+    describe("ajaxify:error", function() {
+        it("should trigger ajaxify:error on XHR error", function() {
+            var spy = jasmine.createSpy("error");
 
-        DOM.once("ajaxify:error", ["detail"], spy);
+            DOM.once("ajaxify:error", ["detail"], spy);
 
-        sendSpy.andCallFake(function() {
-            // trigger error
-            this.onerror();
+            sendSpy.andCallFake(function() {
+                // trigger error
+                this.onerror();
 
-            expect(spy).toHaveBeenCalledWith(this);
+                expect(spy).toHaveBeenCalledWith(this);
+            });
+
+            DOM.fire("ajaxify:fetch", "22222");
+            expect(sendSpy).toHaveBeenCalled();
         });
 
-        DOM.fire("ajaxify:fetch", "22222");
-        expect(sendSpy).toHaveBeenCalled();
+        it("should trigger ajaxify:error if XHR status ie not successfull", function() {
+            var spy = jasmine.createSpy("error"),
+                testStatus = function(xhr, status) {
+                    xhr.onreadystatechange.call({readyState: 4, status: status});
+                    expect(spy).toHaveBeenCalled();
+                    spy.reset();
+                };
+
+            sendSpy.andCallFake(function() {
+                DOM.on("ajaxify:error", ["detail"], spy);
+
+                testStatus(this, 500);
+                testStatus(this, 400);
+                testStatus(this, 401);
+                testStatus(this, 403);
+                testStatus(this, 0);
+
+                DOM.off("ajaxify:error", spy);
+            });
+
+            DOM.fire("ajaxify:fetch", "33333");
+            expect(sendSpy).toHaveBeenCalled();
+        });
     });
 
     it("should process XHR when it's done", function() {
@@ -55,11 +81,11 @@ describe("XMLHttpRequest", function() {
 
             expect(spy).not.toHaveBeenCalled();
 
-            // mark request as completed
-            // this.readyState = 4;
-            // this.onreadystatechange();
+            // it's not possible to change readyState
+            // so to handle this just call handler with a different context
 
-            // expect(spy).toHaveBeenCalledWith(this);
+            this.onreadystatechange.call({readyState: 4});
+            expect(spy).toHaveBeenCalled();
         });
 
         DOM.fire("ajaxify:fetch", "33333");

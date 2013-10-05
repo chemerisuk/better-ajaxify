@@ -85,16 +85,15 @@
                     };
 
                     xhr.onreadystatechange = function() {
-                        if (xhr.readyState === 4) {
-                            var innerXhr = xhr,
-                                status = xhr.status,
-                                response = xhr.responseText;
+                        if (this.readyState === 4) {
+                            var status = this.status,
+                                response = this.responseText;
 
-                            // cleanup closure state
+                            // cleanup outer variables
                             lockedEl = xhr = null;
                             clearTimeout(timerId);
 
-                            sender.fire("ajaxify:loadend", innerXhr);
+                            sender.fire("ajaxify:loadend", this);
 
                             if (status >= 200 && status < 300 || status === 304) {
                                 try {
@@ -112,7 +111,7 @@
                                     sender.fire("ajaxify:load", response);
                                 }
                             } else {
-                                sender.fire("ajaxify:error", innerXhr);
+                                sender.fire("ajaxify:error", this);
                             }
                         }
                     };
