@@ -151,6 +151,6 @@ describe("XMLHttpRequest", function() {
             expect(spy).toHaveBeenCalled();
         });
 
-        DOM.fire("ajaxify:fetch", "33333");
+        DOM.fire("ajaxify:fetch", "55555");
     });
 });

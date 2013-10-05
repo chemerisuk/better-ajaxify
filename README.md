@@ -45,6 +45,24 @@ Custom `data-ajaxify` attribute is used to mark html elements that may be reload
 ...
 ```
 
+#### Enabling animations
+The library supports setting up animations on each content transition. Just use [common approach for animations in better-dom](http://jsfiddle.net/mNBVQ/1/) to enable them. Take a look at simple example below:
+
+```css
+[data-ajaxify=content] {
+    opacity: 1;
+    /* enable animations via CSS3 transition property */
+    -webkit-transition: all 0.3s;
+    transition: all 0.3s;
+}
+
+[data-ajaxify=content][aria-hidden=true] {
+    opacity: 0;
+    /* you MUST override display:none with appropriate diplay property */
+    display: table-cell;
+}
+```
+
 Backend setup
 -------------
 Server should respond in json format:
@@ -60,6 +78,7 @@ Server should respond in json format:
     }
 
 For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
+
 Custom events
 -------------
 The library exposes custom events below for advanced interaction:

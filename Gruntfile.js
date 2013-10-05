@@ -35,9 +35,6 @@ module.exports = function(grunt) {
             bower: ["bower_components/"]
         },
         shell: {
-            openCoverage: {
-                command: "open coverage/index.html"
-            },
             bower: {
                 command: "bower install"
             },
@@ -95,7 +92,7 @@ module.exports = function(grunt) {
     });
 
     grunt.registerTask("test", ["jshint", "karma:unit"]);
-    grunt.registerTask("dev", ["jshint", "karma:coverage", "shell:openCoverage", "watch"]);
+    grunt.registerTask("dev", ["jshint", "karma:coverage", "watch"]);
 
     grunt.registerTask("publish", "Publish a new version at github", function(version) {
         pkg.version = version;
