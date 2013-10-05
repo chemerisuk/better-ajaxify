@@ -39,10 +39,11 @@ describe("Custom events", function() {
         });
 
         it("should respect defaultPrevented", function() {
-            var cancelSpy = jasmine.createSpy("cancel").andReturn(false);
+            var cancelSpy = jasmine.createSpy("cancel").andReturn(false),
+                body = DOM.find("body");
 
-            DOM.once("ajaxify:fetch", cancelSpy);
-            DOM.fire("ajaxify:fetch", "test");
+            body.once("ajaxify:fetch", cancelSpy);
+            body.fire("ajaxify:fetch", "test");
 
             expect(cancelSpy).toHaveBeenCalled();
             expect(spy).not.toHaveBeenCalled();

@@ -67,7 +67,7 @@
                     sender.fire("ajaxify:abort", xhr);
                 };
 
-                if (lockedEl !== sender) {
+                if (lockedEl !== sender || sender === DOM) {
                     lockedEl = sender;
 
                     if (xhr) {
@@ -143,7 +143,7 @@
     DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], function(url, target, cancel) {
         if (cancel) return;
 
-        var queryString;
+        var queryString = null;
 
         if (typeof url !== "string") {
             if (target === DOM || !target.matches("a,form")) {
