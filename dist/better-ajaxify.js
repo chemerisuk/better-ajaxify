@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version 1.3.0 2013-10-05T16:05:47
+ * @version 1.3.1 2013-10-09T16:29:40
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -112,10 +112,13 @@
                                     response.title = response.title || DOM.getTitle();
                                     response.html = response.html || {};
 
-                                    switchContent(response.url, response);
+                                    // must fire event before switching content because sender
+                                    // may be removed from DOM and the event won't bubble
+                                    sender.fire("ajaxify:load", response);
+
+                                    if (!response.done) switchContent(response.url, response);
                                 } catch(err) {
                                     // response is a text content
-                                } finally {
                                     sender.fire("ajaxify:load", response);
                                 }
                             } else {
