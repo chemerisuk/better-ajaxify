@@ -104,10 +104,13 @@
                                     response.title = response.title || DOM.getTitle();
                                     response.html = response.html || {};
 
-                                    switchContent(response.url, response);
+                                    // must fire event before switching content because sender
+                                    // may be removed from DOM and the event won't bubble
+                                    sender.fire("ajaxify:load", response);
+
+                                    if (!response.done) switchContent(response.url, response);
                                 } catch(err) {
                                     // response is a text content
-                                } finally {
                                     sender.fire("ajaxify:load", response);
                                 }
                             } else {
