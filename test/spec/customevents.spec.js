@@ -34,8 +34,15 @@ describe("Custom events", function() {
         });
 
         it("should trigger ajax request", function() {
-            DOM.fire("ajaxify:fetch", "test");
-            expect(spy).toHaveBeenCalled();
+            runs(function() {
+                DOM.ready(function() {
+                    DOM.fire("ajaxify:fetch", "test");
+                });
+            });
+
+            waitsFor(function() {
+                return spy.callCount === 1;
+            });
         });
 
         it("should respect defaultPrevented", function() {
@@ -59,9 +66,15 @@ describe("Custom events", function() {
         it("should trigger page reload if url is not in history cache", function() {
             var locationSpy = spyOn(location, "reload");
 
-            DOM.fire("ajaxify:history", "???");
+            runs(function() {
+                DOM.ready(function() {
+                    DOM.fire("ajaxify:history", "???");
+                });
+            });
 
-            expect(locationSpy).toHaveBeenCalled();
+            waitsFor(function() {
+                return locationSpy.callCount === 1;
+            });
         });
     });
 });

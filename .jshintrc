@@ -31,7 +31,7 @@
         "expect": true,
         "setFixtures": true,
         "jasmine": true,
-        "waits": true,
+        "waitsFor": true,
         "runs": true,
         "spyOn": true
     }
