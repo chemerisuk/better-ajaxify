@@ -57,8 +57,24 @@ describe("Custom events", function() {
         });
 
         it("should throw error if argument is invalid", function() {
-            // expect(function() { DOM.fire("ajaxify:fetch"); }).toThrow();
-            //expect(function() { DOM.fire("ajaxify:fetch", null); }).toThrow();
+            var spy = jasmine.createSpy("error").andReturn(true);
+
+            window.onerror = spy;
+
+            runs(function() {
+                DOM.ready(function() {
+                    DOM.fire("ajaxify:fetch");
+                    DOM.fire("ajaxify:fetch", null);
+                });
+            });
+
+            waitsFor(function() {
+                if (spy.callCount === 2) {
+                    window.onerror = undefined;
+
+                    return true;
+                };
+            });
         });
     });
 

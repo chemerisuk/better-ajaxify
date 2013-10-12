@@ -48,7 +48,7 @@
                                     response.url = response.url || url;
                                     response.title = response.title || DOM.getTitle();
                                     response.html = response.html || {};
-                                } catch(err) {
+                                } catch (err) {
                                     // response is a text content
                                 } finally {
                                     sender.fire("ajaxify:load", response);
@@ -78,7 +78,7 @@
         var // internal data structures
             historyData = {},
             // if browser supports animations use ~1s delay when removing an element from DOM
-            timeout = window.CSSKeyframesRule || !document.attachEvent ? 999 : 0,
+            timeoutDelay = window.CSSKeyframesRule || !document.attachEvent ? 999 : 0,
             currentLocation = location.href.split("#")[0],
             // use late binding to determine when element could be removed from DOM
             attachAjaxifyHandlers = function(el) {
@@ -87,7 +87,7 @@
                 while (events.length) el.on(events.pop(), el, "_handleAjaxify");
             },
             switchContent = function(response) {
-                var cacheEntry = {html: {}, title: response.title, url: currentLocation};
+                var cacheEntry = {html: {}, title: DOM.getTitle(), url: currentLocation};
 
                 containers.each(function(el, index) {
                     var key = el.data("ajaxify"),
@@ -104,14 +104,17 @@
                         // display content async to show animation
                         setTimeout(function() { content.show() }, 0);
                         // postpone removing element from DOM
-                        setTimeout(el._handleAjaxify = function() {
+                        el._handleAjaxify = function() {
                             if (el.parent().length) {
-                                cacheEntry.html[key] = el.remove();
+                                el.remove();
                                 // no need to listen
                                 delete el._handleAjaxify;
                             }
-                        }, timeout);
+                        };
+                        // use timeout as fallback when the element doesn't have animation
+                        setTimeout(el._handleAjaxify, timeoutDelay);
 
+                        cacheEntry.html[key] = el;
                         // update content in the internal collection
                         containers[index] = content;
                     }
@@ -132,7 +135,7 @@
 
             if (typeof url !== "string") {
                 if (target === DOM || !target.matches("a,form")) {
-                    throw "Illegal ajaxify:fetch event";
+                    throw "Illegal ajaxify:fetch event detail=" + String(url);
                 }
 
                 if (target.matches("a")) {
