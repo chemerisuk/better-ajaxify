@@ -6,7 +6,9 @@
         historyData = {},
         // helpers
         switchContent = (function() {
-            var currentLocation = location.href.split("#")[0],
+            // if browser supports animations use ~1s delay when removing an element from DOM
+            var timeout = window.CSSKeyframesRule || !document.attachEvent ? 999 : 0,
+                currentLocation = location.href.split("#")[0],
                 // use late binding to determine when element could be removed from DOM
                 attachAjaxifyHandlers = function(el) {
                     var events = ["animationend", "transitionend", "webkitAnimationEnd", "webkitTransitionEnd"];
@@ -23,29 +25,29 @@
 
                 containers.each(function(el, index) {
                     var key = el.data("ajaxify"),
-                        value = response.html[key];
+                        content = response.html[key];
 
-                    if (value) {
-                        if (typeof value === "string") {
-                            value = el.clone().set(value);
+                    if (content) {
+                        if (typeof content === "string") {
+                            content = el.clone().set(content);
 
-                            attachAjaxifyHandlers(value);
+                            attachAjaxifyHandlers(content);
                         }
 
-                        el.hide().after(value.hide());
-                        // display value async to show animation
-                        setTimeout(function() { value.show() }, 0);
-                        // postpone removing element from DOM (1 sec is max)
+                        el.hide().after(content.hide());
+                        // display content async to show animation
+                        setTimeout(function() { content.show() }, 0);
+                        // postpone removing element from DOM
                         setTimeout(el._handleAjaxify = function() {
                             if (el.parent().length) {
                                 cacheEntry.html[key] = el.remove();
                                 // no need to listen
                                 delete el._handleAjaxify;
                             }
-                        }, 1000);
+                        }, timeout);
 
-                        // update value in the internal collection
-                        containers[index] = value;
+                        // update content in the internal collection
+                        containers[index] = content;
                     }
                 });
                 // update old containers to their latest state
