@@ -73,7 +73,7 @@ describe("Custom events", function() {
                     window.onerror = undefined;
 
                     return true;
-                };
+                }
             });
         });
     });

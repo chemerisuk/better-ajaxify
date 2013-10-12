@@ -135,7 +135,7 @@
 
             if (typeof url !== "string") {
                 if (target === DOM || !target.matches("a,form")) {
-                    throw "Illegal ajaxify:fetch event detail=" + String(url);
+                    throw "Illegal ajaxify:fetch event with {" + String(url) + "}";
                 }
 
                 if (target.matches("a")) {
