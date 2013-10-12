@@ -20,8 +20,8 @@
                 containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers);
             });
 
-            return function(url, response) {
-                var cacheEntry = {html: {}, title: response.title};
+            return function(response) {
+                var cacheEntry = {html: {}, title: response.title, url: currentLocation};
 
                 containers.each(function(el, index) {
                     var key = el.data("ajaxify"),
@@ -53,7 +53,7 @@
                 // update old containers to their latest state
                 historyData[currentLocation] = cacheEntry;
                 // update current location variable
-                currentLocation = url;
+                currentLocation = response.url;
                 // update page title
                 DOM.setTitle(response.title);
             };
@@ -110,7 +110,7 @@
                                     // may be removed from DOM and the event won't bubble
                                     sender.fire("ajaxify:load", response);
 
-                                    if (!response.done) switchContent(response.url, response);
+                                    if (!response.done) switchContent(response);
                                 } catch(err) {
                                     // response is a text content
                                     sender.fire("ajaxify:load", response);
@@ -172,7 +172,7 @@
 
     DOM.on("ajaxify:history", ["detail"], function(url) {
         if (url in historyData) {
-            switchContent(url, historyData[url]);
+            switchContent(historyData[url]);
         } else {
             // TODO: need to trigger partial reload?
             location.reload();
