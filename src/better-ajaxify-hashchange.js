@@ -4,8 +4,8 @@
     var baseUrl = location.href.split(/[\?#]/)[0],
         skipHashchange = false;
 
-    DOM.on("ajaxify:load", ["detail"], function(response) {
-        if (typeof response === "object") {
+    DOM.on("ajaxify:load", ["detail", "defaultPrevented"], function(response, cancel) {
+        if (!cancel && typeof response === "object") {
             // update browser url
             if (response.url !== location.pathname) {
                 var hash = response.url;

@@ -20,8 +20,8 @@
         }
     });
 
-    DOM.on("ajaxify:load", ["detail"], function(response) {
-        if (typeof response === "object") {
+    DOM.on("ajaxify:load", ["detail", "defaultPrevented"], function(response, cancel) {
+        if (!cancel && typeof response === "object") {
             // update browser url
             if (response.url !== location.pathname) {
                 history.pushState(true, response.title, response.url);
