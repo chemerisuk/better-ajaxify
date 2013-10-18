@@ -176,12 +176,14 @@
         loadContent(target, url, queryString);
     });
 
-    DOM.on("ajaxify:history", ["detail"], function(url) {
-        if (url in historyData) {
-            switchContent(url, historyData[url]);
-        } else {
-            // TODO: need to trigger partial reload?
-            location.reload();
+    DOM.on("ajaxify:history", ["detail", "defaultPrevented"], function(url, cancel) {
+        if (!cancel) {
+            if (url in historyData) {
+                switchContent(url, historyData[url]);
+            } else {
+                // TODO: need to trigger partial reload?
+                location.reload();
+            }
         }
     });
 
