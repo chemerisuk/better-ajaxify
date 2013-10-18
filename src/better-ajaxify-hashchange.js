@@ -7,18 +7,17 @@
     DOM.on("ajaxify:load", ["detail", "defaultPrevented"], function(response, cancel) {
         if (!cancel && typeof response === "object") {
             // update browser url
-            if (response.url !== location.pathname) {
+            if (response.url) {
                 var hash = response.url;
-
                 if (!hash.indexOf(baseUrl)) {
                     hash = hash.substr(baseUrl.length - 1);
                 } else if (hash[0] !== "/" && hash[0] !== "#") {
                     // fix relative urls
                     hash = "/" + hash;
                 }
-
+            }
+            if (hash !== location.hash.substring(1)) {
                 skipHashchange = true;
-
                 location.hash = hash;
             }
         }
