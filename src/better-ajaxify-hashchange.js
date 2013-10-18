@@ -9,6 +9,7 @@
             // update browser url
             if (response.url) {
                 var hash = response.url;
+
                 if (!hash.indexOf(baseUrl)) {
                     hash = hash.substr(baseUrl.length - 1);
                 } else if (hash[0] !== "/" && hash[0] !== "#") {
