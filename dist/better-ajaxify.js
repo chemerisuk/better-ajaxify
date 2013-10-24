@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version 1.3.1 2013-10-09T16:29:40
+ * @version 1.3.2 2013-10-25T06:35:06
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -9,62 +9,7 @@
 (function(DOM, location) {
     "use strict";
 
-    var // internal data structures
-        containers = DOM.mock(),
-        historyData = {},
-        // helpers
-        switchContent = (function() {
-            var currentLocation = location.href.split("#")[0],
-                // use late binding to determine when element could be removed from DOM
-                attachAjaxifyHandlers = function(el) {
-                    var events = ["animationend", "transitionend", "webkitAnimationEnd", "webkitTransitionEnd"];
-
-                    while (events.length) el.on(events.pop(), el, "_handleAjaxify");
-                };
-
-            DOM.ready(function() {
-                containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers);
-            });
-
-            return function(url, response) {
-                var cacheEntry = {html: {}, title: response.title};
-
-                containers.each(function(el, index) {
-                    var key = el.data("ajaxify"),
-                        value = response.html[key];
-
-                    if (value) {
-                        if (typeof value === "string") {
-                            value = el.clone().set(value);
-
-                            attachAjaxifyHandlers(value);
-                        }
-
-                        el.hide().after(value.hide());
-                        // display value async to show animation
-                        setTimeout(function() { value.show() }, 0);
-                        // postpone removing element from DOM (1 sec is max)
-                        setTimeout(el._handleAjaxify = function() {
-                            if (el.parent().length) {
-                                cacheEntry.html[key] = el.remove();
-                                // no need to listen
-                                delete el._handleAjaxify;
-                            }
-                        }, 1000);
-
-                        // update value in the internal collection
-                        containers[index] = value;
-                    }
-                });
-                // update old containers to their latest state
-                historyData[currentLocation] = cacheEntry;
-                // update current location variable
-                currentLocation = url;
-                // update page title
-                DOM.setTitle(response.title);
-            };
-        }()),
-        loadContent = (function() {
+    var loadContent = (function() {
             // lock element to prevent double clicks
             var lockedEl, xhr, timerId;
 
@@ -111,14 +56,9 @@
                                     response.url = response.url || url;
                                     response.title = response.title || DOM.getTitle();
                                     response.html = response.html || {};
-
-                                    // must fire event before switching content because sender
-                                    // may be removed from DOM and the event won't bubble
-                                    sender.fire("ajaxify:load", response);
-
-                                    if (!response.done) switchContent(response.url, response);
-                                } catch(err) {
+                                } catch (err) {
                                     // response is a text content
+                                } finally {
                                     sender.fire("ajaxify:load", response);
                                 }
                             } else {
@@ -142,47 +82,106 @@
             return encodeURIComponent(name) + "=" + encodeURIComponent(value);
         };
 
-    DOM.on("click a", function(link, cancel) {
-        if (!cancel && !link.get("target")) return !link.fire("ajaxify:fetch");
-    });
+    DOM.ready(function() {
+        var // internal data structures
+            historyData = {},
+            // if browser supports animations use ~1s delay when removing an element from DOM
+            timeoutDelay = window.CSSKeyframesRule || !document.attachEvent ? 999 : 0,
+            currentLocation = location.href.split("#")[0],
+            // use late binding to determine when element could be removed from DOM
+            attachAjaxifyHandlers = function(el) {
+                var events = ["animationend", "transitionend", "webkitAnimationEnd", "webkitTransitionEnd"];
 
-    DOM.on("submit", function(form, cancel) {
-        if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch");
-    });
+                while (events.length) el.on(events.pop(), el, "_handleAjaxify");
+            },
+            switchContent = function(response) {
+                var cacheEntry = {html: {}, title: DOM.getTitle(), url: currentLocation};
 
-    DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], function(url, target, cancel) {
-        if (cancel) return;
+                containers.each(function(el, index) {
+                    var key = el.data("ajaxify"),
+                        content = response.html[key];
 
-        var queryString = null;
+                    if (content != null) {
+                        if (typeof content === "string") {
+                            content = el.clone().set(content);
 
-        if (typeof url !== "string") {
-            if (target === DOM || !target.matches("a,form")) {
-                throw "Illegal ajaxify:fetch event";
-            }
+                            attachAjaxifyHandlers(content);
+                        }
 
-            if (target.matches("a")) {
-                url = target.get("href");
-            } else {
-                url = target.get("action");
-                queryString = target.toQueryString();
+                        el.hide().before(content.hide());
+                        // display content async to show animation
+                        setTimeout(function() { content.show() }, 0);
+                        // postpone removing element from DOM
+                        el._handleAjaxify = function() {
+                            if (el.parent().length) {
+                                el.remove();
+                                // no need to listen
+                                delete el._handleAjaxify;
+                            }
+                        };
+                        // use timeout as fallback when the element doesn't have animation
+                        setTimeout(el._handleAjaxify, timeoutDelay);
 
-                if (target.get("method") === "get") {
-                    url += (~url.indexOf("?") ? "&" : "?") + queryString;
-                    queryString = null;
+                        cacheEntry.html[key] = el;
+                        // update content in the internal collection
+                        containers[index] = content;
+                    }
+                });
+                // update old containers to their latest state
+                historyData[currentLocation] = cacheEntry;
+                // update current location variable
+                currentLocation = response.url;
+                // update page title
+                DOM.setTitle(response.title);
+            },
+            containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers);
+
+        DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], function(url, target, cancel) {
+            if (cancel) return;
+
+            var queryString = null;
+
+            if (typeof url !== "string") {
+                if (target === DOM || !target.matches("a,form")) {
+                    throw "Illegal ajaxify:fetch event with {" + String(url) + "}";
+                }
+
+                if (target.matches("a")) {
+                    url = target.get("href");
+                } else {
+                    url = target.get("action");
+                    queryString = target.toQueryString();
+
+                    if (target.get("method") === "get") {
+                        url += (~url.indexOf("?") ? "&" : "?") + queryString;
+                        queryString = null;
+                    }
                 }
             }
-        }
 
-        loadContent(target, url, queryString);
-    });
+            loadContent(target, url, queryString);
+        });
 
-    DOM.on("ajaxify:history", ["detail"], function(url) {
-        if (url in historyData) {
-            switchContent(url, historyData[url]);
-        } else {
-            // TODO: need to trigger partial reload?
-            location.reload();
-        }
+        DOM.on("click a", function(link, cancel) {
+            if (!cancel && !link.get("target")) return !link.fire("ajaxify:fetch");
+        });
+
+        DOM.on("submit", function(form, cancel) {
+            if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch");
+        });
+
+        DOM.on("ajaxify:load", ["detail", "defaultPrevented"], function(response, cancel) {
+            if (!cancel && typeof response === "object") switchContent(response);
+        });
+
+        DOM.on("ajaxify:history", ["detail"], function(url) {
+            if (url in historyData) {
+                switchContent(historyData[url]);
+            } else {
+                // TODO: need to trigger partial reload?
+                location.reload();
+            }
+        });
     });
 
     DOM.extend("form", {

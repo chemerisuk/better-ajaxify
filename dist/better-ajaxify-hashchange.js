@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify-hashchange.js
- * @version 1.3.1 2013-10-09T16:29:40
+ * @version 1.3.2 2013-10-25T06:35:06
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -12,8 +12,8 @@
     var baseUrl = location.href.split(/[\?#]/)[0],
         skipHashchange = false;
 
-    DOM.on("ajaxify:load", ["detail"], function(response) {
-        if (typeof response === "object") {
+    DOM.on("ajaxify:load", ["detail", "defaultPrevented"], function(response, cancel) {
+        if (!cancel && typeof response === "object") {
             // update browser url
             if (response.url !== location.pathname) {
                 var hash = response.url;
