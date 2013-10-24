@@ -93,14 +93,14 @@
                     var key = el.data("ajaxify"),
                         content = response.html[key];
 
-                    if (content) {
+                    if (content != null) {
                         if (typeof content === "string") {
                             content = el.clone().set(content);
 
                             attachAjaxifyHandlers(content);
                         }
 
-                        el.hide().after(content.hide());
+                        el.hide().before(content.hide());
                         // display content async to show animation
                         setTimeout(function() { content.show() }, 0);
                         // postpone removing element from DOM

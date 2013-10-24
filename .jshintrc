@@ -2,6 +2,7 @@
     "browser": true,
     "onevar": true,
     "evil": true,
+    "eqnull": true,
 
     "quotmark": "double",
     "indent": 4,
