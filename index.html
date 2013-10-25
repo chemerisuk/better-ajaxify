@@ -23,13 +23,22 @@
     [data-ajaxify=content] {
         opacity: 1;
 
-        -webkit-transition: all 0.3s;
-        transition: all 0.3s;
+        -webkit-transition: opacity 0.3s ease-in;
+        transition: opacity 0.3s ease-in;
     }
 
     [data-ajaxify=content][aria-hidden=true] {
         display: table-cell; /* override display:none */
         opacity: 0;
+    }
+
+    /* style element which is going to be hidden */
+    [data-ajaxify=content] + [data-ajaxify=content] {
+        position: absolute;
+        left: 200px;
+
+        -webkit-transition-delay: 0.15s;
+        transition-delay: 0.15s;
     }
     </style>
     <!--[if IE]>
@@ -43,14 +52,14 @@
 <body>
     <nav style="width: 200px; background: yellow" class="table-cell">
         <ul>
-            <li><a href="/better-ajaxify/demo/page1.html">page 1</a></li>
-            <li><a href="/better-ajaxify/demo/page2.html">page 2</a></li>
-            <li><a href="/better-ajaxify/demo/page3.html">page 3</a></li>
+            <li><a href="/better-ajaxify/demo/page1.html">Installing</a></li>
+            <li><a href="/better-ajaxify/demo/page2.html">Frontend setup</a></li>
+            <li><a href="/better-ajaxify/demo/page3.html">Backend setup</a></li>
         </ul>
     </nav>
     <section style="padding-left: 20px;" data-ajaxify="content" class="table-cell">
         <h1>Home page</h1>
-        TAJS is a program analysis tool that can infer detailed and sound type information for JavaScript programs using abstract interpretation.
+        Ajax website engine for better-dom
     </section>
 </body>
 </html>

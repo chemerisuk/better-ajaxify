@@ -1,10 +1,6 @@
 (function(DOM, location) {
     "use strict";
 
-    var makePair = function(name, value) {
-            return encodeURIComponent(name) + "=" + encodeURIComponent(value);
-        };
-
     DOM.ready(function() {
         var // internal data structures
             historyData = {},
@@ -31,13 +27,14 @@
                             attachAjaxifyHandlers(content);
                         }
 
-                        el.hide().before(content.hide());
-                        // display content async to show animation
+                        el.before(content.hide());
+                        // show/hide content async to display animation
+                        setTimeout(function() { el.hide() }, 0);
                         setTimeout(function() { content.show() }, 0);
                         // postpone removing element from DOM
                         el._handleAjaxify = function() {
                             if (el.parent().length) {
-                                el.remove();
+                                // el.remove();
                                 // no need to listen
                                 delete el._handleAjaxify;
                             }
@@ -66,8 +63,7 @@
             return function(url, target, cancel) {
                 if (cancel) return;
 
-                var queryString = null,
-                    urlSuffix = new Date().getTime();
+                var queryString = null;
 
                 if (typeof url !== "string") {
                     if (target === DOM || !target.matches("a,form")) {
@@ -75,13 +71,13 @@
                     }
 
                     if (target.matches("a")) {
-                        url = target.get("href") + urlSuffix;
+                        url = target.get("href");
                     } else {
                         url = target.get("action");
                         queryString = target.toQueryString();
 
                         if (target.get("method") === "get") {
-                            url += (~url.indexOf("?") ? "&" : "?") + queryString + urlSuffix;
+                            url += (~url.indexOf("?") ? "&" : "?") + queryString;
                             queryString = null;
                         }
                     }
@@ -138,7 +134,7 @@
                     }
                 };
 
-                xhr.open(queryString ? "POST" : "GET", url, true);
+                xhr.open(queryString ? "POST" : "GET", queryString ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
                 xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
                 if (queryString) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -190,6 +186,10 @@
             }
         });
     });
+
+    var makePair = function(name, value) {
+        return encodeURIComponent(name) + "=" + encodeURIComponent(value);
+    };
 
     DOM.extend("form", {
         toQueryString: function() {
