@@ -20,7 +20,14 @@
         vertical-align: top;
     }
 
+    body > nav {
+        width: 200px;
+        background: yellow;
+    }
+
     [data-ajaxify=content] {
+        padding-left: 20px;
+
         opacity: 1;
         /* enable animations via CSS3 transition property */
         -webkit-transition: opacity 0.3s ease-in;
@@ -50,14 +57,14 @@
     <script src="src/better-ajaxify-pushstate.js"></script>
 </head>
 <body>
-    <nav style="width: 200px; background: yellow" class="table-cell">
+    <nav class="table-cell">
         <ul>
             <li><a href="/better-ajaxify/demo/page1.html">Installing</a></li>
             <li><a href="/better-ajaxify/demo/page2.html">Frontend setup</a></li>
             <li><a href="/better-ajaxify/demo/page3.html">Backend setup</a></li>
         </ul>
     </nav>
-    <section style="padding-left: 20px;" data-ajaxify="content" class="table-cell">
+    <section data-ajaxify="content" class="table-cell">
         <h1>Home page</h1>
         Ajax website engine for better-dom
     </section>
