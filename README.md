@@ -52,14 +52,22 @@ The library supports setting up animations on each content transition. Just use 
 [data-ajaxify=content] {
     opacity: 1;
     /* enable animations via CSS3 transition property */
-    -webkit-transition: all 0.3s;
-    transition: all 0.3s;
+    -webkit-transition: opacity 0.3s ease-in;
+    transition: opacity 0.3s ease-in;
 }
 
 [data-ajaxify=content][aria-hidden=true] {
+    display: table-cell; /* override display:none */
     opacity: 0;
-    /* you MUST override display:none with appropriate diplay property */
-    display: table-cell;
+}
+
+/* style element which is going to be hidden */
+[data-ajaxify=content] + [data-ajaxify=content] {
+    position: absolute;
+    left: 200px;
+
+    -webkit-transition-delay: 0.15s;
+    transition-delay: 0.15s;
 }
 ```
 
