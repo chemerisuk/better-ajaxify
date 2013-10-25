@@ -1,76 +1,7 @@
 (function(DOM, location) {
     "use strict";
 
-    var loadContent = (function() {
-            // lock element to prevent double clicks
-            var lockedEl, xhr, timerId;
-
-            return function(sender, url, data) {
-                if (lockedEl !== sender || sender === DOM) {
-                    lockedEl = sender;
-
-                    if (xhr) {
-                        // abort previous request if it's still in progress
-                        xhr.abort();
-
-                        clearTimeout(timerId);
-
-                        sender.fire("ajaxify:abort", xhr);
-                    }
-
-                    xhr = new XMLHttpRequest();
-                    timerId = setTimeout(function() {
-                        xhr.abort();
-
-                        sender.fire("ajaxify:timeout", xhr);
-                    }, 15000);
-
-                    xhr.onerror = function() {
-                        sender.fire("ajaxify:error", xhr);
-                    };
-
-                    xhr.onreadystatechange = function() {
-                        if (this.readyState === 4) {
-                            var status = this.status,
-                                response = this.responseText;
-
-                            // cleanup outer variables
-                            lockedEl = xhr = null;
-                            clearTimeout(timerId);
-
-                            sender.fire("ajaxify:loadend", this);
-
-                            if (status >= 200 && status < 300 || status === 304) {
-                                try {
-                                    response = JSON.parse(response);
-
-                                    // populate default values
-                                    response.url = response.url || url;
-                                    response.title = response.title || DOM.getTitle();
-                                    response.html = response.html || {};
-                                } catch (err) {
-                                    // response is a text content
-                                } finally {
-                                    sender.fire("ajaxify:load", response);
-                                }
-                            } else {
-                                sender.fire("ajaxify:error", this);
-                            }
-                        }
-                    };
-
-                    xhr.open(data ? "POST" : "GET", data ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
-                    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-                    if (data) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-                    sender.fire("ajaxify:loadstart", xhr);
-
-                    xhr.send(data);
-                }
-            };
-        }()),
-        makePair = function(name, value) {
+    var makePair = function(name, value) {
             return encodeURIComponent(name) + "=" + encodeURIComponent(value);
         };
 
@@ -128,31 +59,95 @@
             },
             containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers);
 
-        DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], function(url, target, cancel) {
-            if (cancel) return;
+        DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], (function() {
+            // lock element to prevent double clicks
+            var lockedEl, xhr, timerId;
 
-            var queryString = null;
+            return function(url, target, cancel) {
+                if (cancel) return;
 
-            if (typeof url !== "string") {
-                if (target === DOM || !target.matches("a,form")) {
-                    throw "Illegal ajaxify:fetch event with {" + String(url) + "}";
-                }
+                var queryString = null,
+                    urlSuffix = new Date().getTime();
 
-                if (target.matches("a")) {
-                    url = target.get("href");
-                } else {
-                    url = target.get("action");
-                    queryString = target.toQueryString();
+                if (typeof url !== "string") {
+                    if (target === DOM || !target.matches("a,form")) {
+                        throw "Illegal ajaxify:fetch event with {" + String(url) + "}";
+                    }
 
-                    if (target.get("method") === "get") {
-                        url += (~url.indexOf("?") ? "&" : "?") + queryString;
-                        queryString = null;
+                    if (target.matches("a")) {
+                        url = target.get("href") + urlSuffix;
+                    } else {
+                        url = target.get("action");
+                        queryString = target.toQueryString();
+
+                        if (target.get("method") === "get") {
+                            url += (~url.indexOf("?") ? "&" : "?") + queryString + urlSuffix;
+                            queryString = null;
+                        }
                     }
                 }
-            }
 
-            loadContent(target, url, queryString);
-        });
+                if (lockedEl === target && target !== DOM) return;
+
+                lockedEl = target;
+
+                if (xhr) {
+                    // abort previous request if it's still in progress
+                    xhr.abort();
+
+                    clearTimeout(timerId);
+
+                    target.fire("ajaxify:abort", xhr);
+                }
+
+                xhr = new XMLHttpRequest();
+                timerId = setTimeout(function() {
+                    xhr.abort();
+
+                    target.fire("ajaxify:timeout", xhr);
+                }, 15000);
+
+                xhr.onerror = function() { target.fire("ajaxify:error", this) };
+                xhr.onreadystatechange = function() {
+                    if (this.readyState === 4) {
+                        var status = this.status,
+                            response = this.responseText;
+
+                        // cleanup outer variables
+                        lockedEl = xhr = null;
+                        clearTimeout(timerId);
+
+                        target.fire("ajaxify:loadend", this);
+
+                        if (status >= 200 && status < 300 || status === 304) {
+                            try {
+                                response = JSON.parse(response);
+
+                                // populate default values
+                                response.url = response.url || url;
+                                response.title = response.title || DOM.getTitle();
+                                response.html = response.html || {};
+                            } catch (err) {
+                                // response is a text content
+                            } finally {
+                                target.fire("ajaxify:load", response);
+                            }
+                        } else {
+                            target.fire("ajaxify:error", this);
+                        }
+                    }
+                };
+
+                xhr.open(queryString ? "POST" : "GET", url, true);
+                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+                if (queryString) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+                target.fire("ajaxify:loadstart", xhr);
+
+                xhr.send(queryString);
+            };
+        }()));
 
         DOM.on("click a", function(link, cancel) {
             if (!cancel && !link.get("target")) return !link.fire("ajaxify:fetch");
