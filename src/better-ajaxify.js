@@ -6,24 +6,24 @@
             var lockedEl, xhr, timerId;
 
             return function(sender, url, data) {
-                var abortXHR = function() {
-                    xhr.abort();
-
-                    sender.fire("ajaxify:abort", xhr);
-                };
-
                 if (lockedEl !== sender || sender === DOM) {
                     lockedEl = sender;
 
                     if (xhr) {
                         // abort previous request if it's still in progress
+                        xhr.abort();
+
                         clearTimeout(timerId);
 
-                        abortXHR();
+                        sender.fire("ajaxify:abort", xhr);
                     }
 
                     xhr = new XMLHttpRequest();
-                    timerId = setTimeout(abortXHR, 15000);
+                    timerId = setTimeout(function() {
+                        xhr.abort();
+
+                        sender.fire("ajaxify:timeout", xhr);
+                    }, 15000);
 
                     xhr.onerror = function() {
                         sender.fire("ajaxify:error", xhr);
