@@ -158,9 +158,30 @@
             if (!cancel && !link.get("target")) return !link.fire("ajaxify:fetch");
         });
 
-        DOM.on("submit", function(form, cancel) {
-            if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch");
-        });
+        DOM.on("submit", (function() {
+            var toggleAjaxifyEvents = function(el, method, callback) {
+                var events = ["load", "error", "abort", "timeout"];
+
+                while (events.length) el[method]("ajaxify:" + events.pop(), callback);
+            };
+
+            return function(form, cancel) {
+                if (!cancel && !form.get("target")) {
+                    var submits = form.findAll("[type=submit]"),
+                        callback = function() {
+                            submits.set("disabled", false);
+
+                            toggleAjaxifyEvents(form, "off", callback);
+                        };
+
+                    submits.set("disabled", true);
+
+                    toggleAjaxifyEvents(form, "on", callback);
+
+                    return !form.fire("ajaxify:fetch");
+                }
+            };
+        }()));
 
         DOM.on("ajaxify:load", ["detail", "defaultPrevented"], function(response, cancel) {
             if (!cancel && typeof response === "object") switchContent(response);
