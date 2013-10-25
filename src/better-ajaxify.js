@@ -170,8 +170,7 @@
             if (url in historyData) {
                 switchContent(historyData[url]);
             } else {
-                // TODO: need to trigger partial reload?
-                location.reload();
+                DOM.fire("ajaxify:fetch", url);
             }
         });
     });

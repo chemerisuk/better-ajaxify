@@ -1,19 +1,17 @@
 (function(DOM, location, history) {
     "use strict";
 
-    DOM.find("html").on("ajaxify:fetch a", function(target, cancel) {
+    // skip anchor links
+    DOM.on("ajaxify:fetch a", function(target, cancel) {
         if (!cancel) {
             var url = target.get("href");
 
             if (url) {
                 url = url.split("#")[0];
 
-                // handle anchors
-                if (url !== location.href.split("#")[0]) {
-                    return true;
-                } else {
-                    location.hash = target.get("hash");
-                }
+                if (url !== location.href.split("#")[0]) return true;
+
+                location.hash = target.get("hash");
             }
 
             return false;

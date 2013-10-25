@@ -2,9 +2,9 @@
     "name": "better-ajaxify",
     "version": "1.3.2",
     "main": [
-        "better-ajaxify.js",
-        "better-ajaxify-pushstate.js",
-        "better-ajaxify-hashchange.js"
+        "dist/better-ajaxify.js",
+        "dist/better-ajaxify-pushstate.js",
+        "dist/better-ajaxify-hashchange.js"
     ],
     "ignore": [
         ".*",

@@ -80,7 +80,9 @@ describe("Custom events", function() {
 
     describe("ajaxify:history", function() {
         it("should trigger page reload if url is not in history cache", function() {
-            var locationSpy = spyOn(location, "reload");
+            var fetchSpy = jasmine.createSpy("fetch");
+
+            DOM.once("ajaxify:fetch", fetchSpy);
 
             runs(function() {
                 DOM.ready(function() {
@@ -89,7 +91,7 @@ describe("Custom events", function() {
             });
 
             waitsFor(function() {
-                return locationSpy.callCount === 1;
+                return fetchSpy.callCount === 1;
             });
         });
     });
