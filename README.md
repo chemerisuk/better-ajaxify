@@ -4,6 +4,17 @@ better-ajaxify [![Build Status](https://api.travis-ci.org/chemerisuk/better-ajax
 
 [LIVE DEMO](http://chemerisuk.github.io/better-ajaxify/)
 
+Features
+--------
+* catches both `<a>` and `<form>` element actions and sends ajax requests instead
+* respects the `target` attribute on `<a>` or `<form>`
+* [content transition animations](#animations-support) support
+* supports `pushstate` and `hashchange` strategies both
+* advanced configuration via [custom events](#custom-events)
+* programmatic page loading via `DOM.fire("ajaxify:fetch", url_to_load)`
+* prevents [multiple clicks](#multiclick-fix) on the same element
+* fastclick support
+
 Installing
 ----------
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
