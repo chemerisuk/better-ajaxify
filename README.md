@@ -94,16 +94,31 @@ For History API case It's useful to check for existance of the `X-Requested-With
 
 Custom events
 -------------
-The library exposes custom events below for advanced interaction:
+The library exposes multiple custom events for advanced interaction.
 
-* `ajaxify:fetch` is triggered every time a new content is loaded. `target` of this event is the element that is firing loading a new page (usually link or form). The event could be triggered programmatically, for example `DOM.fire("ajaxify:fetch", url)`
-* `ajaxify:loadstart` is triggered before doing an ajax call. `detail` if this event is particular instance of XMLHttpRequest object. It can be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc.
-* `ajaxify:loadend` is triggered after an every ajax call. `detail` if this event is particular instance of XMLHttpRequest object
-* `ajaxify:load` is triggered only if server returned succesfull response code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `detail` of this event may be a javascript object of raw response string
-* `ajaxify:history` is triggered when a user navigates through history in browser. `detail` of this event is target history entry url
-* `ajaxify:error` is triggered only if server returned unsuccesfull response code. `detail` if this event is particular instance of XMLHttpRequest object
-* `ajaxify:timeout` is triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds
-* `ajaxify:abort` is triggered when request was aborted.
+#### ajaxify:fetch `[URL]`
+Triggered every time a new content is loaded. `target` of this event is the element that is firing loading a new page (usually link or form). The event could be triggered programmatically, for example `DOM.fire("ajaxify:fetch", url)`
+
+#### ajaxify:loadstart `[XMLHttpRequest]`
+Triggered before doing an ajax call. `detail` if this event is particular instance of the `XMLHttpRequest` object. Can be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc.
+
+#### ajaxify:loadend `[XMLHttpRequest]`
+Triggered when an ajax request is completed (successfully or not)
+
+#### ajaxify:load `[response]`
+Triggered only if server returned succesfull response code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `detail` of this event may be a javascript object of raw response string
+
+#### ajaxify:history `[URL]`
+Triggered when a user navigates through history in browser. `detail` of this event is target history entry url
+
+#### ajaxify:error `[XMLHttpRequest]`
+Triggered only if server returned unsuccesfull response code
+
+#### ajaxify:timeout `[XMLHttpRequest]`
+Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds
+
+#### ajaxify:abort `[XMLHttpRequest]`
+Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed
 
 Browser support
 ---------------
