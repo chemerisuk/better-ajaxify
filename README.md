@@ -48,10 +48,10 @@ Custom `data-ajaxify` attribute is used to mark html elements that may be reload
 ### Multiclick fix
 The library prevents user from clicking on the same element twice. All repeated actions will be skipped.
 
-Additionally for forms all submit buttons become to be `[disabled]` until the submit request will be completed (or failed). So you could use css to style these buttons on demand (for example by adding a cool animation to indicate that request is in progress).
+Additionally for forms all submit buttons become to be `[disabled]` until the submit request is completed (or failed). So you could use css to style these buttons (for example by adding a cool spinner to indicate that request is in progress).
 
-#### Enabling animations
-The library supports setting up animations on each content transition. Just use [common approach for animations in better-dom](http://jsfiddle.net/mNBVQ/1/) to enable them. Take a look at simple example below:
+### Animations support
+Each content transition could be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/mNBVQ/1/) to enable them. Take a look at simple example below:
 
 ```css
 [data-ajaxify=content] {
