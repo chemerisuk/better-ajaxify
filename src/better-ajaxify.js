@@ -4,8 +4,6 @@
     DOM.ready(function() {
         var // internal data structures
             historyData = {},
-            // if browser supports animations use ~1s delay when removing an element from DOM
-            timeoutDelay = window.CSSKeyframesRule || !document.attachEvent ? 999 : 0,
             currentLocation = location.href.split("#")[0],
             // use late binding to determine when element could be removed from DOM
             attachAjaxifyHandlers = function(el) {
@@ -13,47 +11,55 @@
 
                 while (events.length) el.on(events.pop(), el, "_handleAjaxify");
             },
-            switchContent = function(response) {
-                var cacheEntry = {html: {}, title: DOM.getTitle(), url: currentLocation};
+            switchContent = (function() {
+                var prevContainers = [],
+                    _handleAjaxify = function() {
+                        // remove element from dom and cleanup
+                        delete this.remove()._handleAjaxify;
+                    };
 
-                containers.each(function(el, index) {
-                    var key = el.data("ajaxify"),
-                        content = response.html[key];
+                return function(response) {
+                    var cacheEntry = {html: {}, title: DOM.getTitle(), url: currentLocation};
 
-                    if (content != null) {
-                        if (typeof content === "string") {
-                            content = el.clone().set(content);
+                    while (prevContainers.length) _handleAjaxify.call(prevContainers.pop());
 
-                            attachAjaxifyHandlers(content);
+                    prevContainers = containers.map(function(el, index) {
+                        var key = el.data("ajaxify"),
+                            content = response.html[key];
+
+                        if (content != null) {
+                            if (typeof content === "string") {
+                                content = el.clone().set(content);
+
+                                attachAjaxifyHandlers(content);
+                            }
+
+                            el.before(content.hide());
+                            // show/hide content async to display animation
+                            setTimeout(function() { el.hide() }, 0);
+                            setTimeout(function() { content.show() }, 0);
+                            // postpone removing element from DOM if an animation exists
+                            if (el.style("transition-property") || el.style("animation-name")) {
+                                el._handleAjaxify = _handleAjaxify;
+                            } else {
+                                el.remove();
+                            }
+
+                            cacheEntry.html[key] = el;
+                            // update content in the internal collection
+                            containers[index] = content;
                         }
 
-                        el.before(content.hide());
-                        // show/hide content async to display animation
-                        setTimeout(function() { el.hide() }, 0);
-                        setTimeout(function() { content.show() }, 0);
-                        // postpone removing element from DOM
-                        el._handleAjaxify = function() {
-                            if (el.parent().length) {
-                                // el.remove();
-                                // no need to listen
-                                delete el._handleAjaxify;
-                            }
-                        };
-                        // use timeout as fallback when the element doesn't have animation
-                        setTimeout(el._handleAjaxify, timeoutDelay);
-
-                        cacheEntry.html[key] = el;
-                        // update content in the internal collection
-                        containers[index] = content;
-                    }
-                });
-                // update old containers to their latest state
-                historyData[currentLocation] = cacheEntry;
-                // update current location variable
-                currentLocation = response.url;
-                // update page title
-                DOM.setTitle(response.title);
-            },
+                        return el;
+                    });
+                    // update old containers to their latest state
+                    historyData[currentLocation] = cacheEntry;
+                    // update current location variable
+                    currentLocation = response.url;
+                    // update page title
+                    DOM.setTitle(response.title);
+                };
+            }()),
             containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers);
 
         DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], (function() {
