@@ -20,7 +20,7 @@ describe("switch content", function() {
         waitsFor(function() {
             var el = DOM.find("[data-ajaxify=test]");
 
-            return DOM.getTitle() === "switch" && el.get() === "test updated";
+            return DOM.get("title") === "switch" && el.get() === "test updated";
         });
     });
 

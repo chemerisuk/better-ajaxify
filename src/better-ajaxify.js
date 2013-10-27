@@ -19,7 +19,7 @@
                     };
 
                 return function(response) {
-                    var cacheEntry = {html: {}, title: DOM.getTitle(), url: currentLocation};
+                    var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
 
                     while (prevContainers.length) _handleAjaxify.call(prevContainers.pop());
 
@@ -29,7 +29,7 @@
 
                         if (content != null) {
                             if (typeof content === "string") {
-                                content = el.clone().set(content);
+                                content = el.clone(false).set(content);
 
                                 attachAjaxifyHandlers(content);
                             }
@@ -39,7 +39,8 @@
                             setTimeout(function() { el.hide() }, 0);
                             setTimeout(function() { content.show() }, 0);
                             // postpone removing element from DOM if an animation exists
-                            if (el.style("transition-property") || el.style("animation-name")) {
+                            if (parseFloat(el.style("transition-duration")) ||
+                                parseFloat(el.style("animation-duration"))) {
                                 el._handleAjaxify = _handleAjaxify;
                             } else {
                                 el.remove();
@@ -57,7 +58,7 @@
                     // update current location variable
                     currentLocation = response.url;
                     // update page title
-                    DOM.setTitle(response.title);
+                    DOM.set("title", response.title);
                 };
             }()),
             containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers);
@@ -127,7 +128,7 @@
 
                                 // populate default values
                                 response.url = response.url || url;
-                                response.title = response.title || DOM.getTitle();
+                                response.title = response.title || DOM.get("title");
                                 response.html = response.html || {};
                             } catch (err) {
                                 // response is a text content

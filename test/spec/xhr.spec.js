@@ -111,7 +111,7 @@ describe("XMLHttpRequest", function() {
             sendSpy.andCallFake(function() {
                 DOM.once("ajaxify:load", ["detail"], spy);
 
-                DOM.setTitle("ajaxify:load");
+                DOM.set("title", "ajaxify:load");
 
                 var response = {};
 

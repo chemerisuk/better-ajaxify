@@ -39,7 +39,7 @@
             DOM.fire("ajaxify:history", url);
         };
         // update initial state
-        history.replaceState(true, DOM.getTitle());
+        history.replaceState(true, DOM.get("title"));
     } else {
         // when url should be changed don't start request in old browsers
         DOM.on("ajaxify:loadstart", function(sender, defaultPrevented) {
