@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify-pushstate.js
- * @version 1.3.2 2013-10-25T06:35:06
+ * @version 1.4.0 2013-10-27T20:54:32
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -9,19 +9,17 @@
 (function(DOM, location, history) {
     "use strict";
 
-    DOM.find("html").on("ajaxify:fetch a", function(target, cancel) {
+    // skip anchor links
+    DOM.on("ajaxify:fetch a", function(target, cancel) {
         if (!cancel) {
             var url = target.get("href");
 
             if (url) {
                 url = url.split("#")[0];
 
-                // handle anchors
-                if (url !== location.href.split("#")[0]) {
-                    return true;
-                } else {
-                    location.hash = target.get("hash");
-                }
+                if (url !== location.href.split("#")[0]) return true;
+
+                location.hash = target.get("hash");
             }
 
             return false;
@@ -49,7 +47,7 @@
             DOM.fire("ajaxify:history", url);
         };
         // update initial state
-        history.replaceState(true, DOM.getTitle());
+        history.replaceState(true, DOM.get("title"));
     } else {
         // when url should be changed don't start request in old browsers
         DOM.on("ajaxify:loadstart", function(sender, defaultPrevented) {
