@@ -41,8 +41,9 @@
                             setTimeout(function() { el.hide() }, 0);
                             setTimeout(function() { content.show() }, 0);
                             // postpone removing element from DOM if an animation exists
-                            if (parseFloat(el.style("transition-duration")) ||
-                                parseFloat(el.style("animation-duration"))) {
+                            if (!el.matches(":hidden") && (
+                                parseFloat(el.style("transition-duration")) ||
+                                parseFloat(el.style("animation-duration")))) {
                                 el._handleAjaxify = _handleAjaxify;
                             } else {
                                 el.remove();
