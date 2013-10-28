@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify-pushstate.js
- * @version 1.4.0 2013-10-27T20:54:32
+ * @version 1.4.1 2013-10-28T19:40:23
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT

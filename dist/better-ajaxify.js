@@ -1,6 +1,6 @@
 /**
  * @file better-ajaxify.js
- * @version 1.4.0 2013-10-27T20:54:32
+ * @version 1.4.1 2013-10-28T19:40:23
  * @overview SEO-friendly ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -19,8 +19,9 @@
 
                 while (events.length) el.on(events.pop(), el, "_handleAjaxify");
             },
+            containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers),
             switchContent = (function() {
-                var prevContainers = [],
+                var prevContainers = {},
                     _handleAjaxify = function() {
                         // remove element from dom and cleanup
                         delete this.remove()._handleAjaxify;
@@ -29,11 +30,12 @@
                 return function(response) {
                     var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
 
-                    while (prevContainers.length) _handleAjaxify.call(prevContainers.pop());
-
-                    prevContainers = containers.map(function(el, index) {
+                    containers.each(function(el, index) {
                         var key = el.data("ajaxify"),
                             content = response.html[key];
+
+                        // make sure that previous element is hidden
+                        if (key in prevContainers) _handleAjaxify.call(prevContainers[key]);
 
                         if (content != null) {
                             if (typeof content === "string") {
@@ -47,8 +49,9 @@
                             setTimeout(function() { el.hide() }, 0);
                             setTimeout(function() { content.show() }, 0);
                             // postpone removing element from DOM if an animation exists
-                            if (parseFloat(el.style("transition-duration")) ||
-                                parseFloat(el.style("animation-duration"))) {
+                            if (!el.matches(":hidden") && (
+                                parseFloat(el.style("transition-duration")) ||
+                                parseFloat(el.style("animation-duration")))) {
                                 el._handleAjaxify = _handleAjaxify;
                             } else {
                                 el.remove();
@@ -58,8 +61,6 @@
                             // update content in the internal collection
                             containers[index] = content;
                         }
-
-                        return el;
                     });
                     // update old containers to their latest state
                     historyData[currentLocation] = cacheEntry;
@@ -68,8 +69,7 @@
                     // update page title
                     DOM.set("title", response.title);
                 };
-            }()),
-            containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers);
+            }());
 
         DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], (function() {
             // lock element to prevent double clicks
