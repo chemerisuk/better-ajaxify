@@ -11,8 +11,9 @@
 
                 while (events.length) el.on(events.pop(), el, "_handleAjaxify");
             },
+            containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers),
             switchContent = (function() {
-                var prevContainers = [],
+                var prevContainers = {},
                     _handleAjaxify = function() {
                         // remove element from dom and cleanup
                         delete this.remove()._handleAjaxify;
@@ -21,11 +22,12 @@
                 return function(response) {
                     var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
 
-                    while (prevContainers.length) _handleAjaxify.call(prevContainers.pop());
-
-                    prevContainers = containers.map(function(el, index) {
+                    containers.each(function(el, index) {
                         var key = el.data("ajaxify"),
                             content = response.html[key];
+
+                        // make sure that previous element is hidden
+                        if (key in prevContainers) _handleAjaxify.call(prevContainers[key]);
 
                         if (content != null) {
                             if (typeof content === "string") {
@@ -50,8 +52,6 @@
                             // update content in the internal collection
                             containers[index] = content;
                         }
-
-                        return el;
                     });
                     // update old containers to their latest state
                     historyData[currentLocation] = cacheEntry;
@@ -60,8 +60,7 @@
                     // update page title
                     DOM.set("title", response.title);
                 };
-            }()),
-            containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers);
+            }());
 
         DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], (function() {
             // lock element to prevent double clicks
