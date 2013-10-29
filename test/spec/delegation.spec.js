@@ -15,42 +15,42 @@ describe("delegation", function() {
 
     describe("links", function() {
         it("should skip clicks on a element with target attribute", function() {
-            var spy2 = jasmine.createSpy("touchstart").andReturn(false);
+            var spy2 = jasmine.createSpy("click").andReturn(false);
 
-            DOM.on("touchstart", spy2);
+            DOM.on("click", spy2);
 
             sandbox.set("<a target=_blank>123</a>");
-            sandbox.find("a").fire("touchstart");
+            sandbox.find("a").fire("click");
             expect(spy).not.toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
         });
 
         it("should skip links if default action was prevented", function() {
-            var spy2 = jasmine.createSpy("touchstart").andReturn(false);
+            var spy2 = jasmine.createSpy("click").andReturn(false);
 
-            DOM.on("touchstart", spy2);
+            DOM.on("click", spy2);
 
-            sandbox.set("<a href='test' ontouchstart='return false'>123</a>");
-            sandbox.find("a").fire("touchstart");
+            sandbox.set("<a href='test' onclick='return false'>123</a>");
+            sandbox.find("a").fire("click");
             expect(spy).not.toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
         });
 
         it("should allow links from a different domain", function() {
-            var spy2 = jasmine.createSpy("touchstart").andReturn(false);
+            var spy2 = jasmine.createSpy("click").andReturn(false);
 
-            DOM.on("touchstart", spy2);
+            DOM.on("click", spy2);
 
             sandbox.set("<a href='http://google.com'>123</a>");
-            sandbox.find("a").fire("touchstart");
+            sandbox.find("a").fire("click");
             expect(spy).toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
         });
 
         it("should skip links without href", function() {
-            var spy2 = jasmine.createSpy("touchstart").andReturn(false);
+            var spy2 = jasmine.createSpy("click").andReturn(false);
 
-            DOM.on("touchstart", spy2);
+            DOM.on("click", spy2);
 
             // sandbox.set("<a href='#test'>123</a>");
             // sandbox.find("a").fire("click");
@@ -58,33 +58,33 @@ describe("delegation", function() {
             // expect(spy2).toHaveBeenCalled();
 
             sandbox.set("<a>123</a>");
-            sandbox.find("a").fire("touchstart");
+            sandbox.find("a").fire("click");
             expect(spy).not.toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
         });
 
         it("should handle click on elements with internal tree", function() {
-            var spy2 = jasmine.createSpy("touchstart").andReturn(false);
+            var spy2 = jasmine.createSpy("click").andReturn(false);
 
-            DOM.on("touchstart", spy2);
+            DOM.on("click", spy2);
 
             sandbox.set("<a href='test'><i>icon</i>123</a>");
-            sandbox.find("i").fire("touchstart");
+            sandbox.find("i").fire("click");
             expect(spy).toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
         });
 
         it("should prevent default clicks and send ajax-request instead", function() {
-            var spy2 = jasmine.createSpy("touchstart").andCallFake(function(defaultPrevented) {
+            var spy2 = jasmine.createSpy("click").andCallFake(function(defaultPrevented) {
                 expect(defaultPrevented).toBe(true);
                 // cancel click anyway
                 return false;
             });
 
-            DOM.on("touchstart", ["defaultPrevented"], spy2);
+            DOM.on("click", ["defaultPrevented"], spy2);
 
             sandbox.set("<a href='test'>123</a>");
-            sandbox.find("a").fire("touchstart");
+            sandbox.find("a").fire("click");
             expect(spy).toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
         });
@@ -149,12 +149,12 @@ describe("delegation", function() {
     });
 
     it("should not allow to send request from the same request twice except it's DOM", function() {
-        var spy2 = jasmine.createSpy("touchstart").andReturn(false);
+        var spy2 = jasmine.createSpy("click").andReturn(false);
 
-        DOM.on("touchstart", spy2);
+        DOM.on("click", spy2);
 
         sandbox.set("<a href='abc'>123</a>");
-        sandbox.find("a").fire("touchstart").fire("touchstart");
+        sandbox.find("a").fire("click").fire("click");
         expect(spy.callCount).toBe(1);
 
         spy.reset();

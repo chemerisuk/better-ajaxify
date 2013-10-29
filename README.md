@@ -13,7 +13,6 @@ Features
 * advanced configuration via [custom events](#custom-events)
 * programmatic page loading via `DOM.fire("ajaxify:fetch", url_to_load)`
 * prevents [multiple clicks](#multiclick-fix) on the same element
-* fastclick support
 
 Installing
 ----------

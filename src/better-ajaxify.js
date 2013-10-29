@@ -152,7 +152,7 @@
             };
         }()));
 
-        DOM.on("ontouchstart" in document.documentElement ? "touchstart a" : "click a", function(link, cancel) {
+        DOM.on("click a", function(link, cancel) {
             if (!cancel && !link.get("target")) return !link.fire("ajaxify:fetch");
         });
 
