@@ -154,7 +154,7 @@
         }()));
 
         DOM.on("click a", function(link, cancel) {
-            if (!cancel && !link.get("target")) return !link.fire("ajaxify:fetch");
+            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
         });
 
         DOM.on("submit", (function() {

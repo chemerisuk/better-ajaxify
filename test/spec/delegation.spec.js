@@ -63,6 +63,12 @@ describe("delegation", function() {
             expect(spy2).toHaveBeenCalled();
         });
 
+        it("should skip non-http(s) links", function() {
+            sandbox.set("<a href='mailto:support@google.com'>123</a>");
+            sandbox.find("a").fire("click");
+            expect(spy).not.toHaveBeenCalled();
+        });
+
         it("should handle click on elements with internal tree", function() {
             var spy2 = jasmine.createSpy("click").andReturn(false);
 
