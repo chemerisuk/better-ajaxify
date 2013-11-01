@@ -122,21 +122,22 @@
 
                         target.fire("ajaxify:loadend", this);
 
-                        if (status >= 200 && status < 300 || status === 304) {
-                            try {
-                                response = JSON.parse(response);
+                        try {
+                            response = JSON.parse(response);
+                            // populate default values
+                            response.url = response.url || url;
+                            response.title = response.title || DOM.get("title");
+                            response.html = response.html || {};
+                        } catch (err) {
+                            // response is a text content
+                        } finally {
+                            if (typeof response === "object") switchContent(response);
 
-                                // populate default values
-                                response.url = response.url || url;
-                                response.title = response.title || DOM.get("title");
-                                response.html = response.html || {};
-                            } catch (err) {
-                                // response is a text content
-                            } finally {
+                            if (status >= 200 && status < 300 || status === 304) {
                                 target.fire("ajaxify:load", response);
+                            } else {
+                                target.fire("ajaxify:error", this);
                             }
-                        } else {
-                            target.fire("ajaxify:error", this);
                         }
                     }
                 };
@@ -180,10 +181,6 @@
                 }
             };
         }()));
-
-        DOM.on("ajaxify:load", ["detail", "defaultPrevented"], function(response, cancel) {
-            if (!cancel && typeof response === "object") switchContent(response);
-        });
 
         DOM.on("ajaxify:history", ["detail"], function(url) {
             if (url in historyData) {
