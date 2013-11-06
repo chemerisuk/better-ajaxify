@@ -155,17 +155,21 @@ describe("delegation", function() {
     });
 
     it("should not allow to send request from the same request twice except it's DOM", function() {
-        var spy2 = jasmine.createSpy("click").andReturn(false);
+        sandbox.set("<a href='abc'>123</a>");
+
+        var link = sandbox.find("a"),
+            spy2 = jasmine.createSpy("click").andReturn(false);
 
         DOM.on("click", spy2);
 
-        sandbox.set("<a href='abc'>123</a>");
-        sandbox.find("a").fire("click").fire("click");
+        link.fire("click");
+        link.fire("click");
         expect(spy.callCount).toBe(1);
 
         spy.reset();
 
-        DOM.fire("ajaxify:fetch", "abc").fire("ajaxify:fetch", "abc");
+        DOM.fire("ajaxify:fetch", "abc");
+        DOM.fire("ajaxify:fetch", "abc");
         expect(spy.callCount).toBe(2);
     });
 });
