@@ -96,11 +96,14 @@
 
                 if (xhr) {
                     // abort previous request if it's still in progress
-                    xhr.abort();
+                    // skip cases when refresh was triggered programatically
+                    if (target !== DOM) {
+                        xhr.abort();
+
+                        target.fire("ajaxify:abort", xhr);
+                    }
 
                     clearTimeout(timerId);
-
-                    target.fire("ajaxify:abort", xhr);
                 }
 
                 xhr = new XMLHttpRequest();
