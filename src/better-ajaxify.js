@@ -61,7 +61,7 @@
 
         DOM.on("ajaxify:fetch", (function() {
             // lock element to prevent double clicks
-            var lockedEl, xhr, timerId,
+            var lockedEl, xhr,
                 createXHR = function(target, url, callback) {
                     if (xhr) {
                         // abort previous request if it's still in progress but
@@ -71,18 +71,11 @@
 
                             lockedEl.fire("ajaxify:abort", xhr);
                         }
-
-                        clearTimeout(timerId);
                     }
 
                     var resultXHR = new XMLHttpRequest();
 
-                    timerId = setTimeout(function() {
-                        resultXHR.abort();
-
-                        target.fire("ajaxify:timeout", resultXHR);
-                    }, 15000);
-
+                    resultXHR.ontimeout = function() { target.fire("ajaxify:timeout", this) };
                     resultXHR.onerror = function() { target.fire("ajaxify:error", this) };
                     resultXHR.onreadystatechange = function() {
                         if (this.readyState === 4) {
@@ -91,7 +84,6 @@
 
                             // cleanup outer variables
                             lockedEl = xhr = null;
-                            clearTimeout(timerId);
 
                             target.fire("ajaxify:loadend", this);
 
@@ -151,6 +143,7 @@
 
                 xhr = createXHR(target, url, callback);
                 xhr.open(queryString ? "POST" : "GET", queryString ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
+                xhr.timeout = 15000;
                 xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
                 if (queryString) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");

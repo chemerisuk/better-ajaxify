@@ -205,14 +205,14 @@
 
     DOM.extend("form", {
         toQueryString: function() {
-            return this.findAll("[name]").reduce(function(memo, el) {
+            return this.get("elements").reduce(function(memo, el) {
                 var name = el.get("name");
 
                 if (name) { // don't include form fields without names
                     switch(el.get("type")) {
                     case "select-one":
                     case "select-multiple":
-                        el.children().each(function(option) {
+                        el.get("options").each(function(option) {
                             if (option.get("selected")) {
                                 memo.push(makePair(name, option.get()));
                             }
