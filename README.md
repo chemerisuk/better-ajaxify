@@ -6,10 +6,10 @@ better-ajaxify [![Build Status](https://api.travis-ci.org/chemerisuk/better-ajax
 
 Features
 --------
-* catches both `<a>` and `<form>` element actions and sends ajax requests instead
+* handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
 * [content transition animations](#animations-support) support
-* supports `pushstate` and `hashchange` strategies both
+* supports `pushstate` and `hashchange` to update address bar
 * advanced configuration via [custom events](#custom-events)
 * programmatic page loading via `DOM.fire("ajaxify:fetch", url_to_load)`
 * prevents [multiple clicks](#multiclick-fix) on the same element
@@ -41,7 +41,7 @@ Then append the following html elements on your page:
 </html>
 ```
 
-Depending on requirements you also need to include `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js`. The first file implements havigation via [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) and this is preferred option for a website, because it's SEO-friendly. The second uses hash to indicate current state, so it could be useful for web applications.
+Depending on requirements you usually have to include `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js`. The first script implements navigation via [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history), the second uses __hashchange__ to indicate current state.
 
 Frontend setup
 --------------
@@ -106,20 +106,20 @@ Custom events
 -------------
 The library exposes multiple custom events for advanced interaction.
 
-#### ajaxify:fetch `[URL]`
-Triggered every time a new content is loaded. `target` of this event is the element that is firing loading a new page (usually link or form). The event could be triggered programmatically, for example `DOM.fire("ajaxify:fetch", url)`
+#### ajaxify:fetch `[URL|callback(response)]`
+Triggered every time a new content is loaded. `target` of this event is the element that is firing loading a new page (usually link or form). The event could be triggered programmatically, for example `DOM.fire("ajaxify:fetch", url)`. It also supports function callback instead of url.
 
 #### ajaxify:loadstart `[XMLHttpRequest]`
-Triggered before doing an ajax call. `detail` if this event is particular instance of the `XMLHttpRequest` object. Can be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc.
+Triggered before doing an ajax call. `data` if this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent.
 
 #### ajaxify:loadend `[XMLHttpRequest]`
-Triggered when an ajax request is completed (successfully or not)
+Triggered when an ajaxify request is completed (successfully or not)
 
 #### ajaxify:load `[response]`
-Triggered only if server returned succesfull response code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `detail` of this event may be a javascript object of raw response string
+Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string
 
 #### ajaxify:history `[URL]`
-Triggered when a user navigates through history in browser. `detail` of this event is target history entry url
+Triggered when a user navigates through history in browser. `data` of this event is target history entry url
 
 #### ajaxify:error `[XMLHttpRequest]`
 Triggered only if server returned unsuccesfull response code
