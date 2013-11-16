@@ -61,17 +61,22 @@
 
         DOM.on("ajaxify:fetch", (function() {
             // lock element to prevent double clicks
-            var lockedEl, sharedXHR,
+            var lockedEl,
+                sharedXHR = new XMLHttpRequest(),
                 createXHR = function(target, url, callback) {
-                    if (sharedXHR && callback === switchContent) {
+                    var resultXHR = sharedXHR;
+
+                    if (callback === switchContent) {
                         // abort previous request if it's still in progress but
                         // skip cases when refresh was triggered programatically
                         sharedXHR.abort();
 
-                        lockedEl.fire("ajaxify:abort", sharedXHR);
-                    }
+                        if (lockedEl) lockedEl.fire("ajaxify:abort", sharedXHR);
 
-                    var resultXHR = new XMLHttpRequest();
+                        lockedEl = target;
+                    } else {
+                        resultXHR = new XMLHttpRequest();
+                    }
 
                     resultXHR.ontimeout = function() { target.fire("ajaxify:timeout", this) };
                     resultXHR.onerror = function() { target.fire("ajaxify:error", this) };
@@ -81,7 +86,7 @@
                                 response = this.responseText;
 
                             // cleanup outer variables
-                            if (callback === switchContent) lockedEl = sharedXHR = null;
+                            if (callback === switchContent) lockedEl = null;
 
                             target.fire("ajaxify:loadend", this);
 
@@ -104,11 +109,6 @@
                             }
                         }
                     };
-
-                    if (callback === switchContent) {
-                        sharedXHR = resultXHR;
-                        lockedEl = target;
-                    }
 
                     return resultXHR;
                 };
