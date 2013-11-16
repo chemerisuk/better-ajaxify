@@ -61,16 +61,14 @@
 
         DOM.on("ajaxify:fetch", (function() {
             // lock element to prevent double clicks
-            var lockedEl, xhr,
+            var lockedEl, sharedXHR,
                 createXHR = function(target, url, callback) {
-                    if (xhr) {
+                    if (sharedXHR && callback === switchContent) {
                         // abort previous request if it's still in progress but
                         // skip cases when refresh was triggered programatically
-                        if (lockedEl !== DOM) {
-                            xhr.abort();
+                        sharedXHR.abort();
 
-                            lockedEl.fire("ajaxify:abort", xhr);
-                        }
+                        lockedEl.fire("ajaxify:abort", sharedXHR);
                     }
 
                     var resultXHR = new XMLHttpRequest();
@@ -83,7 +81,7 @@
                                 response = this.responseText;
 
                             // cleanup outer variables
-                            lockedEl = xhr = null;
+                            if (callback === switchContent) lockedEl = sharedXHR = null;
 
                             target.fire("ajaxify:loadend", this);
 
@@ -107,6 +105,11 @@
                         }
                     };
 
+                    if (callback === switchContent) {
+                        sharedXHR = resultXHR;
+                        lockedEl = target;
+                    }
+
                     return resultXHR;
                 };
 
@@ -121,7 +124,7 @@
 
                 var url = typeof data === "string" ? data : null,
                     callback = typeof data === "function" ? data : switchContent,
-                    queryString = null;
+                    queryString = null, xhr;
 
                 if (!url) {
                     if (target === DOM || !target.matches("a,form")) {
@@ -148,9 +151,7 @@
 
                 if (queryString) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-                (lockedEl = target).fire("ajaxify:loadstart", xhr);
-
-                xhr.send(queryString);
+                if (target.fire("ajaxify:loadstart", xhr)) xhr.send(queryString);
             };
         }()));
 
