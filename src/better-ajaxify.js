@@ -16,9 +16,9 @@
                     _handleAjaxify = function() { delete this.remove()._handleAjaxify };
 
                 return function(response) {
-                    var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
-
                     if (typeof response !== "object") return;
+
+                    var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
 
                     containers.each(function(el, index) {
                         var key = el.data("ajaxify"),
@@ -61,7 +61,62 @@
 
         DOM.on("ajaxify:fetch", (function() {
             // lock element to prevent double clicks
-            var lockedEl, xhr, timerId;
+            var lockedEl, xhr, timerId,
+                createXHR = function(target, url, callback) {
+                    if (xhr) {
+                        // abort previous request if it's still in progress but
+                        // skip cases when refresh was triggered programatically
+                        if (lockedEl !== DOM) {
+                            xhr.abort();
+
+                            lockedEl.fire("ajaxify:abort", xhr);
+                        }
+
+                        clearTimeout(timerId);
+                    }
+
+                    var resultXHR = new XMLHttpRequest();
+
+                    timerId = setTimeout(function() {
+                        resultXHR.abort();
+
+                        target.fire("ajaxify:timeout", resultXHR);
+                    }, 15000);
+
+                    resultXHR.onerror = function() { target.fire("ajaxify:error", this) };
+                    resultXHR.onreadystatechange = function() {
+                        if (this.readyState === 4) {
+                            var status = this.status,
+                                response = this.responseText;
+
+                            // cleanup outer variables
+                            lockedEl = xhr = null;
+                            clearTimeout(timerId);
+
+                            target.fire("ajaxify:loadend", this);
+
+                            try {
+                                response = JSON.parse(response);
+                                // populate default values
+                                response.url = response.url || url;
+                                response.title = response.title || DOM.get("title");
+                                response.html = response.html || {};
+                            } catch (err) {
+                                // response is a text content
+                            } finally {
+                                callback(response);
+
+                                if (status >= 200 && status < 300 || status === 304) {
+                                    target.fire("ajaxify:load", response);
+                                } else {
+                                    target.fire("ajaxify:error", this);
+                                }
+                            }
+                        }
+                    };
+
+                    return resultXHR;
+                };
 
             return function(data, target, cancel) {
                 if (arguments.length === 2) {
@@ -94,65 +149,13 @@
                     }
                 }
 
-                lockedEl = target;
-
-                if (xhr) {
-                    // abort previous request if it's still in progress
-                    // skip cases when refresh was triggered programatically
-                    if (target !== DOM) {
-                        xhr.abort();
-
-                        target.fire("ajaxify:abort", xhr);
-                    }
-
-                    clearTimeout(timerId);
-                }
-
-                xhr = new XMLHttpRequest();
-                timerId = setTimeout(function() {
-                    xhr.abort();
-
-                    target.fire("ajaxify:timeout", xhr);
-                }, 15000);
-
-                xhr.onerror = function() { target.fire("ajaxify:error", this) };
-                xhr.onreadystatechange = function() {
-                    if (this.readyState === 4) {
-                        var status = this.status,
-                            response = this.responseText;
-
-                        // cleanup outer variables
-                        lockedEl = xhr = null;
-                        clearTimeout(timerId);
-
-                        target.fire("ajaxify:loadend", this);
-
-                        try {
-                            response = JSON.parse(response);
-                            // populate default values
-                            response.url = response.url || url;
-                            response.title = response.title || DOM.get("title");
-                            response.html = response.html || {};
-                        } catch (err) {
-                            // response is a text content
-                        } finally {
-                            callback(response);
-
-                            if (status >= 200 && status < 300 || status === 304) {
-                                target.fire("ajaxify:load", response);
-                            } else {
-                                target.fire("ajaxify:error", this);
-                            }
-                        }
-                    }
-                };
-
+                xhr = createXHR(target, url, callback);
                 xhr.open(queryString ? "POST" : "GET", queryString ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
                 xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
                 if (queryString) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-                target.fire("ajaxify:loadstart", xhr);
+                (lockedEl = target).fire("ajaxify:loadstart", xhr);
 
                 xhr.send(queryString);
             };
