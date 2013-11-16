@@ -7,17 +7,13 @@
             currentLocation = location.href.split("#")[0],
             // use late binding to determine when element could be removed from DOM
             attachAjaxifyHandlers = function(el) {
-                var events = ["animationend", "transitionend", "webkitAnimationEnd", "webkitTransitionEnd"];
-
-                while (events.length) el.on(events.pop(), el, "_handleAjaxify");
+                el.on(["animationend", "transitionend"], el, "_handleAjaxify");
             },
             containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers),
             switchContent = (function() {
                 var prevContainers = {},
-                    _handleAjaxify = function() {
-                        // remove element from dom and cleanup
-                        delete this.remove()._handleAjaxify;
-                    };
+                    // remove element from dom and cleanup
+                    _handleAjaxify = function() { delete this.remove()._handleAjaxify };
 
                 return function(response) {
                     var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
@@ -63,7 +59,7 @@
                 };
             }());
 
-        DOM.on("ajaxify:fetch", ["detail", "target", "defaultPrevented"], (function() {
+        DOM.on("ajaxify:fetch", (function() {
             // lock element to prevent double clicks
             var lockedEl, xhr, timerId;
 
@@ -157,35 +153,14 @@
         }()));
 
         DOM.on("click a", function(link, cancel) {
-            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
+            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch", true);
         });
 
-        DOM.on("submit", (function() {
-            var toggleAjaxifyEvents = function(el, method, callback) {
-                var events = ["load", "error", "abort", "timeout"];
+        DOM.on("submit", function(form, cancel) {
+            if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch", true);
+        });
 
-                while (events.length) el[method]("ajaxify:" + events.pop(), callback);
-            };
-
-            return function(form, cancel) {
-                if (!cancel && !form.get("target")) {
-                    var submits = form.findAll("[type=submit]"),
-                        callback = function() {
-                            submits.set("disabled", false);
-
-                            toggleAjaxifyEvents(form, "off", callback);
-                        };
-
-                    submits.set("disabled", true);
-
-                    toggleAjaxifyEvents(form, "on", callback);
-
-                    return !form.fire("ajaxify:fetch");
-                }
-            };
-        }()));
-
-        DOM.on("ajaxify:history", ["detail"], function(url) {
+        DOM.on("ajaxify:history", function(url) {
             if (url in historyData) {
                 switchContent(historyData[url]);
             } else {
@@ -199,6 +174,17 @@
     };
 
     DOM.extend("form", {
+        constructor: function() {
+            var submits = this.findAll("[type=submit]");
+
+            this.on("ajaxify:fetch", function() {
+                submits.set("disabled", true);
+            });
+
+            this.on(["ajaxify:load", "ajaxify:error", "ajaxify:abort", "ajaxify:timeout"], function() {
+                submits.set("disabled", false);
+            });
+        },
         toQueryString: function() {
             return this.findAll("[name]").reduce(function(memo, el) {
                 var name = el.get("name");

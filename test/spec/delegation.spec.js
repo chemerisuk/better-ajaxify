@@ -87,7 +87,7 @@ describe("delegation", function() {
                 return false;
             });
 
-            DOM.on("click", ["defaultPrevented"], spy2);
+            DOM.on("click", spy2, ["defaultPrevented"]);
 
             sandbox.set("<a href='test'>123</a>");
             sandbox.find("a").fire("click");
@@ -129,7 +129,7 @@ describe("delegation", function() {
 
             sandbox.append(form);
 
-            DOM.on("submit", ["defaultPrevented"], spy2);
+            DOM.on("submit", spy2, ["defaultPrevented"]);
             form.fire("submit");
 
             expect(spy).toHaveBeenCalled();
@@ -146,7 +146,7 @@ describe("delegation", function() {
 
             sandbox.append(form);
 
-            DOM.on("submit", ["defaultPrevented"], spy2);
+            DOM.on("submit", spy2, ["defaultPrevented"]);
             form.fire("submit");
 
             expect(spy).toHaveBeenCalled();

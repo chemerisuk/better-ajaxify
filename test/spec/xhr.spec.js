@@ -32,7 +32,7 @@ describe("XMLHttpRequest", function() {
         it("should trigger ajaxify:error on XHR error", function() {
             var spy = jasmine.createSpy("error");
 
-            DOM.once("ajaxify:error", ["detail"], spy);
+            DOM.once("ajaxify:error", spy);
 
             sendSpy.andCallFake(function() {
                 // trigger error
@@ -54,7 +54,7 @@ describe("XMLHttpRequest", function() {
                 };
 
             sendSpy.andCallFake(function() {
-                DOM.on("ajaxify:error", ["detail"], spy);
+                DOM.on("ajaxify:error", spy);
 
                 testStatus(this, 500);
                 testStatus(this, 400);
@@ -75,10 +75,14 @@ describe("XMLHttpRequest", function() {
             var spy = jasmine.createSpy("error");
 
             sendSpy.andCallFake(function() {
-                DOM.on("ajaxify:load", ["detail"], spy);
+                spy.andCallFake(function(detail) {
+                    expect(detail).toEqual("<a>test</a>");
+                });
+
+                DOM.on("ajaxify:load", spy);
 
                 this.onreadystatechange.call({readyState: 4, status: 200, responseText: "<a>test</a>"});
-                expect(spy).toHaveBeenCalledWith("<a>test</a>");
+                expect(spy).toHaveBeenCalled();
                 spy.reset();
 
                 var response = {
@@ -109,7 +113,7 @@ describe("XMLHttpRequest", function() {
             var spy = jasmine.createSpy("error");
 
             sendSpy.andCallFake(function() {
-                DOM.once("ajaxify:load", ["detail"], spy);
+                DOM.once("ajaxify:load", spy);
 
                 DOM.set("title", "ajaxify:load");
 
@@ -136,7 +140,7 @@ describe("XMLHttpRequest", function() {
     it("should process XHR when it's done", function() {
         var spy = jasmine.createSpy("loadend");
 
-        DOM.once("ajaxify:loadend", ["detail"], spy);
+        DOM.once("ajaxify:loadend", spy);
 
         sendSpy.andCallFake(function() {
             // request is not completed yet
