@@ -28,6 +28,42 @@ describe("XMLHttpRequest", function() {
         expect(sendSpy).toHaveBeenCalledWith(null);
     });
 
+    it("should allow to trigger it on element manually", function() {
+        var link = DOM.mock("a[href=00000]"),
+            form = DOM.mock("form[action=99999 method=post]>input[name=a value=b]"),
+            openSpy = spyOn(XMLHttpRequest.prototype, "open"),
+            setRequestHeaderSpy = spyOn(XMLHttpRequest.prototype, "setRequestHeader");
+
+        DOM.find("body").append(link, form);
+
+
+        openSpy.andCallFake(function(type, url) {
+            expect(type).toBe("GET");
+            expect(url.indexOf("00000") >= 0).toBe(true);
+            expect(this.onerror).toBeDefined();
+        });
+
+        link.fire("ajaxify:fetch");
+        expect(openSpy).toHaveBeenCalled();
+        expect(setRequestHeaderSpy).toHaveBeenCalledWith("X-Requested-With", "XMLHttpRequest");
+        expect(sendSpy).toHaveBeenCalledWith(null);
+
+        link.remove();
+
+        openSpy.andCallFake(function(type, url) {
+            expect(type).toBe("POST");
+            expect(url.indexOf("99999") >= 0).toBe(true);
+            expect(this.onerror).toBeDefined();
+        });
+
+        form.fire("ajaxify:fetch");
+        expect(openSpy).toHaveBeenCalled();
+        expect(setRequestHeaderSpy).toHaveBeenCalledWith("Content-Type", "application/x-www-form-urlencoded");
+        expect(sendSpy).toHaveBeenCalledWith("a=b");
+
+        form.remove();
+    });
+
     describe("ajaxify:error", function() {
         it("should trigger ajaxify:error on XHR error", function() {
             var spy = jasmine.createSpy("error");

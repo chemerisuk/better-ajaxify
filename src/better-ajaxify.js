@@ -7,7 +7,7 @@
             currentLocation = location.href.split("#")[0],
             // use late binding to determine when element could be removed from DOM
             attachAjaxifyHandlers = function(el) {
-                el.on(["animationend", "transitionend"], el, "_handleAjaxify");
+                el.on(["animationend", "transitionend"], "_handleAjaxify");
             },
             containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers),
             switchContent = (function() {
@@ -17,6 +17,8 @@
 
                 return function(response) {
                     var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
+
+                    if (typeof response !== "object") return;
 
                     containers.each(function(el, index) {
                         var key = el.data("ajaxify"),
@@ -61,14 +63,22 @@
             // lock element to prevent double clicks
             var lockedEl, xhr, timerId;
 
-            return function(url, target, cancel) {
-                if (cancel) return;
+            return function(data, target, cancel) {
+                if (arguments.length === 2) {
+                    cancel = target;
+                    target = data;
+                    data = null;
+                }
 
-                var queryString = null;
+                if (cancel || lockedEl === target && target !== DOM) return;
 
-                if (typeof url !== "string") {
+                var url = typeof data === "string" ? data : null,
+                    callback = typeof data === "function" ? data : switchContent,
+                    queryString = null;
+
+                if (!url) {
                     if (target === DOM || !target.matches("a,form")) {
-                        throw "Illegal ajaxify:fetch event with {" + String(url) + "}";
+                        throw "Illegal ajaxify:fetch event with {" + String(data) + "}";
                     }
 
                     if (target.matches("a")) {
@@ -83,8 +93,6 @@
                         }
                     }
                 }
-
-                if (lockedEl === target && target !== DOM) return;
 
                 lockedEl = target;
 
@@ -128,7 +136,7 @@
                         } catch (err) {
                             // response is a text content
                         } finally {
-                            if (typeof response === "object") switchContent(response);
+                            callback(response);
 
                             if (status >= 200 && status < 300 || status === 304) {
                                 target.fire("ajaxify:load", response);
@@ -151,11 +159,11 @@
         }()));
 
         DOM.on("click a", function(link, cancel) {
-            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch", true);
+            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
         });
 
         DOM.on("submit", function(form, cancel) {
-            if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch", true);
+            if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch");
         });
 
         DOM.on("ajaxify:history", function(url) {
