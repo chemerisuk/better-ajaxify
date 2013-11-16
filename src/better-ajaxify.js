@@ -27,9 +27,7 @@
 
                         if (content != null) {
                             if (typeof content === "string") {
-                                content = el.clone(false).set(content);
-
-                                attachAjaxifyHandlers(content);
+                                attachAjaxifyHandlers(content = el.clone(false).set(content));
                             }
 
                             el.before(content.hide());
