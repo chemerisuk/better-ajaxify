@@ -8,10 +8,11 @@ Features
 --------
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
-* [content transition animations](#animations-support) support
-* supports `pushstate` and `hashchange` to update address bar
+* [fastclick support](#fastclick-support) to be more responsive on mobile browsers
+* `pushstate` or `hashchange` could be used to update address bar
 * advanced configuration via [custom events](#custom-events)
-* programmatic page loading via `DOM.fire("ajaxify:fetch", url_to_load)`
+* [content transition animations](#animations-support) support
+* programmatic access via the custom `ajaxify:fetch` event
 * prevents [multiple clicks](#multiclick-fix) on the same element
 
 Installing
@@ -54,6 +55,9 @@ Custom `data-ajaxify` attribute is used to mark html elements that may be reload
 <div data-ajaxify="content"></div>
 ...
 ```
+
+### Fastclick support
+Mobile browsers have 300ms delay between a physical tap and the firing of a click event. To achieve it you need to set `touch-start: none` css property on such elements. In that case `touchstart` will be used to send `ajaxify:fetch` event.
 
 ### Multiclick fix
 The library prevents user from clicking on the same element twice. All repeated actions will be skipped.

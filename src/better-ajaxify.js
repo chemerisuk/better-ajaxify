@@ -5,6 +5,9 @@
         var // internal data structures
             historyData = {},
             currentLocation = location.href.split("#")[0],
+            handleLinkClick = function(link, cancel) {
+                if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
+            },
             // use late binding to determine when element could be removed from DOM
             attachAjaxifyHandlers = function(el) {
                 el.on(["animationend", "transitionend"], "_handleAjaxify");
@@ -155,9 +158,12 @@
             };
         }()));
 
-        DOM.on("click a", function(link, cancel) {
-            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
+        DOM.on("touchstart a", function(link, cancel) {
+            // fastclick support by checking touch-action: none property
+            if (link.style("touch-action") === "none") return handleLinkClick(link, cancel);
         });
+
+        DOM.on("click a", handleLinkClick);
 
         DOM.on("submit", function(form, cancel) {
             if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch");
