@@ -5,14 +5,12 @@
         var // internal data structures
             historyData = {},
             currentLocation = location.href.split("#")[0],
+            animationEvents = ["animationend", "transitionend", "webkitAnimationEnd", "webkitTransitionEnd"],
             handleLinkClick = function(link, cancel) {
                 if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
             },
             // use late binding to determine when element could be removed from DOM
-            attachAjaxifyHandlers = function(el) {
-                el.on(["animationend", "transitionend"], "_handleAjaxify");
-            },
-            containers = DOM.findAll("[data-ajaxify]").each(attachAjaxifyHandlers),
+            containers = DOM.findAll("[data-ajaxify]").on(animationEvents, "_handleAjaxify"),
             switchContent = (function() {
                 var prevContainers = {},
                     // remove element from dom and cleanup
@@ -32,7 +30,7 @@
 
                         if (content != null) {
                             if (typeof content === "string") {
-                                attachAjaxifyHandlers(content = el.clone(false).set(content));
+                                content = el.clone(false).set(content).on(animationEvents, "_handleAjaxify");
                             }
 
                             el.before(content.hide());

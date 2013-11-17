@@ -57,7 +57,7 @@ Custom `data-ajaxify` attribute is used to mark html elements that may be reload
 ```
 
 ### Fastclick support
-Mobile browsers have 300ms delay between a physical tap and the firing of a click event. To achieve it you need to set `touch-start: none` css property on such elements. In that case `touchstart` will be used to send `ajaxify:fetch` event.
+Mobile browsers have 300ms delay between a physical tap and the firing of a `click` event. To get rid it you need to set `touch-action: none` css property on appropriate elements. In that case `touchstart` will be used instead of `click` to send `ajaxify:fetch` event.
 
 ### Multiclick fix
 The library prevents user from clicking on the same element twice. All repeated actions will be skipped.
