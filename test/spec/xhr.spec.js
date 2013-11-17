@@ -66,18 +66,20 @@ describe("XMLHttpRequest", function() {
 
     describe("ajaxify:error", function() {
         it("should trigger ajaxify:error on XHR error", function() {
-            var spy = jasmine.createSpy("error");
-
-            DOM.once("ajaxify:error", spy);
-
             sendSpy.andCallFake(function() {
-                // trigger error
-                this.onerror();
+                var xhr = this,
+                    spy = jasmine.createSpy("error").andCallFake(function(data) {
+                        expect(this).toBe(DOM);
+                        expect(data).toBe(xhr);
+                    });
 
-                expect(spy).toHaveBeenCalledWith(this);
+                DOM.once("ajaxify:error", spy);
+
+                this.onerror();
+                expect(spy).toHaveBeenCalled();
             });
 
-            DOM.fire("ajaxify:fetch", "22222");
+            DOM.fire("ajaxify:fetch", "ajaxify:error");
             expect(sendSpy).toHaveBeenCalled();
         });
 
@@ -102,6 +104,26 @@ describe("XMLHttpRequest", function() {
             });
 
             DOM.fire("ajaxify:fetch", "33333");
+            expect(sendSpy).toHaveBeenCalled();
+        });
+    });
+
+    describe("ajaxify:timeout", function() {
+        it("should trigger ajaxify:timeout on XHR error", function() {
+            sendSpy.andCallFake(function() {
+                var xhr = this,
+                    spy = jasmine.createSpy("timeout").andCallFake(function(data) {
+                        expect(this).toBe(DOM);
+                        expect(data).toBe(xhr);
+                    });
+
+                DOM.once("ajaxify:timeout", spy);
+
+                this.ontimeout();
+                expect(spy).toHaveBeenCalled();
+            });
+
+            DOM.fire("ajaxify:fetch", "ajaxify:timeout");
             expect(sendSpy).toHaveBeenCalled();
         });
     });
