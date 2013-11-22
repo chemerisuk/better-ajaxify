@@ -1,20 +1,20 @@
 {
-    "name": "better-ajaxify",
-    "version": "1.4.2",
-    "main": [
-        "dist/better-ajaxify.js",
-        "dist/better-ajaxify-pushstate.js",
-        "dist/better-ajaxify-hashchange.js"
-    ],
-    "ignore": [
-        ".*",
-        "src",
-        "test"
-    ],
-    "keywords": [
-        "better-dom"
-    ],
-    "dependencies": {
-        "better-dom": "~1.6.0"
-    }
+  "name": "better-ajaxify",
+  "version": "1.5.0-rc.1",
+  "main": [
+    "dist/better-ajaxify.js",
+    "dist/better-ajaxify-pushstate.js",
+    "dist/better-ajaxify-hashchange.js"
+  ],
+  "ignore": [
+    ".*",
+    "src",
+    "test"
+  ],
+  "keywords": [
+    "better-dom"
+  ],
+  "dependencies": {
+    "better-dom": "~1.6.0"
+  }
 }
