@@ -1,6 +1,6 @@
 {
   "name": "better-ajaxify",
-  "description": "SEO-friendly ajax website engine for better-dom",
+  "description": "Ajax website engine for better-dom",
   "version": "1.5.0-rc.1",
   "author": "Maksim Chemerisuk",
   "license": "MIT",

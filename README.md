@@ -8,12 +8,13 @@ Features
 --------
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
-* [fastclick support](#fastclick-support) to be more responsive on mobile browsers
+* [fastclick support](#fastclick-support) on mobile devices
 * `pushstate` or `hashchange` could be used to update address bar
 * advanced configuration via [custom events](#custom-events)
-* [content transition animations](#animations-support) support
+* [page transition animations](#animations-support) support via CSS3
 * programmatic access via the custom `ajaxify:fetch` event
 * prevents [multiple clicks](#multiclick-fix) on the same element
+* makes submit buttons to be `[disabled]` until the request is completed
 
 Installing
 ----------
