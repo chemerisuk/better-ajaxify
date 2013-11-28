@@ -111,28 +111,28 @@ Custom events
 -------------
 The library exposes multiple custom events for advanced interaction.
 
-#### ajaxify:fetch `[URL|callback(response)]`
+#### ajaxify:fetch `URL[, callback(response)]`
 Triggered every time a new content is loaded. `target` of this event is the element that is firing loading a new page (usually link or form). The event could be triggered programmatically, for example `DOM.fire("ajaxify:fetch", url)`. It also supports function callback instead of url.
 
-#### ajaxify:loadstart `[XMLHttpRequest]`
+#### ajaxify:loadstart `XMLHttpRequest`
 Triggered before doing an ajax call. `data` if this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent.
 
-#### ajaxify:loadend `[XMLHttpRequest]`
+#### ajaxify:loadend `XMLHttpRequest`
 Triggered when an ajaxify request is completed (successfully or not)
 
-#### ajaxify:load `[response]`
+#### ajaxify:load `response`
 Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string
 
-#### ajaxify:history `[URL]`
+#### ajaxify:history `URL`
 Triggered when a user navigates through history in browser. `data` of this event is target history entry url
 
-#### ajaxify:error `[XMLHttpRequest]`
+#### ajaxify:error `XMLHttpRequest`
 Triggered only if server returned unsuccesfull response code
 
-#### ajaxify:timeout `[XMLHttpRequest]`
+#### ajaxify:timeout `XMLHttpRequest`
 Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds
 
-#### ajaxify:abort `[XMLHttpRequest]`
+#### ajaxify:abort `XMLHttpRequest`
 Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed
 
 Browser support
