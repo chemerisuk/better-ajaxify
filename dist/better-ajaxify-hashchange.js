@@ -1,7 +1,7 @@
 /**
  * @file src/better-ajaxify-hashchange.js
- * @version 1.5.0-rc.1 2013-11-23T00:56:16
- * @overview SEO-friendly ajax website engine for better-dom
+ * @version 1.5.0-rc.2 2013-11-28T20:05:04
+ * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
  * @see https://github.com/chemerisuk/better-ajaxify

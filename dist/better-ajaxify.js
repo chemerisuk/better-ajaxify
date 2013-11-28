@@ -1,7 +1,7 @@
 /**
  * @file src/better-ajaxify.js
- * @version 1.5.0-rc.1 2013-11-23T00:56:16
- * @overview SEO-friendly ajax website engine for better-dom
+ * @version 1.5.0-rc.2 2013-11-28T20:05:04
+ * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
  * @see https://github.com/chemerisuk/better-ajaxify
@@ -40,11 +40,8 @@
                             if (typeof content === "string") {
                                 content = el.clone(false).set(content).on(animationEvents, "_handleAjaxify");
                             }
-
-                            el.before(content.hide());
-                            // show/hide content async to display animation
-                            setTimeout(function() { el.hide() }, 0);
-                            setTimeout(function() { content.show() }, 0);
+                            // show/hide content async to display CSS3 animation
+                            el.before(content.hide().show(1)).hide(1);
                             // postpone removing element from DOM if an animation exists
                             if (!el.matches(":hidden") && (
                                 parseFloat(el.style("transition-duration")) ||
@@ -122,22 +119,27 @@
                     return resultXHR;
                 };
 
-            return function(data, target, cancel) {
-                if (arguments.length === 2) {
+            return function(url, callback, target, cancel) {
+                if (arguments.length === 3) {
+                    // url, target, cancel
                     cancel = target;
-                    target = data;
-                    data = null;
+                    target = callback;
+                    callback = switchContent;
+                } else if (arguments.length === 2) {
+                    // target, cancel
+                    target = url;
+                    cancel = callback;
+                    callback = switchContent;
+                    url = null;
                 }
 
                 if (cancel || lockedEl === target && target !== DOM) return;
 
-                var url = typeof data === "string" ? data : null,
-                    callback = typeof data === "function" ? data : switchContent,
-                    queryString = null, xhr;
+                var queryString = null, xhr;
 
-                if (!url) {
+                if (typeof url !== "string") {
                     if (target === DOM || !target.matches("a,form")) {
-                        throw "Illegal ajaxify:fetch event with {" + String(data) + "}";
+                        throw "Illegal ajaxify:fetch event with {" + String(url) + "}";
                     }
 
                     if (target.matches("a")) {
