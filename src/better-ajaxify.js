@@ -6,9 +6,6 @@
             historyData = {},
             currentLocation = location.href.split("#")[0],
             animationEvents = ["animationend", "transitionend", "webkitAnimationEnd", "webkitTransitionEnd"],
-            handleLinkClick = function(link, cancel) {
-                if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
-            },
             // use late binding to determine when element could be removed from DOM
             containers = DOM.findAll("[data-ajaxify]").on(animationEvents, "_handleAjaxify"),
             switchContent = (function() {
@@ -158,12 +155,14 @@
             };
         }()));
 
-        DOM.on("touchstart a", function(link, cancel) {
+        DOM.on("touchstart a", function(link) {
             // fastclick support by checking touch-action: none property
-            if (link.style("touch-action") === "none") return handleLinkClick(link, cancel);
+            if (link.style("touch-action") === "none") return link.fire("click");
         });
 
-        DOM.on("click a", handleLinkClick);
+        DOM.on("click a", function(link, cancel) {
+            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
+        });
 
         DOM.on("submit", function(form, cancel) {
             if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch");

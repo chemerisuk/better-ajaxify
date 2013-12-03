@@ -94,6 +94,24 @@ describe("delegation", function() {
             expect(spy).toHaveBeenCalled();
             expect(spy2).toHaveBeenCalled();
         });
+
+        it("should have fastclick support", function() {
+            sandbox.set("<a href='http://google.com'>123</a>");
+
+            var spy2 = jasmine.createSpy("click").andReturn(false),
+                link = sandbox.find("a");
+
+            DOM.on("click", spy2);
+
+
+            link.fire("touchstart");
+            expect(spy).not.toHaveBeenCalled();
+
+            link.style("touch-action", "none");
+
+            link.fire("touchstart");
+            expect(spy).toHaveBeenCalled();
+        });
     });
 
     describe("forms", function() {
