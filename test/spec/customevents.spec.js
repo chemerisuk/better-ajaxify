@@ -76,6 +76,36 @@ describe("Custom events", function() {
                 }
             });
         });
+
+        it("should support optional callback argument", function() {
+            runs(function() {
+                DOM.ready(function() {
+                    DOM.fire("ajaxify:fetch", "test", function() {});
+                });
+            });
+
+            waitsFor(function() {
+                return spy.callCount === 1;
+            });
+        });
+
+        it("should respect defaultPrevented of ajaxify:loadstart", function() {
+            var done = false;
+
+            runs(function() {
+                DOM.ready(function() {
+                    var loadstartSpy = jasmine.createSpy("loadstart").andReturn(false);
+
+                    DOM.once("ajaxify:loadstart", loadstartSpy);
+                    DOM.fire("ajaxify:fetch", "test");
+                    expect(loadstartSpy).toHaveBeenCalled();
+
+                    done = !spy.callCount;
+                });
+            });
+
+            waitsFor(function() { return done });
+        });
     });
 
     describe("ajaxify:history", function() {

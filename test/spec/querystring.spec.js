@@ -14,6 +14,7 @@ describe("toQueryString", function() {
     });
 
     describe("ignored form elements", function(){
+        test("<form id='f0'><input type='file' name='' value='123'></form>", "");
         test("<form id='f1'><input type='file' name='t'></form>", "");
         test("<form id='f2'><input type='submit' name='t'></form>", "");
         test("<form id='f3'><input type='reset' name='t'></form>",  "");
