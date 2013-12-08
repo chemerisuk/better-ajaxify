@@ -1,11 +1,9 @@
-better-ajaxify [![Build Status](https://api.travis-ci.org/chemerisuk/better-ajaxify.png?branch=master)](http://travis-ci.org/chemerisuk/better-ajaxify)
-==============
+# better-ajaxify [![Build Status](https://api.travis-ci.org/chemerisuk/better-ajaxify.png?branch=master)](http://travis-ci.org/chemerisuk/better-ajaxify)
 > Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
 [LIVE DEMO](http://chemerisuk.github.io/better-ajaxify/)
 
-Features
---------
+## Features
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
 * [fastclick support](#fastclick-support) on mobile devices
@@ -16,8 +14,7 @@ Features
 * prevents [multiple clicks](#multiclick-fix) on the same element
 * makes submit buttons to be `[disabled]` until the request is completed
 
-Installing
-----------
+## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
 
     bower install better-ajaxify --save
@@ -31,8 +28,8 @@ Then append the following html elements on your page:
 <head>
     ...
     <!--[if IE]>
-        <link href="bower_components/better-dom/dist/better-dom.htc" rel="htc"/>
-        <script src="bower_components/html5shiv/dist/html5shiv.js"></script>
+        <link href="bower_components/better-dom/dist/better-dom-legacy.htc" rel="htc"/>
+        <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
     <![endif]-->
 </head>
 <body>
@@ -45,9 +42,8 @@ Then append the following html elements on your page:
 
 Depending on requirements you usually have to include `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js`. The first script implements navigation via [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history), the second uses __hashchange__ to indicate current state.
 
-Frontend setup
---------------
-Custom `data-ajaxify` attribute is used to mark html elements that may be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
+## Frontend/backend setup
+Custom `data-ajaxify` attribute is used to mark html elements that might be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
 
 ```html
 ...
@@ -56,9 +52,22 @@ Custom `data-ajaxify` attribute is used to mark html elements that may be reload
 <div data-ajaxify="content"></div>
 ...
 ```
+Server should respond in json format:
+
+    {
+        "title": "Page title",
+        "url": "Optional page url, for a case when request and response urls should be different",
+        "html": {
+            "menu": "innerHTML content for [data-ajaxify=menu] element",
+            "content": "innerHTML content for [data-ajaxify=content] element",
+            ...
+        }
+    }
+
+For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
 
 ### Fastclick support
-Mobile browsers have 300ms delay between a physical tap and the firing of a `click` event. To get rid it you need to set `touch-action: none` css property on appropriate elements. In that case `touchstart` will be used instead of `click` to send `ajaxify:fetch` event.
+Mobile browsers have 300ms delay between a physical tap and the firing of a **click** event. To get rid of it just add `touch-action: none` css property on appropriate elements. In this case **touchstart** will be used to send `ajaxify:fetch` event that doesn't have extra delay.
 
 ### Multiclick fix
 The library prevents user from clicking on the same element twice. All repeated actions will be skipped.
@@ -66,7 +75,7 @@ The library prevents user from clicking on the same element twice. All repeated 
 Additionally for forms all submit buttons become to be `[disabled]` until the submit request is completed (or failed). So you could use css to style these buttons (for example by adding a cool spinner to indicate that request is in progress).
 
 ### Animations support
-Each content transition could be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/mNBVQ/1/) to enable them. Take a look at simple example below:
+Each content transition could be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
 
 ```css
 [data-ajaxify=content] {
@@ -91,24 +100,7 @@ Each content transition could be animated. Just use [common approach for animati
 }
 ```
 
-Backend setup
--------------
-Server should respond in json format:
-
-    {
-        "title": "Page title",
-        "url": "Optional page url, for a case when request and response urls should be different",
-        "html": {
-            "menu": "HTML string for menu",
-            "content": "HTML string for content",
-            ...
-        }
-    }
-
-For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
-
-Custom events
--------------
+## Custom events
 The library exposes multiple custom events for advanced interaction.
 
 #### ajaxify:fetch `URL[, callback(response)]`
@@ -135,10 +127,9 @@ Triggered when request was cancelled because of timeout. Timeout is not configur
 #### ajaxify:abort `XMLHttpRequest`
 Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed
 
-Browser support
----------------
+## Browser support
 * Chrome
-* Safari 5.2.2+
+* Safari 6.0+
 * Firefox 16+
 * Opera 12.10+
 * IE8+
