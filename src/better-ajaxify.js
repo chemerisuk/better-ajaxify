@@ -63,7 +63,8 @@
                     resultXHR.onreadystatechange = function() {
                         if (this.readyState === 4) {
                             var status = this.status,
-                                response = this.responseText;
+                                response = this.responseText,
+                                doCallback;
 
                             // cleanup outer variables
                             if (callback === switchContent) lockedEl = null;
@@ -79,13 +80,13 @@
                             } catch (err) {
                                 // response is a text content
                             } finally {
-                                callback(response);
-
                                 if (status >= 200 && status < 300 || status === 304) {
-                                    target.fire("ajaxify:load", response);
+                                    doCallback = target.fire("ajaxify:load", response);
                                 } else {
-                                    target.fire("ajaxify:error", this);
+                                    doCallback = target.fire("ajaxify:error", this);
                                 }
+
+                                if (doCallback) callback(response);
                             }
                         }
                     };

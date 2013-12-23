@@ -34,10 +34,8 @@ describe("Custom events", function() {
         });
 
         it("should trigger ajax request", function() {
-            runs(function() {
-                DOM.ready(function() {
-                    DOM.fire("ajaxify:fetch", "test");
-                });
+            DOM.ready(function() {
+                DOM.fire("ajaxify:fetch", "test");
             });
 
             waitsFor(function() {
@@ -61,11 +59,9 @@ describe("Custom events", function() {
 
             window.onerror = spy;
 
-            runs(function() {
-                DOM.ready(function() {
-                    DOM.fire("ajaxify:fetch");
-                    DOM.fire("ajaxify:fetch", null);
-                });
+            DOM.ready(function() {
+                DOM.fire("ajaxify:fetch");
+                DOM.fire("ajaxify:fetch", null);
             });
 
             waitsFor(function() {
@@ -78,10 +74,8 @@ describe("Custom events", function() {
         });
 
         it("should support optional callback argument", function() {
-            runs(function() {
-                DOM.ready(function() {
-                    DOM.fire("ajaxify:fetch", "test", function() {});
-                });
+            DOM.ready(function() {
+                DOM.fire("ajaxify:fetch", "test", function() {});
             });
 
             waitsFor(function() {
@@ -92,16 +86,14 @@ describe("Custom events", function() {
         it("should respect defaultPrevented of ajaxify:loadstart", function() {
             var done = false;
 
-            runs(function() {
-                DOM.ready(function() {
-                    var loadstartSpy = jasmine.createSpy("loadstart").andReturn(false);
+            DOM.ready(function() {
+                var loadstartSpy = jasmine.createSpy("loadstart").andReturn(false);
 
-                    DOM.once("ajaxify:loadstart", loadstartSpy);
-                    DOM.fire("ajaxify:fetch", "test");
-                    expect(loadstartSpy).toHaveBeenCalled();
+                DOM.once("ajaxify:loadstart", loadstartSpy);
+                DOM.fire("ajaxify:fetch", "test");
+                expect(loadstartSpy).toHaveBeenCalled();
 
-                    done = !spy.callCount;
-                });
+                done = !spy.callCount;
             });
 
             waitsFor(function() { return done });
@@ -114,10 +106,8 @@ describe("Custom events", function() {
 
             DOM.once("ajaxify:fetch", fetchSpy);
 
-            runs(function() {
-                DOM.ready(function() {
-                    DOM.fire("ajaxify:history", "???");
-                });
+            DOM.ready(function() {
+                DOM.fire("ajaxify:history", "???");
             });
 
             waitsFor(function() {
