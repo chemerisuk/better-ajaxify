@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify.js
- * @version 1.5.0 2013-12-08T03:25:48
+ * @version 1.5.1 2013-12-23T08:25:50
  * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2013
  * @license MIT
@@ -13,14 +13,8 @@
         var // internal data structures
             historyData = {},
             currentLocation = location.href.split("#")[0],
-            animationEvents = ["animationend", "transitionend", "webkitAnimationEnd", "webkitTransitionEnd"],
-            // use late binding to determine when element could be removed from DOM
-            containers = DOM.findAll("[data-ajaxify]").on(animationEvents, "_handleAjaxify"),
+            containers = DOM.findAll("[data-ajaxify]"),
             switchContent = (function() {
-                var prevContainers = {},
-                    // remove element from dom and cleanup
-                    _handleAjaxify = function() { delete this.remove()._handleAjaxify };
-
                 return function(response) {
                     if (typeof response !== "object") return;
 
@@ -30,23 +24,14 @@
                         var key = el.data("ajaxify"),
                             content = response.html[key];
 
-                        // make sure that previous element is hidden
-                        if (key in prevContainers) _handleAjaxify.call(prevContainers[key]);
-
                         if (content != null) {
                             if (typeof content === "string") {
-                                content = el.clone(false).set(content).on(animationEvents, "_handleAjaxify");
+                                content = el.clone(false).set(content);
                             }
                             // show/hide content async to display CSS3 animation
-                            el.before(content.hide().show(1)).hide(1);
-                            // postpone removing element from DOM if an animation exists
-                            if (!el.matches(":hidden") && (
-                                parseFloat(el.style("transition-duration")) ||
-                                parseFloat(el.style("animation-duration")))) {
-                                el._handleAjaxify = _handleAjaxify;
-                            } else {
-                                el.remove();
-                            }
+                            el.before(content.hide().show(1));
+                            // removing element from DOM when animation ends
+                            el.hide(1, function(el) { el.remove() });
 
                             cacheEntry.html[key] = el;
                             // update content in the internal collection
@@ -86,7 +71,8 @@
                     resultXHR.onreadystatechange = function() {
                         if (this.readyState === 4) {
                             var status = this.status,
-                                response = this.responseText;
+                                response = this.responseText,
+                                doCallback;
 
                             // cleanup outer variables
                             if (callback === switchContent) lockedEl = null;
@@ -102,13 +88,13 @@
                             } catch (err) {
                                 // response is a text content
                             } finally {
-                                callback(response);
-
                                 if (status >= 200 && status < 300 || status === 304) {
-                                    target.fire("ajaxify:load", response);
+                                    doCallback = target.fire("ajaxify:load", response);
                                 } else {
-                                    target.fire("ajaxify:error", this);
+                                    doCallback = target.fire("ajaxify:error", this);
                                 }
+
+                                if (doCallback) callback(response);
                             }
                         }
                     };
@@ -163,17 +149,34 @@
             };
         }()));
 
-        DOM.on("touchstart a", function(link) {
-            // fastclick support by checking touch-action: none property
-            if (link.style("touch-action") === "none") return link.fire("click");
+        DOM.find("meta[name=viewport]").each(function(el) {
+            // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
+            if (~el.get("content").indexOf("width=device-width")) {
+                // fastclick support via triggering some events earlier
+                DOM.on("touchend a", function(link) {
+                    link.fire("click");
+
+                    return false;
+                });
+
+                DOM.on("touchend [type=submit]", function(btn) {
+                    btn.parent("form").fire("submit");
+
+                    return false;
+                });
+            }
         });
 
         DOM.on("click a", function(link, cancel) {
-            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
+            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) {
+                return !link.fire("ajaxify:fetch");
+            }
         });
 
         DOM.on("submit", function(form, cancel) {
-            if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch");
+            if (!cancel && !form.get("target")) {
+                return !form.fire("ajaxify:fetch");
+            }
         });
 
         DOM.on("ajaxify:history", function(url) {
