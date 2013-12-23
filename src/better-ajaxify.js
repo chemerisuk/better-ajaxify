@@ -5,14 +5,8 @@
         var // internal data structures
             historyData = {},
             currentLocation = location.href.split("#")[0],
-            animationEvents = ["animationend", "transitionend", "webkitAnimationEnd", "webkitTransitionEnd"],
-            // use late binding to determine when element could be removed from DOM
-            containers = DOM.findAll("[data-ajaxify]").on(animationEvents, "_handleAjaxify"),
+            containers = DOM.findAll("[data-ajaxify]"),
             switchContent = (function() {
-                var prevContainers = {},
-                    // remove element from dom and cleanup
-                    _handleAjaxify = function() { delete this.remove()._handleAjaxify };
-
                 return function(response) {
                     if (typeof response !== "object") return;
 
@@ -22,23 +16,14 @@
                         var key = el.data("ajaxify"),
                             content = response.html[key];
 
-                        // make sure that previous element is hidden
-                        if (key in prevContainers) _handleAjaxify.call(prevContainers[key]);
-
                         if (content != null) {
                             if (typeof content === "string") {
-                                content = el.clone(false).set(content).on(animationEvents, "_handleAjaxify");
+                                content = el.clone(false).set(content);
                             }
                             // show/hide content async to display CSS3 animation
-                            el.before(content.hide().show(1)).hide(1);
-                            // postpone removing element from DOM if an animation exists
-                            if (!el.matches(":hidden") && (
-                                parseFloat(el.style("transition-duration")) ||
-                                parseFloat(el.style("animation-duration")))) {
-                                el._handleAjaxify = _handleAjaxify;
-                            } else {
-                                el.remove();
-                            }
+                            el.before(content.hide().show(1));
+                            // removing element from DOM when animation ends
+                            el.hide(1, function(el) { el.remove() });
 
                             cacheEntry.html[key] = el;
                             // update content in the internal collection
