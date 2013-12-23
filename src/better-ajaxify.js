@@ -140,17 +140,34 @@
             };
         }()));
 
-        DOM.on("touchstart a", function(link) {
-            // fastclick support by checking touch-action: none property
-            if (link.style("touch-action") === "none") return link.fire("click");
+        DOM.find("meta[name=viewport]").each(function(el) {
+            // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
+            if (~el.get("content").indexOf("width=device-width")) {
+                // fastclick support via triggering some events earlier
+                DOM.on("touchend a", function(link) {
+                    link.fire("click");
+
+                    return false;
+                });
+
+                DOM.on("touchend [type=submit]", function(btn) {
+                    btn.parent("form").fire("submit");
+
+                    return false;
+                });
+            }
         });
 
         DOM.on("click a", function(link, cancel) {
-            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) return !link.fire("ajaxify:fetch");
+            if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) {
+                return !link.fire("ajaxify:fetch");
+            }
         });
 
         DOM.on("submit", function(form, cancel) {
-            if (!cancel && !form.get("target")) return !form.fire("ajaxify:fetch");
+            if (!cancel && !form.get("target")) {
+                return !form.fire("ajaxify:fetch");
+            }
         });
 
         DOM.on("ajaxify:history", function(url) {

@@ -6,7 +6,7 @@
 ## Features
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
-* [fastclick support](#fastclick-support) on mobile devices
+* fastclick support on mobile devices via checking `<meta name="viewport" content="width=device-width">`
 * `pushstate` or `hashchange` could be used to update address bar
 * advanced configuration via [custom events](#custom-events)
 * [page transition animations](#animations-support) support via CSS3
@@ -65,9 +65,6 @@ Server should respond in json format:
     }
 
 For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
-
-### Fastclick support
-Mobile browsers have 300ms delay between a physical tap and the firing of a **click** event. To get rid of it just add `touch-action: none` css property on appropriate elements. In this case **touchstart** will be used to send `ajaxify:fetch` event that doesn't have extra delay.
 
 ### Multiclick fix
 The library prevents user from clicking on the same element twice. All repeated actions will be skipped.
