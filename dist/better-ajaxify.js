@@ -45,27 +45,7 @@
                     // update page title
                     DOM.set("title", response.title);
                 };
-            }()),
-            handleLinkClick = function(link, cancel) {
-                if (!cancel && !link.get("target")) {
-                    var url = link.get("href");
-
-                    if (!url.indexOf("http")) return !link.fire("ajaxify:fetch", url);
-                }
-            },
-            handleFormSubmit = function(form, cancel) {
-                if (!cancel && !form.get("target")) {
-                    var url = form.get("action"),
-                        query = form.toQueryString();
-
-                    if (form.get("method") === "get") {
-                        url += (~url.indexOf("?") ? "&" : "?") + query;
-                        query = null;
-                    }
-
-                    return !form.fire("ajaxify:fetch", url, query);
-                }
-            };
+            }());
 
         DOM.on("ajaxify:fetch", (function() {
             // lock element to prevent double clicks
@@ -182,18 +162,44 @@
             if (~el.get("content").indexOf("width=device-width")) {
                 // fastclick support via handling some events earlier
                 DOM.on("touchend", function(el, cancel) {
+                    if (cancel) return;
+
                     if (el.matches("a")) {
-                        return handleLinkClick(el, cancel);
-                    } else if (el.get("type") === "submit" && !el.get("disabled")) {
-                        return handleFormSubmit(el.parent("form"), cancel);
+                        if (!el.get("target") && !el.get("href").indexOf("http")) {
+                            el.fire("click");
+
+                            return false;
+                        }
+                    } else if (el.matches("[type=submit]") && !el.get("disabled")) {
+                        el.parent("form").fire("submit");
+
+                        return false;
                     }
                 });
             }
         });
 
         DOM.on({
-            "click a": handleLinkClick,
-            "submit": handleFormSubmit,
+            "click a": function(link, cancel) {
+                if (!cancel && !link.get("target")) {
+                    var url = link.get("href");
+
+                    if (!url.indexOf("http")) return !link.fire("ajaxify:fetch", url);
+                }
+            },
+            "submit": function(form, cancel) {
+                if (!cancel && !form.get("target")) {
+                    var url = form.get("action"),
+                        query = form.toQueryString();
+
+                    if (form.get("method") === "get") {
+                        url += (~url.indexOf("?") ? "&" : "?") + query;
+                        query = null;
+                    }
+
+                    return !form.fire("ajaxify:fetch", url, query);
+                }
+            },
             "ajaxify:history": function(url) {
                 if (url in historyData) {
                     switchContent(historyData[url]);
