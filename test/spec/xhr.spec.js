@@ -43,7 +43,7 @@ describe("XMLHttpRequest", function() {
             expect(this.onerror).toBeDefined();
         });
 
-        link.fire("ajaxify:fetch");
+        link.fire("ajaxify:fetch", link.get("href"));
         expect(openSpy).toHaveBeenCalled();
         expect(setRequestHeaderSpy).toHaveBeenCalledWith("X-Requested-With", "XMLHttpRequest");
         expect(sendSpy).toHaveBeenCalledWith(null);
@@ -56,7 +56,7 @@ describe("XMLHttpRequest", function() {
             expect(this.onerror).toBeDefined();
         });
 
-        form.fire("ajaxify:fetch");
+        form.fire("ajaxify:fetch", form.get("action"), form.toQueryString());
         expect(openSpy).toHaveBeenCalled();
         expect(setRequestHeaderSpy).toHaveBeenCalledWith("Content-Type", "application/x-www-form-urlencoded");
         expect(sendSpy).toHaveBeenCalledWith("a=b");

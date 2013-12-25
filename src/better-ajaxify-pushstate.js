@@ -1,23 +1,6 @@
 (function(DOM, location, history) {
     "use strict";
 
-    // skip anchor links
-    DOM.on("ajaxify:fetch a", function(data, target, cancel) {
-        if (!cancel) {
-            var url = target.get("href");
-
-            if (url) {
-                url = url.split("#")[0];
-
-                if (url !== location.href.split("#")[0]) return true;
-
-                location.hash = target.get("hash");
-            }
-
-            return false;
-        }
-    });
-
     DOM.on("ajaxify:load", function(response, target, cancel) {
         if (!cancel && typeof response === "object") {
             // update browser url

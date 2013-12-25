@@ -41,13 +41,23 @@
                 };
             }()),
             handleLinkClick = function(link, cancel) {
-                if (!cancel && !link.get("target") && !link.get("href").indexOf("http")) {
-                    return !link.fire("ajaxify:fetch");
+                if (!cancel && !link.get("target")) {
+                    var url = link.get("href");
+
+                    if (!url.indexOf("http")) return !link.fire("ajaxify:fetch", url);
                 }
             },
             handleFormSubmit = function(form, cancel) {
                 if (!cancel && !form.get("target")) {
-                    return !form.fire("ajaxify:fetch");
+                    var url = form.get("action"),
+                        query = form.toQueryString();
+
+                    if (form.get("method") === "get") {
+                        url += (~url.indexOf("?") ? "&" : "?") + query;
+                        query = null;
+                    }
+
+                    return !form.fire("ajaxify:fetch", url, query);
                 }
             };
 
@@ -106,57 +116,46 @@
                     return resultXHR;
                 };
 
-            return function(url, callback, target, cancel) {
-                if (arguments.length === 3) {
-                    // url, target, cancel
+            return function(url, query, callback, target, cancel) {
+                var len = arguments.length, xhr;
+
+                if (len === 4) {
                     cancel = target;
                     target = callback;
-                    callback = switchContent;
-                } else if (arguments.length === 2) {
-                    // target, cancel
-                    target = url;
+
+                    if (typeof query === "string") {
+                        callback = switchContent;
+                    } else {
+                        callback = query;
+                        query = null;
+                    }
+                } else if (len === 3) {
+                    // url, target, cancel
                     cancel = callback;
+                    target = query;
                     callback = switchContent;
-                    url = null;
+                    query = null;
+                } else if (len < 3) {
+                    throw "URL value is required for ajaxify:fetch";
                 }
 
                 if (cancel || lockedEl === target && target !== DOM) return;
 
-                var queryString = null, xhr;
-
-                if (typeof url !== "string") {
-                    if (target === DOM || !target.matches("a,form")) {
-                        throw "Illegal ajaxify:fetch event with {" + String(url) + "}";
-                    }
-
-                    if (target.matches("a")) {
-                        url = target.get("href");
-                    } else {
-                        url = target.get("action");
-                        queryString = target.toQueryString();
-
-                        if (target.get("method") === "get") {
-                            url += (~url.indexOf("?") ? "&" : "?") + queryString;
-                            queryString = null;
-                        }
-                    }
-                }
-
                 xhr = createXHR(target, url, callback);
-                xhr.open(queryString ? "POST" : "GET", queryString ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
+                xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
                 xhr.timeout = 15000;
                 xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
-                if (queryString) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                if (query) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-                if (target.fire("ajaxify:loadstart", xhr)) xhr.send(queryString);
+                if (target.fire("ajaxify:loadstart", xhr)) xhr.send(query);
             };
         }()));
 
         DOM.find("meta[name=viewport]").each(function(el) {
             // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
             if (~el.get("content").indexOf("width=device-width")) {
-                // fastclick support via triggering some events earlier
+                // fastclick support via handling some events earlier
                 DOM.on("touchend", function(el, cancel) {
                     if (el.matches("a")) {
                         return handleLinkClick(el, cancel);
