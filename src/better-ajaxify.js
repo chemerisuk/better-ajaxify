@@ -21,8 +21,10 @@
                                 content = el.clone(false).set(content);
                             }
                             // show/hide content async to display CSS3 animation
-                            el.before(content.hide().show(1));
                             // removing element from DOM when animation ends
+                            content.hide().show(10, function() { el.remove() });
+                            el.before(content).hide(10);
+
                             el.hide(1, function(el) { el.remove() });
 
                             cacheEntry.html[key] = el;
