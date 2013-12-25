@@ -141,6 +141,23 @@
 
                 if (cancel || lockedEl === target && target !== DOM) return;
 
+                if (query && Object.prototype.toString.call(query) === "[object Object]") {
+                    query = Object.keys(query).reduce(function(memo, key) {
+                        var name = encodeURIComponent(key),
+                            value = query[key];
+
+                        if (Array.isArray(value)) {
+                            value.forEach(function(value) {
+                                memo.push(name + "=" + encodeURIComponent(value));
+                            });
+                        } else {
+                            memo.push(name + "=" + encodeURIComponent(value));
+                        }
+
+                        return memo;
+                    }, []).join("&").replace(/%20/g, "+");
+                }
+
                 xhr = createXHR(target, url, callback);
                 xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
                 xhr.timeout = 15000;
@@ -159,7 +176,7 @@
                 DOM.on("touchend", function(el, cancel) {
                     if (el.matches("a")) {
                         return handleLinkClick(el, cancel);
-                    } else if (el.get("type") === "submit") {
+                    } else if (el.get("type") === "submit" && !el.get("disabled")) {
                         return handleFormSubmit(el.parent("form"), cancel);
                     }
                 });
