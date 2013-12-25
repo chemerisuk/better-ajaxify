@@ -25,8 +25,6 @@
                             content.hide().show(10, function() { el.remove() });
                             el.before(content).hide(10);
 
-                            el.hide(1, function(el) { el.remove() });
-
                             cacheEntry.html[key] = el;
                             // update content in the internal collection
                             containers[index] = content;
@@ -135,8 +133,10 @@
                     target = query;
                     callback = switchContent;
                     query = null;
-                } else if (len < 3) {
-                    throw "URL value is required for ajaxify:fetch";
+                }
+
+                if (len < 3 || typeof url !== "string") {
+                    throw "URL value for ajaxify:fetch is not valid";
                 }
 
                 if (cancel || lockedEl === target && target !== DOM) return;
