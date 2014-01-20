@@ -1,8 +1,8 @@
 /**
  * @file src/better-ajaxify.js
- * @version 1.5.2 2013-12-25T18:59:45
+ * @version 1.6.0-beta.1 2014-01-21T01:19:32
  * @overview Ajax website engine for better-dom
- * @copyright Maksim Chemerisuk 2013
+ * @copyright Maksim Chemerisuk 2014
  * @license MIT
  * @see https://github.com/chemerisuk/better-ajaxify
  */
@@ -10,7 +10,8 @@
     "use strict";
 
     DOM.ready(function() {
-        var // internal data structures
+        var reAbsoluteUrl = /^.*\/\/[^\/]+/,
+            // internal data structures
             historyData = {},
             currentLocation = location.href.split("#")[0],
             containers = DOM.findAll("[data-ajaxify]"),
@@ -28,10 +29,10 @@
                             if (typeof content === "string") {
                                 content = el.clone(false).set(content);
                             }
-                            // show/hide content async to display CSS3 animation
+                            // show/hide content to display CSS3 animation
                             // removing element from DOM when animation ends
-                            content.hide().show(10, function() { el.remove() });
-                            el.before(content).hide(10);
+                            el.before(content.hide()).hide();
+                            content.show(function() { el.remove() });
 
                             cacheEntry.html[key] = el;
                             // update content in the internal collection
@@ -82,7 +83,7 @@
                             try {
                                 response = JSON.parse(response);
                                 // populate default values
-                                response.url = response.url || url;
+                                response.url = (response.url || url).replace(reAbsoluteUrl, "");
                                 response.title = response.title || DOM.get("title");
                                 response.html = response.html || {};
                             } catch (err) {
@@ -102,11 +103,12 @@
                     return resultXHR;
                 };
 
-            return function(url, query, callback, target, cancel) {
+            return function(url, query, callback, target, currentTarget, cancel) {
                 var len = arguments.length, xhr;
 
-                if (len === 4) {
-                    cancel = target;
+                if (len === 5) {
+                    cancel = currentTarget;
+                    currentTarget = target;
                     target = callback;
 
                     if (typeof query === "string") {
@@ -115,15 +117,16 @@
                         callback = query;
                         query = null;
                     }
-                } else if (len === 3) {
+                } else if (len === 4) {
                     // url, target, cancel
-                    cancel = callback;
+                    cancel = target;
+                    currentTarget = callback;
                     target = query;
                     callback = switchContent;
                     query = null;
                 }
 
-                if (len < 3 || typeof url !== "string") {
+                if (len < 4 || typeof url !== "string") {
                     throw "URL value for ajaxify:fetch is not valid";
                 }
 
@@ -161,7 +164,7 @@
             // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
             if (~el.get("content").indexOf("width=device-width")) {
                 // fastclick support via handling some events earlier
-                DOM.on("touchend", function(el, cancel) {
+                DOM.on("touchend", function(el, currentTarget, cancel) {
                     if (cancel) return;
 
                     if (el.matches("a")) {
@@ -180,14 +183,14 @@
         });
 
         DOM.on({
-            "click a": function(link, cancel) {
+            "click a": function(target, link, cancel) {
                 if (!cancel && !link.get("target")) {
                     var url = link.get("href");
 
                     if (!url.indexOf("http")) return !link.fire("ajaxify:fetch", url);
                 }
             },
-            "submit": function(form, cancel) {
+            "submit": function(form, currentTarget, cancel) {
                 if (!cancel && !form.get("target")) {
                     var url = form.get("action"),
                         query = form.toQueryString();
@@ -228,9 +231,12 @@
         },
         toQueryString: function() {
             return this.findAll("[name]").reduce(function(memo, el) {
-                var name = el.get("name");
+                var name = el.get("name"),
+                    fieldset = el.parent("fieldset");
 
-                if (name) { // don't include form fields without names
+                // don't include form fields without names
+                // skip inner elements of a disabled fieldset
+                if (name && !fieldset.get("disabled")) {
                     switch(el.get("type")) {
                     case "select-one":
                     case "select-multiple":
