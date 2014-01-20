@@ -172,7 +172,7 @@ describe("delegation", function() {
         });
     });
 
-    it("should not allow to send request from the same request twice except it's DOM", function() {
+    it("should not allow to send the same request twice except it's DOM", function() {
         sandbox.set("<a href='abc'>123</a>");
 
         var link = sandbox.find("a"),

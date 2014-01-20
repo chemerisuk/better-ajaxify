@@ -94,11 +94,12 @@
                     return resultXHR;
                 };
 
-            return function(url, query, callback, target, cancel) {
+            return function(url, query, callback, target, currentTarget, cancel) {
                 var len = arguments.length, xhr;
 
-                if (len === 4) {
-                    cancel = target;
+                if (len === 5) {
+                    cancel = currentTarget;
+                    currentTarget = target;
                     target = callback;
 
                     if (typeof query === "string") {
@@ -107,15 +108,16 @@
                         callback = query;
                         query = null;
                     }
-                } else if (len === 3) {
+                } else if (len === 4) {
                     // url, target, cancel
-                    cancel = callback;
+                    cancel = target;
+                    currentTarget = callback;
                     target = query;
                     callback = switchContent;
                     query = null;
                 }
 
-                if (len < 3 || typeof url !== "string") {
+                if (len < 4 || typeof url !== "string") {
                     throw "URL value for ajaxify:fetch is not valid";
                 }
 
@@ -153,7 +155,7 @@
             // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
             if (~el.get("content").indexOf("width=device-width")) {
                 // fastclick support via handling some events earlier
-                DOM.on("touchend", function(el, cancel) {
+                DOM.on("touchend", function(el, currentTarget, cancel) {
                     if (cancel) return;
 
                     if (el.matches("a")) {
@@ -172,14 +174,14 @@
         });
 
         DOM.on({
-            "click a": function(link, cancel) {
+            "click a": function(target, link, cancel) {
                 if (!cancel && !link.get("target")) {
                     var url = link.get("href");
 
                     if (!url.indexOf("http")) return !link.fire("ajaxify:fetch", url);
                 }
             },
-            "submit": function(form, cancel) {
+            "submit": function(form, currentTarget, cancel) {
                 if (!cancel && !form.get("target")) {
                     var url = form.get("action"),
                         query = form.toQueryString();

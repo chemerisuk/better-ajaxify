@@ -4,7 +4,7 @@
     var baseUrl = location.href.split(/[\?#]/)[0],
         skipHashchange = false;
 
-    DOM.on("ajaxify:load", function(response, target, cancel) {
+    DOM.on("ajaxify:load", function(response, target, currentTarget, cancel) {
         if (!cancel && typeof response === "object") {
             // update browser url
             if (response.url !== location.pathname) {

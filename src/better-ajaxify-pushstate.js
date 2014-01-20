@@ -1,7 +1,7 @@
 (function(DOM, location, history) {
     "use strict";
 
-    DOM.on("ajaxify:load", function(response, target, cancel) {
+    DOM.on("ajaxify:load", function(response, target, currentTarget, cancel) {
         if (!cancel && typeof response === "object") {
             // update browser url
             if (response.url !== location.pathname) {
@@ -25,7 +25,7 @@
         history.replaceState(true, DOM.get("title"));
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", function(xhr, sender, defaultPrevented) {
+        DOM.on("ajaxify:loadstart", function(xhr, sender, currentTarget, defaultPrevented) {
             if (!defaultPrevented && sender.get("method") !== "post") {
                 // load a new page in legacy browsers
                 if (sender.matches("form")) {
