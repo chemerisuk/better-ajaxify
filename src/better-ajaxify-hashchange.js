@@ -1,21 +1,16 @@
 (function(DOM, location) {
     "use strict";
 
-    var skipHashchange = false;
+    var baseUrl = location.href.split(/[\?#]/)[0],
+        skipHashchange = false;
 
     DOM.on("ajaxify:load", function(response, target, currentTarget, cancel) {
         if (!cancel && typeof response === "object") {
             // update browser url
-            if (response.url !== location.pathname + location.search) {
-                var hash = response.url;
-
-                if (hash[0] !== "/" && hash[0] !== "#") {
-                    // fix relative urls
-                    hash = "/" + hash;
-                }
-
+            if (response.url !== location.hash.replace("#/", "")) {
                 skipHashchange = true;
-                location.hash = hash;
+
+                location.hash = response.url;
             }
         }
     });
@@ -24,7 +19,7 @@
         if (skipHashchange) {
             skipHashchange = false;
         } else {
-            DOM.fire("ajaxify:history", baseUrl + location.hash.substr(2));
+            DOM.fire("ajaxify:history", baseUrl + location.hash.replace("#/", ""));
         }
     };
 
