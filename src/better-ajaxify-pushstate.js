@@ -4,7 +4,7 @@
     DOM.on("ajaxify:load", function(response, target, currentTarget, cancel) {
         if (!cancel && typeof response === "object") {
             // update browser url
-            if (response.url !== location.pathname) {
+            if (response.url !== location.pathname + location.search) {
                 history.pushState(true, response.title, response.url);
             } else if (history.replaceState) {
                 history.replaceState(true, response.title);

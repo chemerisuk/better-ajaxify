@@ -2,7 +2,8 @@
     "use strict";
 
     DOM.ready(function() {
-        var // internal data structures
+        var reAbsoluteUrl = /^.*\/\/[^\/]+/,
+            // internal data structures
             historyData = {},
             currentLocation = location.href.split("#")[0],
             containers = DOM.findAll("[data-ajaxify]"),
@@ -74,7 +75,7 @@
                             try {
                                 response = JSON.parse(response);
                                 // populate default values
-                                response.url = response.url || url;
+                                response.url = (response.url || url).replace(reAbsoluteUrl, "");
                                 response.title = response.title || DOM.get("title");
                                 response.html = response.html || {};
                             } catch (err) {
