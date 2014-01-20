@@ -20,10 +20,10 @@
                             if (typeof content === "string") {
                                 content = el.clone(false).set(content);
                             }
-                            // show/hide content async to display CSS3 animation
+                            // show/hide content to display CSS3 animation
                             // removing element from DOM when animation ends
-                            content.hide().show(10, function() { el.remove() });
-                            el.before(content).hide(10);
+                            el.before(content.hide()).hide();
+                            content.show(function() { el.remove() });
 
                             cacheEntry.html[key] = el;
                             // update content in the internal collection
