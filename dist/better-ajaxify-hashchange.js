@@ -1,8 +1,8 @@
 /**
  * @file src/better-ajaxify-hashchange.js
- * @version 1.5.2 2013-12-25T18:59:45
+ * @version 1.6.0-beta.1 2014-01-21T01:19:32
  * @overview Ajax website engine for better-dom
- * @copyright Maksim Chemerisuk 2013
+ * @copyright Maksim Chemerisuk 2014
  * @license MIT
  * @see https://github.com/chemerisuk/better-ajaxify
  */
@@ -12,22 +12,13 @@
     var baseUrl = location.href.split(/[\?#]/)[0],
         skipHashchange = false;
 
-    DOM.on("ajaxify:load", function(response, target, cancel) {
+    DOM.on("ajaxify:load", function(response, target, currentTarget, cancel) {
         if (!cancel && typeof response === "object") {
             // update browser url
-            if (response.url !== location.pathname) {
-                var hash = response.url;
-
-                if (!hash.indexOf(baseUrl)) {
-                    hash = hash.substr(baseUrl.length - 1);
-                } else if (hash[0] !== "/" && hash[0] !== "#") {
-                    // fix relative urls
-                    hash = "/" + hash;
-                }
-
+            if (response.url !== location.hash.replace("#/", "")) {
                 skipHashchange = true;
 
-                location.hash = hash;
+                location.hash = response.url;
             }
         }
     });
@@ -36,7 +27,7 @@
         if (skipHashchange) {
             skipHashchange = false;
         } else {
-            DOM.fire("ajaxify:history", baseUrl + location.hash.substr(2));
+            DOM.fire("ajaxify:history", baseUrl + location.hash.replace("#/", ""));
         }
     };
 
