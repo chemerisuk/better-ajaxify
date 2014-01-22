@@ -22,9 +22,12 @@
                                 content = el.clone(false).set(content);
                             }
                             // show/hide content to display CSS3 animation
-                            // removing element from DOM when animation ends
                             el.before(content.hide()).hide();
-                            content.show(function() { el.remove() });
+                            // show content async to display the animation properly
+                            // removing old element from the DOM when animation ends
+                            setTimeout(function() {
+                                content.show(function() { el.remove() });
+                            }, 0);
 
                             cacheEntry.html[key] = el;
                             // update content in the internal collection
@@ -123,6 +126,8 @@
                 }
 
                 if (cancel || lockedEl === target && target !== DOM) return;
+
+                url = url.replace("#/", "");
 
                 if (query && Object.prototype.toString.call(query) === "[object Object]") {
                     query = Object.keys(query).reduce(function(memo, key) {
