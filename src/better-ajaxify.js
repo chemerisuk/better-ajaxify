@@ -5,35 +5,42 @@
         var reAbsoluteUrl = /^.*\/\/[^\/]+/,
             // internal data structures
             historyData = {},
+            currentTimestamp = Date.now(),
             currentLocation = location.href.replace(reAbsoluteUrl, "").split("#")[0],
-            switchContent = (function() {
-                return function(response) {
-                    if (typeof response !== "object") return;
+            switchContent = function(response) {
+                if (typeof response !== "object") return;
 
-                    var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
+                var historyEntry = {html: {}, title: DOM.get("title"), url: currentLocation, ts: currentTimestamp};
 
-                    Object.keys(response.html).forEach(function(selector) {
-                        var el = DOM.find(selector),
-                            content = response.html[selector];
+                Object.keys(response.html).forEach(function(selector) {
+                    var el = DOM.find(selector),
+                        content = response.html[selector];
 
-                        if (content != null) {
-                            if (typeof content === "string") {
-                                content = el.clone(false).set("aria-hidden", "true").set(content);
-                            }
-                            // show/hide content to display CSS3 animation
-                            cacheEntry.html[selector] = el.before(content).hide();
-                            // remove old element from the DOM when animation ends
-                            content.show(function() { el.remove() });
+                    if (content != null) {
+                        if (typeof content === "string") {
+                            content = el.clone(false).set(content);
                         }
-                    });
-                    // store previous state difference
-                    historyData[currentLocation] = cacheEntry;
-                    // update current location variable
-                    currentLocation = response.url;
-                    // update page title
-                    DOM.set("title", response.title);
-                };
-            }());
+                        // can't use hide() here - animation quirks...
+                        content.set("aria-hidden", "true");
+                        // insert new response content
+                        el[response.ts > currentTimestamp ? "before" : "after"](content);
+                        // hide old content and remove when it's done
+                        // have to call show() to fix animation quirks
+                        el.hide(function() { el.remove().show() });
+                        // show current content
+                        content.show();
+                        // store reference to node in memory
+                        historyEntry.html[selector] = el;
+                    }
+                });
+                // store previous state difference
+                historyData[currentLocation] = historyEntry;
+                // update current location variable
+                currentLocation = response.url;
+                currentTimestamp = response.ts;
+                // update page title
+                DOM.set("title", response.title);
+            };
 
         DOM.on("ajaxify:fetch", (function() {
             // lock element to prevent double clicks
@@ -73,6 +80,7 @@
                                 response.url = (response.url || url).replace(reAbsoluteUrl, "");
                                 response.title = response.title || DOM.get("title");
                                 response.html = response.html || {};
+                                response.ts = Date.now();
                             } catch (err) {
                                 // response is a text content
                             } finally {

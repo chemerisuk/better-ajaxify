@@ -153,6 +153,8 @@ describe("XMLHttpRequest", function() {
                 };
 
                 spy.andCallFake(function(detail) {
+                    response.ts = detail.ts;
+
                     expect(detail).toEqual(response);
                 });
 
