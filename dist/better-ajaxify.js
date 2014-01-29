@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify.js
- * @version 1.6.0-beta.1 2014-01-21T01:19:32
+ * @version 1.6.0-rc.1 2014-01-29T22:56:52
  * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -13,40 +13,42 @@
         var reAbsoluteUrl = /^.*\/\/[^\/]+/,
             // internal data structures
             historyData = {},
-            currentLocation = location.href.split("#")[0],
-            containers = DOM.findAll("[data-ajaxify]"),
-            switchContent = (function() {
-                return function(response) {
-                    if (typeof response !== "object") return;
+            currentTimestamp = Date.now(),
+            currentLocation = location.href.replace(reAbsoluteUrl, "").split("#")[0],
+            switchContent = function(response) {
+                if (typeof response !== "object") return;
 
-                    var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
+                var historyEntry = {html: {}, title: DOM.get("title"), url: currentLocation, ts: currentTimestamp};
 
-                    containers.each(function(el, index) {
-                        var key = el.data("ajaxify"),
-                            content = response.html[key];
+                Object.keys(response.html).forEach(function(selector) {
+                    var el = DOM.find(selector),
+                        content = response.html[selector];
 
-                        if (content != null) {
-                            if (typeof content === "string") {
-                                content = el.clone(false).set(content);
-                            }
-                            // show/hide content to display CSS3 animation
-                            // removing element from DOM when animation ends
-                            el.before(content.hide()).hide();
-                            content.show(function() { el.remove() });
-
-                            cacheEntry.html[key] = el;
-                            // update content in the internal collection
-                            containers[index] = content;
+                    if (content != null) {
+                        if (typeof content === "string") {
+                            content = el.clone(false).set(content);
                         }
-                    });
-                    // update old containers to their latest state
-                    historyData[currentLocation] = cacheEntry;
-                    // update current location variable
-                    currentLocation = response.url;
-                    // update page title
-                    DOM.set("title", response.title);
-                };
-            }());
+                        // can't use hide() here - animation quirks...
+                        content.set("aria-hidden", "true");
+                        // insert new response content
+                        el[response.ts > currentTimestamp ? "before" : "after"](content);
+                        // hide old content and remove when it's done
+                        // have to call show() to fix animation quirks
+                        el.hide(function() { el.remove().show() });
+                        // show current content
+                        content.show();
+                        // store reference to node in memory
+                        historyEntry.html[selector] = el;
+                    }
+                });
+                // store previous state difference
+                historyData[currentLocation] = historyEntry;
+                // update current location variable
+                currentLocation = response.url;
+                currentTimestamp = response.ts;
+                // update page title
+                DOM.set("title", response.title);
+            };
 
         DOM.on("ajaxify:fetch", (function() {
             // lock element to prevent double clicks
@@ -86,6 +88,7 @@
                                 response.url = (response.url || url).replace(reAbsoluteUrl, "");
                                 response.title = response.title || DOM.get("title");
                                 response.html = response.html || {};
+                                response.ts = Date.now();
                             } catch (err) {
                                 // response is a text content
                             } finally {
@@ -131,6 +134,8 @@
                 }
 
                 if (cancel || lockedEl === target && target !== DOM) return;
+
+                url = url.replace("#/", "");
 
                 if (query && Object.prototype.toString.call(query) === "[object Object]") {
                     query = Object.keys(query).reduce(function(memo, key) {
