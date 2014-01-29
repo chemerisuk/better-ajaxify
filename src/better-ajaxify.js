@@ -5,36 +5,29 @@
         var reAbsoluteUrl = /^.*\/\/[^\/]+/,
             // internal data structures
             historyData = {},
-            currentLocation = location.href.split("#")[0],
-            containers = DOM.findAll("[data-ajaxify]"),
+            currentLocation = location.href.replace(reAbsoluteUrl, "").split("#")[0],
             switchContent = (function() {
                 return function(response) {
                     if (typeof response !== "object") return;
 
                     var cacheEntry = {html: {}, title: DOM.get("title"), url: currentLocation};
 
-                    containers.each(function(el, index) {
-                        var key = el.data("ajaxify"),
-                            content = response.html[key];
+                    Object.keys(response.html).forEach(function(selector) {
+                        var el = DOM.find(selector),
+                            content = response.html[selector];
 
                         if (content != null) {
                             if (typeof content === "string") {
-                                content = el.clone(false).set(content);
+                                content = el.clone(false).set("aria-hidden", "true").set(content);
                             }
                             // show/hide content to display CSS3 animation
-                            el.before(content.hide()).hide();
-                            // show content async to display the animation properly
-                            // removing old element from the DOM when animation ends
-                            setTimeout(function() {
-                                content.show(function() { el.remove() });
-                            }, 0);
-
-                            cacheEntry.html[key] = el;
-                            // update content in the internal collection
-                            containers[index] = content;
+                            el.before(content).hide();
+                            // remove old element from the DOM when animation ends
+                            content.show(function() { el.remove() });
+                            cacheEntry.html[selector] = el;
                         }
                     });
-                    // update old containers to their latest state
+                    // store previous state difference
                     historyData[currentLocation] = cacheEntry;
                     // update current location variable
                     currentLocation = response.url;

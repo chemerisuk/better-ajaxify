@@ -26,7 +26,7 @@
         background: yellow;
     }
 
-    [data-ajaxify=content] {
+    .main-content {
         padding-left: 20px;
 
         opacity: 1;
@@ -35,13 +35,12 @@
         transition: opacity 0.3s ease-in;
     }
 
-    [data-ajaxify=content][aria-hidden=true] {
-        display: table-cell; /* override display:none */
+    .main-content[aria-hidden=true] {
         opacity: 0;
     }
 
     /* style element which is going to be hidden */
-    [data-ajaxify=content] + [data-ajaxify=content] {
+    .main-content + .main-content {
         position: absolute;
         left: 200px;
 
@@ -65,7 +64,7 @@
             <li><a href="/better-ajaxify/demo/backend-setup.html">Backend setup</a></li>
         </ul>
     </nav>
-    <section data-ajaxify="content" class="table-cell">
+    <section class="main-content table-cell">
         <h1>Home page</h1>
         Ajax website engine for better-dom
     </section>

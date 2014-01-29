@@ -1,7 +1,7 @@
 (function(DOM, location) {
     "use strict";
 
-    var baseUrl = location.href.split(/[\?#]/)[0],
+    var baseUrl = location.pathname,
         skipHashchange = false;
 
     DOM.on("ajaxify:load", function(response, target, currentTarget, cancel) {
@@ -10,7 +10,7 @@
             if (response.url !== location.hash.replace("#/", "")) {
                 skipHashchange = true;
 
-                location.hash = response.url;
+                location.hash = response.url.replace(baseUrl, "/");
             }
         }
     });
