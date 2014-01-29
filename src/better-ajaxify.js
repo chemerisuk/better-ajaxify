@@ -21,10 +21,9 @@
                                 content = el.clone(false).set("aria-hidden", "true").set(content);
                             }
                             // show/hide content to display CSS3 animation
-                            el.before(content).hide();
+                            cacheEntry.html[selector] = el.before(content).hide();
                             // remove old element from the DOM when animation ends
                             content.show(function() { el.remove() });
-                            cacheEntry.html[selector] = el;
                         }
                     });
                     // store previous state difference
