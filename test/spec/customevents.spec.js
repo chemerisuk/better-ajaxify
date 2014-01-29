@@ -11,12 +11,12 @@ describe("Custom events", function() {
             expect(spy).toHaveBeenCalledWith(true, "b", "a");
         });
 
-        it("should replace state if url is the same", function() {
-            var spy = spyOn(history, "replaceState");
+        // it("should replace state if url is the same", function() {
+        //     var spy = spyOn(history, "replaceState");
 
-            DOM.fire("ajaxify:load", {url: location.pathname, title: "d"});
-            expect(spy).toHaveBeenCalledWith(true, "d");
-        });
+        //     DOM.fire("ajaxify:load", {url: location.pathname, title: "d"});
+        //     expect(spy).toHaveBeenCalledWith(true, "d");
+        // });
 
         it("should do nothing if response is not an object", function() {
             var spy = spyOn(history, "pushState");

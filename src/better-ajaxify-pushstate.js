@@ -6,23 +6,22 @@
             // update browser url
             if (response.url !== location.pathname + location.search) {
                 history.pushState(true, response.title, response.url);
-            } else if (history.replaceState) {
-                history.replaceState(true, response.title);
             }
         }
     });
 
     if (history.pushState) {
-        window.onpopstate = function(e) {
-            var url = location.href.split("#")[0];
-
-            // skip initial popstate
-            if (!e.state) return;
-
-            DOM.fire("ajaxify:history", url);
-        };
+        window.addEventListener("popstate", function(e) {
+            if (e.state) {
+                DOM.fire("ajaxify:history", location.pathname + location.search);
+            }
+        });
         // update initial state
         history.replaceState(true, DOM.get("title"));
+        // fix bug with external pages
+        window.addEventListener("beforeunload", function() {
+            history.replaceState(null, DOM.get("title"));
+        });
     } else {
         // when url should be changed don't start request in old browsers
         DOM.on("ajaxify:loadstart", function(xhr, sender, currentTarget, defaultPrevented) {
