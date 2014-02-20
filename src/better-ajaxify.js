@@ -18,7 +18,8 @@
 
                     if (content != null) {
                         if (typeof content === "string") {
-                            content = el.clone(false).set(content).hide();
+                            // can't use hide() because of animation quirks in safari
+                            content = el.clone(false).set(content).set("aria-hidden", "true");
                         }
                         // insert new response content
                         el[response.ts > currentTimestamp ? "before" : "after"](content);
@@ -176,33 +177,36 @@
             }
         });
 
-        DOM.on({
-            "click a": function(target, link, cancel) {
-                if (!cancel && !link.get("target")) {
-                    var url = link.get("href");
+        DOM.on("click a", "defaultLinkClick");
+        DOM.defaultLinkClick = function(_, link, cancel) {
+            if (!cancel && !link.get("target")) {
+                var url = link.get("href");
 
-                    if (!url.indexOf("http")) return !link.fire("ajaxify:fetch", url);
+                if (!url.indexOf("http")) {
+                    return !link.fire("ajaxify:fetch", url);
                 }
-            },
-            "submit": function(form, currentTarget, cancel) {
-                if (!cancel && !form.get("target")) {
-                    var url = form.get("action"),
-                        query = form.toQueryString();
+            }
+        };
 
-                    if (form.get("method") === "get") {
-                        url += (~url.indexOf("?") ? "&" : "?") + query;
-                        query = null;
-                    }
+        DOM.on("submit", "defaultFormSubmit");
+        DOM.defaultFormSubmit = function(form, _, cancel) {
+            if (!cancel && !form.get("target")) {
+                var url = form.get("action"),
+                    query = form.toQueryString();
 
+                if (form.get("method") === "get") {
+                    return !form.fire("ajaxify:fetch", url + (~url.indexOf("?") ? "&" : "?") + query);
+                } else {
                     return !form.fire("ajaxify:fetch", url, query);
                 }
-            },
-            "ajaxify:history": function(url) {
-                if (url in historyData) {
-                    switchContent(historyData[url]);
-                } else {
-                    DOM.fire("ajaxify:fetch", url);
-                }
+            }
+        };
+
+        DOM.on("ajaxify:history", function(url) {
+            if (url in historyData) {
+                switchContent(historyData[url]);
+            } else {
+                DOM.fire("ajaxify:fetch", url);
             }
         });
     });
