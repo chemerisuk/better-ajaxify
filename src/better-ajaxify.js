@@ -18,15 +18,12 @@
 
                     if (content != null) {
                         if (typeof content === "string") {
-                            content = el.clone(false).set(content);
+                            content = el.clone(false).set(content).hide();
                         }
-                        // can't use hide() here - animation quirks...
-                        content.set("aria-hidden", "true");
                         // insert new response content
                         el[response.ts > currentTimestamp ? "before" : "after"](content);
                         // hide old content and remove when it's done
-                        // have to call show() to fix animation quirks
-                        el.hide(function() { el.remove().show() });
+                        el.hide(function() { el.remove() });
                         // show current content
                         content.show();
                         // store reference to node in memory
