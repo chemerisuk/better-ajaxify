@@ -225,12 +225,10 @@
         },
         toQueryString: function() {
             return this.findAll("[name]").reduce(function(memo, el) {
-                var name = el.get("name"),
-                    fieldset = el.parent("fieldset");
-
-                // don't include form fields without names
-                // skip inner elements of a disabled fieldset
-                if (name && !fieldset.get("disabled")) {
+                var name = el.get("name");
+                // don't include disabled form fields or without names
+                // skip inner form elements of a disabled fieldset
+                if (name && !el.get("disabled") && !el.parent("fieldset").get("disabled")) {
                     switch(el.get("type")) {
                     case "select-one":
                     case "select-multiple":

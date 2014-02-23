@@ -22,6 +22,7 @@ describe("toQueryString", function() {
         test("<form id='a5'><button type='submit' name='t'></button></form>", "");
         test("<form id='f6'><fieldset name='t'></fieldset></form>", "");
         test("form>input[type=text name=a value=b]+fieldset[disabled=disabled]>input[type=text name=c value=d]", "a=b");
+        test("form>input[type=text name=a value=b disabled]", "");
     });
 
     function test(html, value) {
