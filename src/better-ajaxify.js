@@ -3,14 +3,13 @@
 
     DOM.ready(function() {
         var reAbsoluteUrl = /^.*\/\/[^\/]+/,
-            // internal data structures
-            historyData = {},
-            currentTimestamp = Date.now(),
-            currentLocation = location.href.replace(reAbsoluteUrl, "").split("#")[0],
+            stateHistory = {}, // in-memory storage for states
+            currentState = {ts: Date.now(), url: location.href.replace(reAbsoluteUrl, "").split("#")[0]},
             switchContent = function(response) {
                 if (typeof response !== "object") return;
 
-                var historyEntry = {html: {}, title: DOM.get("title"), url: currentLocation, ts: currentTimestamp};
+                currentState.html = {};
+                currentState.title = DOM.get("title");
 
                 Object.keys(response.html).forEach(function(selector) {
                     var el = DOM.find(selector),
@@ -18,24 +17,23 @@
 
                     if (content != null) {
                         if (typeof content === "string") {
-                            // can't use hide() because of animation quirks in safari
+                            // can't use hide() because of animation quirks in Safari
                             content = el.clone(false).set(content).set("aria-hidden", "true");
                         }
                         // insert new response content
-                        el[response.ts > currentTimestamp ? "before" : "after"](content);
+                        el[response.ts > currentState.ts ? "before" : "after"](content);
                         // hide old content and remove when it's done
                         el.hide(function() { el.remove() });
                         // show current content
                         content.show();
                         // store reference to node in memory
-                        historyEntry.html[selector] = el;
+                        currentState.html[selector] = el;
                     }
                 });
                 // store previous state difference
-                historyData[currentLocation] = historyEntry;
-                // update current location variable
-                currentLocation = response.url;
-                currentTimestamp = response.ts;
+                stateHistory[currentState.url] = currentState;
+                // update current state with the latest
+                currentState = response;
                 // update page title
                 DOM.set("title", response.title);
             };
@@ -65,12 +63,10 @@
                         if (this.readyState === 4) {
                             var status = this.status,
                                 response = this.responseText,
-                                doCallback;
+                                eventType;
 
                             // cleanup outer variables
                             if (callback === switchContent) lockedEl = null;
-
-                            target.fire("ajaxify:loadend", this);
 
                             try {
                                 response = JSON.parse(response);
@@ -82,13 +78,15 @@
                             } catch (err) {
                                 // response is a text content
                             } finally {
+                                target.fire("ajaxify:loadend", response, this);
+
                                 if (status >= 200 && status < 300 || status === 304) {
-                                    doCallback = target.fire("ajaxify:load", response);
+                                    eventType = "ajaxify:load"; // success
                                 } else {
-                                    doCallback = target.fire("ajaxify:error", this);
+                                    eventType = "ajaxify:error"; // error
                                 }
 
-                                if (doCallback) callback(response);
+                                if (target.fire(eventType, response, this)) callback(response);
                             }
                         }
                     };
@@ -201,8 +199,8 @@
         };
 
         DOM.on("ajaxify:history", function(url) {
-            if (url in historyData) {
-                switchContent(historyData[url]);
+            if (url in stateHistory) {
+                switchContent(stateHistory[url]);
             } else {
                 DOM.fire("ajaxify:fetch", url);
             }
