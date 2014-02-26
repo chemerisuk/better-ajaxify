@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify-hashchange.js
- * @version 1.6.0-rc.1 2014-01-29T22:56:52
+ * @version 1.6.0-rc.2 2014-02-27T00:31:24
  * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -12,8 +12,8 @@
     var baseUrl = location.pathname,
         skipHashchange = false;
 
-    DOM.on("ajaxify:load", function(response, target, currentTarget, cancel) {
-        if (!cancel && typeof response === "object") {
+    DOM.on("ajaxify:load", function(response, xhr, target, _, canceled) {
+        if (!canceled && typeof response === "object") {
             // update browser url
             if (response.url !== location.hash.replace("#/", "")) {
                 skipHashchange = true;

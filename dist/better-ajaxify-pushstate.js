@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify-pushstate.js
- * @version 1.6.0-rc.1 2014-01-29T22:56:52
+ * @version 1.6.0-rc.2 2014-02-27T00:31:24
  * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -9,9 +9,9 @@
 (function(DOM, location, history) {
     "use strict";
 
-    DOM.on("ajaxify:load", function(response, target, currentTarget, cancel) {
-        if (!cancel && typeof response === "object") {
-            // update browser url
+    DOM.on("ajaxify:load", function(response, xhr, target, _, canceled) {
+        if (!canceled && typeof response === "object") {
+            // update url in address bar
             if (response.url !== location.pathname + location.search) {
                 history.pushState(true, response.title, response.url);
             }
@@ -32,8 +32,8 @@
         });
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", function(xhr, sender, currentTarget, defaultPrevented) {
-            if (!defaultPrevented && sender.get("method") !== "post") {
+        DOM.on("ajaxify:loadstart", function(xhr, sender, _, canceled) {
+            if (!canceled && sender.get("method") !== "post") {
                 // load a new page in legacy browsers
                 if (sender.matches("form")) {
                     sender.fire("submit");
