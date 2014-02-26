@@ -8,8 +8,12 @@
   ],
   "ignore": [
     ".*",
+    "test",
     "src",
-    "test"
+    "Gruntfile.js",
+    "package.json",
+    "bower.json",
+    "main.sublime-project"
   ],
   "keywords": [
     "better-dom"
