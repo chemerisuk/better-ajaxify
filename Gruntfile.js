@@ -34,7 +34,15 @@ module.exports = function(grunt) {
             bower: {
                 command: "bower install"
             }
-        }
+        },
+        connect: {
+            watch: {
+                options: {
+                    hostname: "*",
+                    base: "../"
+                }
+            }
+        },
     });
 
     Object.keys(pkg.devDependencies).forEach(function(name) {
@@ -42,7 +50,7 @@ module.exports = function(grunt) {
     });
 
     grunt.registerTask("test", ["jshint", "karma:unit"]);
-    grunt.registerTask("dev", ["jshint", "karma:coverage", "watch"]);
+    grunt.registerTask("dev", ["jshint", "karma:coverage", "connect", "watch"]);
     grunt.registerTask("publish", "Publish a new version", function(version) {
         grunt.task.run([
             "shell:bower",

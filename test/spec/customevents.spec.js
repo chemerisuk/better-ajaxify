@@ -33,18 +33,20 @@ describe("Custom events", function() {
             spy = spyOn(XMLHttpRequest.prototype, "send");
         });
 
-        it("should trigger ajax request", function() {
+        it("should trigger ajax request", function(done) {
             DOM.ready(function() {
                 DOM.fire("ajaxify:fetch", "test");
             });
 
-            waitsFor(function() {
-                return spy.callCount === 1;
-            });
+            setTimeout(function() {
+                expect(spy).toHaveBeenCalled();
+
+                done();
+            }, 100);
         });
 
         it("should respect defaultPrevented", function() {
-            var cancelSpy = jasmine.createSpy("cancel").andReturn(false),
+            var cancelSpy = jasmine.createSpy("cancel").and.returnValue(false),
                 body = DOM.find("body");
 
             body.once("ajaxify:fetch", cancelSpy);
@@ -54,8 +56,8 @@ describe("Custom events", function() {
             expect(spy).not.toHaveBeenCalled();
         });
 
-        it("should throw error if argument is invalid", function() {
-            var spy = jasmine.createSpy("error").andReturn(true);
+        it("should throw error if argument is invalid", function(done) {
+            var spy = jasmine.createSpy("error").and.returnValue(true);
 
             window.onerror = spy;
 
@@ -64,44 +66,46 @@ describe("Custom events", function() {
                 DOM.fire("ajaxify:fetch", null);
             });
 
-            waitsFor(function() {
-                if (spy.callCount === 2) {
-                    window.onerror = undefined;
+            setTimeout(function() {
+                expect(spy.calls.count()).toBe(2);
 
-                    return true;
-                }
-            });
+                window.onerror = undefined;
+
+                done();
+            }, 100);
         });
 
-        it("should support optional callback argument", function() {
+        it("should support optional callback argument", function(done) {
             DOM.ready(function() {
                 DOM.fire("ajaxify:fetch", "test", function() {});
             });
 
-            waitsFor(function() {
-                return spy.callCount === 1;
-            });
+            setTimeout(function() {
+                expect(spy.calls.count()).toBe(1);
+
+                done();
+            }, 100);
         });
 
-        it("should respect defaultPrevented of ajaxify:loadstart", function() {
-            var done = false;
-
+        it("should respect defaultPrevented of ajaxify:loadstart", function(done) {
             DOM.ready(function() {
-                var loadstartSpy = jasmine.createSpy("loadstart").andReturn(false);
+                var loadstartSpy = jasmine.createSpy("loadstart").and.returnValue(false);
 
                 DOM.once("ajaxify:loadstart", loadstartSpy);
                 DOM.fire("ajaxify:fetch", "test");
                 expect(loadstartSpy).toHaveBeenCalled();
-
-                done = !spy.callCount;
             });
 
-            waitsFor(function() { return done });
+            setTimeout(function() {
+                expect(spy.calls.count()).toBe(0);
+
+                done();
+            }, 100);
         });
     });
 
     describe("ajaxify:history", function() {
-        it("should trigger page reload if url is not in history cache", function() {
+        it("should trigger page reload if url is not in history cache", function(done) {
             var fetchSpy = jasmine.createSpy("fetch");
 
             DOM.once("ajaxify:fetch", fetchSpy);
@@ -110,9 +114,11 @@ describe("Custom events", function() {
                 DOM.fire("ajaxify:history", "???");
             });
 
-            waitsFor(function() {
-                return fetchSpy.callCount === 1;
-            });
+            setTimeout(function() {
+                expect(fetchSpy.calls.count()).toBe(1);
+
+                done();
+            }, 100);
         });
     });
 });

@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify.js
- * @version 1.6.0-rc.1 2014-01-29T22:56:52
+ * @version 1.6.0-rc.2 2014-02-27T00:31:24
  * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -11,14 +11,13 @@
 
     DOM.ready(function() {
         var reAbsoluteUrl = /^.*\/\/[^\/]+/,
-            // internal data structures
-            historyData = {},
-            currentTimestamp = Date.now(),
-            currentLocation = location.href.replace(reAbsoluteUrl, "").split("#")[0],
+            stateHistory = {}, // in-memory storage for states
+            currentState = {ts: Date.now(), url: location.href.replace(reAbsoluteUrl, "").split("#")[0]},
             switchContent = function(response) {
                 if (typeof response !== "object") return;
 
-                var historyEntry = {html: {}, title: DOM.get("title"), url: currentLocation, ts: currentTimestamp};
+                currentState.html = {};
+                currentState.title = DOM.get("title");
 
                 Object.keys(response.html).forEach(function(selector) {
                     var el = DOM.find(selector),
@@ -26,26 +25,23 @@
 
                     if (content != null) {
                         if (typeof content === "string") {
-                            content = el.clone(false).set(content);
+                            // can't use hide() because of animation quirks in Safari
+                            content = el.clone(false).set(content).set("aria-hidden", "true");
                         }
-                        // can't use hide() here - animation quirks...
-                        content.set("aria-hidden", "true");
                         // insert new response content
-                        el[response.ts > currentTimestamp ? "before" : "after"](content);
+                        el[response.ts > currentState.ts ? "before" : "after"](content);
                         // hide old content and remove when it's done
-                        // have to call show() to fix animation quirks
-                        el.hide(function() { el.remove().show() });
+                        el.hide(function() { el.remove() });
                         // show current content
                         content.show();
                         // store reference to node in memory
-                        historyEntry.html[selector] = el;
+                        currentState.html[selector] = el;
                     }
                 });
                 // store previous state difference
-                historyData[currentLocation] = historyEntry;
-                // update current location variable
-                currentLocation = response.url;
-                currentTimestamp = response.ts;
+                stateHistory[currentState.url] = currentState;
+                // update current state with the latest
+                currentState = response;
                 // update page title
                 DOM.set("title", response.title);
             };
@@ -75,12 +71,10 @@
                         if (this.readyState === 4) {
                             var status = this.status,
                                 response = this.responseText,
-                                doCallback;
+                                eventType;
 
                             // cleanup outer variables
                             if (callback === switchContent) lockedEl = null;
-
-                            target.fire("ajaxify:loadend", this);
 
                             try {
                                 response = JSON.parse(response);
@@ -92,13 +86,15 @@
                             } catch (err) {
                                 // response is a text content
                             } finally {
+                                target.fire("ajaxify:loadend", response, this);
+
                                 if (status >= 200 && status < 300 || status === 304) {
-                                    doCallback = target.fire("ajaxify:load", response);
+                                    eventType = "ajaxify:load"; // success
                                 } else {
-                                    doCallback = target.fire("ajaxify:error", this);
+                                    eventType = "ajaxify:error"; // error
                                 }
 
-                                if (doCallback) callback(response);
+                                if (target.fire(eventType, response, this)) callback(response);
                             }
                         }
                     };
@@ -165,55 +161,48 @@
             };
         }()));
 
-        DOM.find("meta[name=viewport]").each(function(el) {
-            // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
-            if (~el.get("content").indexOf("width=device-width")) {
-                // fastclick support via handling some events earlier
-                DOM.on("touchend", function(el, currentTarget, cancel) {
-                    if (cancel) return;
+        // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
+        DOM.find("meta[name=viewport][content*='width=device-width']").each(function() {
+            // fastclick support via handling some events earlier
+            DOM.on("touchend a", function(_, el, cancel) {
+                return !(cancel || el.fire("click"));
+            });
 
-                    if (el.matches("a")) {
-                        if (!el.get("target") && !el.get("href").indexOf("http")) {
-                            el.fire("click");
-
-                            return false;
-                        }
-                    } else if (el.matches("[type=submit]") && !el.get("disabled")) {
-                        el.parent("form").fire("submit");
-
-                        return false;
-                    }
-                });
-            }
+            DOM.on("touchend [type=submit]", function(_, el, cancel) {
+                return !(cancel || el.parent("form").fire("submit"));
+            });
         });
 
-        DOM.on({
-            "click a": function(target, link, cancel) {
-                if (!cancel && !link.get("target")) {
-                    var url = link.get("href");
+        DOM.on("click a", "defaultLinkClick");
+        DOM.defaultLinkClick = function(_, link, cancel) {
+            if (!cancel && !link.get("target")) {
+                var url = link.get("href");
 
-                    if (!url.indexOf("http")) return !link.fire("ajaxify:fetch", url);
+                if (!url.indexOf("http")) {
+                    return !link.fire("ajaxify:fetch", url);
                 }
-            },
-            "submit": function(form, currentTarget, cancel) {
-                if (!cancel && !form.get("target")) {
-                    var url = form.get("action"),
-                        query = form.toQueryString();
+            }
+        };
 
-                    if (form.get("method") === "get") {
-                        url += (~url.indexOf("?") ? "&" : "?") + query;
-                        query = null;
-                    }
+        DOM.on("submit", "defaultFormSubmit");
+        DOM.defaultFormSubmit = function(form, _, cancel) {
+            if (!cancel && !form.get("target")) {
+                var url = form.get("action"),
+                    query = form.toQueryString();
 
+                if (form.get("method") === "get") {
+                    return !form.fire("ajaxify:fetch", url + (~url.indexOf("?") ? "&" : "?") + query);
+                } else {
                     return !form.fire("ajaxify:fetch", url, query);
                 }
-            },
-            "ajaxify:history": function(url) {
-                if (url in historyData) {
-                    switchContent(historyData[url]);
-                } else {
-                    DOM.fire("ajaxify:fetch", url);
-                }
+            }
+        };
+
+        DOM.on("ajaxify:history", function(url) {
+            if (url in stateHistory) {
+                switchContent(stateHistory[url]);
+            } else {
+                DOM.fire("ajaxify:fetch", url);
             }
         });
     });
@@ -236,12 +225,10 @@
         },
         toQueryString: function() {
             return this.findAll("[name]").reduce(function(memo, el) {
-                var name = el.get("name"),
-                    fieldset = el.parent("fieldset");
-
-                // don't include form fields without names
-                // skip inner elements of a disabled fieldset
-                if (name && !fieldset.get("disabled")) {
+                var name = el.get("name");
+                // don't include disabled form fields or without names
+                // skip inner form elements of a disabled fieldset
+                if (name && !el.get("disabled") && !el.parent("fieldset").get("disabled")) {
                     switch(el.get("type")) {
                     case "select-one":
                     case "select-multiple":
