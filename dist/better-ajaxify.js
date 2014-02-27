@@ -165,11 +165,11 @@
         DOM.find("meta[name=viewport][content*='width=device-width']").each(function() {
             // fastclick support via handling some events earlier
             DOM.on("touchend a", function(_, el, cancel) {
-                return !(cancel || el.fire("click"));
+                return !cancel || !el.fire("click");
             });
 
             DOM.on("touchend [type=submit]", function(_, el, cancel) {
-                return !(cancel || el.parent("form").fire("submit"));
+                return !cancel || !el.parent("form").fire("submit");
             });
         });
 
