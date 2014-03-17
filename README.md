@@ -1,5 +1,5 @@
-# better-ajaxify [![Build Status](https://api.travis-ci.org/chemerisuk/better-ajaxify.png?branch=master)](http://travis-ci.org/chemerisuk/better-ajaxify)
-> Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
+# better-ajaxify [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
+> Pjax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
 [LIVE DEMO](http://chemerisuk.github.io/better-ajaxify/)
 
@@ -125,8 +125,20 @@ Triggered when request was cancelled because of timeout. Timeout is not configur
 Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed
 
 ## Browser support
+#### Desktop
 * Chrome
 * Safari 6.0+
 * Firefox 16+
 * Opera 12.10+
 * IE8+
+
+#### Mobile
+* iOS Safari 6+
+* Android 2.3+
+* Chrome for Android
+
+[travis-url]: http://travis-ci.org/chemerisuk/better-ajaxify
+[travis-image]: https://api.travis-ci.org/chemerisuk/better-ajaxify.png?branch=master
+
+[coveralls-url]: https://coveralls.io/r/chemerisuk/better-ajaxify
+[coveralls-image]: https://coveralls.io/repos/chemerisuk/better-ajaxify/badge.png?branch=master

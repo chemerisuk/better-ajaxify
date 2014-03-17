@@ -1,6 +1,6 @@
 {
   "name": "better-ajaxify",
-  "description": "Ajax website engine for better-dom",
+  "description": "Pjax website engine for better-dom",
   "version": "1.6.0-rc.2",
   "author": "Maksim Chemerisuk",
   "license": "MIT",
@@ -8,18 +8,22 @@
     "type": "git",
     "url": "https://github.com/chemerisuk/better-ajaxify"
   },
-  "scripts": {
-    "test": "grunt test"
-  },
   "devDependencies": {
     "grunt": "0.4.1",
     "grunt-contrib-jshint": "0.5.4",
     "grunt-contrib-watch": "0.4.3",
-    "grunt-karma": "0.7.1",
-    "karma-jasmine": "~0.2",
-    "karma-coverage": "~0.1",
+    "grunt-karma": "0.8.2",
+    "karma": "0.12.0",
+    "karma-jasmine": "^0.2",
+    "karma-coverage": "^0.1",
+    "karma-phantomjs-launcher": "^0.1",
     "grunt-github-publish": "~0.1.1",
     "grunt-shell": "~0.6.0",
-    "grunt-contrib-connect": "0.3.0"
+    "grunt-contrib-connect": "0.3.0",
+    "coveralls": "^2.8.0"
+  },
+  "scripts": {
+    "test": "grunt test",
+    "coveralls": "cat ./coverage/PhantomJS*/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   }
 }
