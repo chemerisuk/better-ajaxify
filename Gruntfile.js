@@ -16,13 +16,11 @@ module.exports = function(grunt) {
                 configFile: "test/karma.conf.js"
             },
             watch: {
-                preprocessors: { "src/*.js": "coverage" },
                 reporters: ["coverage", "progress"],
                 background: true
             },
             unit: {
                 singleRun: true,
-                preprocessors: { "build/better-ajaxify.js": "coverage" },
                 reporters: ["coverage", "dots"],
                 coverageReporter: {
                     type: "lcovonly",
