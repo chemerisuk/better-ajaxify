@@ -1,6 +1,8 @@
 (function(DOM, location) {
     "use strict";
 
+    DOM.ajaxifyTimeout = 15000;
+
     DOM.ready(function() {
         var reAbsoluteUrl = /^.*\/\/[^\/]+/,
             stateHistory = {}, // in-memory storage for states
@@ -58,7 +60,7 @@
                     }
 
                     resultXHR.ontimeout = function() { target.fire("ajaxify:timeout", this) };
-                    resultXHR.onerror = function() { target.fire("ajaxify:error", this) };
+                    resultXHR.onerror = function() { target.fire("ajaxify:error", null, this) };
                     resultXHR.onreadystatechange = function() {
                         if (this.readyState === 4) {
                             var status = this.status,
@@ -144,7 +146,7 @@
 
                 xhr = createXHR(target, url, callback);
                 xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
-                xhr.timeout = 15000;
+                xhr.timeout = DOM.ajaxifyTimeout;
                 xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
                 if (query) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
