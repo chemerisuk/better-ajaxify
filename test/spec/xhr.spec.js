@@ -68,9 +68,10 @@ describe("xhr", function() {
         it("should trigger ajaxify:error on XHR error", function() {
             sendSpy.and.callFake(function() {
                 var xhr = this,
-                    spy = jasmine.createSpy("error").and.callFake(function(data) {
+                    spy = jasmine.createSpy("error").and.callFake(function(arg1, arg2) {
                         expect(this).toBe(DOM);
-                        expect(data).toBe(xhr);
+                        expect(arg1).toBeNull();
+                        expect(arg2).toBe(xhr);
                     });
 
                 DOM.once("ajaxify:error", spy);

@@ -65,7 +65,7 @@
                         if (this.readyState === 4) {
                             var status = this.status,
                                 response = this.responseText,
-                                eventType;
+                                eventType, execCallback;
 
                             // cleanup outer variables
                             if (callback === switchContent) lockedEl = null;
@@ -80,7 +80,7 @@
                             } catch (err) {
                                 // response is a text content
                             } finally {
-                                target.fire("ajaxify:loadend", response, this);
+                                execCallback = target.fire("ajaxify:loadend", response, this);
 
                                 if (status >= 200 && status < 300 || status === 304) {
                                     eventType = "ajaxify:load"; // success
@@ -88,7 +88,9 @@
                                     eventType = "ajaxify:error"; // error
                                 }
 
-                                if (target.fire(eventType, response, this)) callback(response);
+                                execCallback &= target.fire(eventType, response, this);
+
+                                if (execCallback) callback(response);
                             }
                         }
                     };
