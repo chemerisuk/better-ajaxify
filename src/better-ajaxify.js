@@ -1,6 +1,8 @@
 (function(DOM, location) {
     "use strict";
 
+    DOM.ajaxifyTimeout = 15000;
+
     DOM.ready(function() {
         var reAbsoluteUrl = /^.*\/\/[^\/]+/,
             stateHistory = {}, // in-memory storage for states
@@ -58,12 +60,12 @@
                     }
 
                     resultXHR.ontimeout = function() { target.fire("ajaxify:timeout", this) };
-                    resultXHR.onerror = function() { target.fire("ajaxify:error", this) };
+                    resultXHR.onerror = function() { target.fire("ajaxify:error", null, this) };
                     resultXHR.onreadystatechange = function() {
                         if (this.readyState === 4) {
                             var status = this.status,
                                 response = this.responseText,
-                                eventType;
+                                eventType, execCallback;
 
                             // cleanup outer variables
                             if (callback === switchContent) lockedEl = null;
@@ -78,7 +80,7 @@
                             } catch (err) {
                                 // response is a text content
                             } finally {
-                                target.fire("ajaxify:loadend", response, this);
+                                execCallback = target.fire("ajaxify:loadend", response, this);
 
                                 if (status >= 200 && status < 300 || status === 304) {
                                     eventType = "ajaxify:load"; // success
@@ -86,7 +88,9 @@
                                     eventType = "ajaxify:error"; // error
                                 }
 
-                                if (target.fire(eventType, response, this)) callback(response);
+                                execCallback &= target.fire(eventType, response, this);
+
+                                if (execCallback) callback(response);
                             }
                         }
                     };
@@ -144,7 +148,7 @@
 
                 xhr = createXHR(target, url, callback);
                 xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
-                xhr.timeout = 15000;
+                xhr.timeout = DOM.ajaxifyTimeout;
                 xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
                 if (query) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -157,11 +161,11 @@
         DOM.find("meta[name=viewport][content*='width=device-width']").each(function() {
             // fastclick support via handling some events earlier
             DOM.on("touchend a", function(_, el, cancel) {
-                return !(cancel || el.fire("click"));
+                return !cancel || !el.fire("click");
             });
 
             DOM.on("touchend [type=submit]", function(_, el, cancel) {
-                return !(cancel || el.parent("form").fire("submit"));
+                return !cancel || !el.parent("form").fire("submit");
             });
         });
 
