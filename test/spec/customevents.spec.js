@@ -7,7 +7,7 @@ describe("Custom events", function() {
         it("should update url and containers", function() {
             var spy = spyOn(history, "pushState");
 
-            DOM.fire("ajaxify:load", {url: "a", title: "b"});
+            DOM.fire("ajaxify:loadend", {url: "a", title: "b"});
             expect(spy).toHaveBeenCalledWith(true, "b", "a");
         });
 

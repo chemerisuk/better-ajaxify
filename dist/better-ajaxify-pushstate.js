@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify-pushstate.js
- * @version 1.6.0-rc.3 2014-04-28T21:41:29
+ * @version 1.6.0-rc.4 2014-05-10T15:50:10
  * @overview Pjax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -9,7 +9,7 @@
 (function(DOM, location, history) {
     "use strict";
 
-    DOM.on("ajaxify:load", function(response, xhr, target, _, canceled) {
+    DOM.on("ajaxify:loadend", function(response, xhr, target, _, canceled) {
         if (!canceled && typeof response === "object") {
             // update url in address bar
             if (response.url !== location.pathname + location.search) {

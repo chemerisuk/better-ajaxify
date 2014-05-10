@@ -1,7 +1,7 @@
 (function(DOM, location, history) {
     "use strict";
 
-    DOM.on("ajaxify:load", function(response, xhr, target, _, canceled) {
+    DOM.on("ajaxify:loadend", function(response, xhr, target, _, canceled) {
         if (!canceled && typeof response === "object") {
             // update url in address bar
             if (response.url !== location.pathname + location.search) {
