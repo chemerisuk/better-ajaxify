@@ -8,7 +8,7 @@
             stateHistory = {}, // in-memory storage for states
             currentState = {ts: Date.now(), url: location.href.replace(reAbsoluteUrl, "").split("#")[0]},
             switchContent = function(response) {
-                if (typeof response !== "object") return;
+                if (typeof response !== "object" || typeof response.html !== "object") return;
 
                 currentState.html = {};
                 currentState.title = DOM.get("title");
@@ -63,34 +63,22 @@
                     resultXHR.onerror = function() { target.fire("ajaxify:error", null, this) };
                     resultXHR.onreadystatechange = function() {
                         if (this.readyState === 4) {
-                            var status = this.status,
-                                response = this.responseText,
-                                eventType, execCallback;
+                            var response = this.responseText;
 
                             // cleanup outer variables
                             if (callback === switchContent) lockedEl = null;
 
                             try {
                                 response = JSON.parse(response);
-                                // populate default values
-                                response.url = (response.url || url).replace(reAbsoluteUrl, "");
-                                response.title = response.title || DOM.get("title");
-                                response.html = response.html || {};
-                                response.ts = Date.now();
                             } catch (err) {
                                 // response is a text content
+                                response = {html: response};
                             } finally {
-                                execCallback = target.fire("ajaxify:loadend", response, this);
+                                // populate local values
+                                response.url = response.url || url;
+                                response.callback = callback;
 
-                                if (status >= 200 && status < 300 || status === 304) {
-                                    eventType = "ajaxify:load"; // success
-                                } else {
-                                    eventType = "ajaxify:error"; // error
-                                }
-
-                                execCallback &= target.fire(eventType, response, this);
-
-                                if (execCallback) callback(response);
+                                target.fire("ajaxify:loadend", response, this);
                             }
                         }
                     };
@@ -147,7 +135,7 @@
                 }
 
                 xhr = createXHR(target, url, callback);
-                xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + new Date().getTime()), true);
+                xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + Date.now()), true);
                 xhr.timeout = DOM.ajaxifyTimeout;
                 xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
@@ -193,6 +181,27 @@
                 }
             }
         };
+
+        DOM.on("ajaxify:loadend", function(response, xhr, target, _, canceled) {
+            var status = xhr.status,
+                eventType;
+
+            if (canceled) return false;
+
+            // populate default values
+            response.url = response.url.replace(reAbsoluteUrl, "");
+            response.title = response.title || DOM.get("title");
+            response.callback = response.callback || switchContent;
+            response.ts = Date.now();
+
+            if (status >= 200 && status < 300 || status === 304) {
+                eventType = "ajaxify:load"; // success
+            } else {
+                eventType = "ajaxify:error"; // error
+            }
+
+            if (target.fire(eventType, response, xhr)) response.callback(response);
+        });
 
         DOM.on("ajaxify:history", function(url) {
             if (url in stateHistory) {
