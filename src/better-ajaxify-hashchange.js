@@ -4,7 +4,7 @@
     var baseUrl = location.pathname,
         skipHashchange = false;
 
-    DOM.on("ajaxify:load", function(response, xhr, target, _, canceled) {
+    DOM.on("ajaxify:loadend", function(response, xhr, target, _, canceled) {
         if (!canceled && typeof response === "object") {
             // update browser url
             if (response.url !== location.hash.replace("#/", "")) {

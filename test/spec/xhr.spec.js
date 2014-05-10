@@ -135,7 +135,7 @@ describe("xhr", function() {
 
             sendSpy.and.callFake(function() {
                 spy.and.callFake(function(detail) {
-                    expect(detail).toEqual("<a>test</a>");
+                    expect(detail.html).toEqual("<a>test</a>");
                 });
 
                 DOM.on("ajaxify:load", spy);
