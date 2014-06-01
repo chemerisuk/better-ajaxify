@@ -44,10 +44,10 @@ Then append the following html elements on your page:
 
 ## Frontend setup
 
-### Determine strategy for browser history
-There are 2 main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) or via __hashchange__ event. Each has it's own advantages and disadvantages.
+#### Determine strategy for browser history
+There are two main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) or via __hashchange__ event. Each has it's own advantages and disadvantages.
 
-HTML5 History API:
+__HTML5 History API__:
 + performance: initial page load always takes a single request 
 + clear and SEO-friendly address bar urls
 + you can use archors on your page as in regular case
@@ -57,66 +57,80 @@ HTML5 History API:
 Using __hashchange__ event:
 + [great browser support](http://caniuse.com/#search=hashchange)
 + consistent support in all browsers
-- urls have to start with `#` that look weird and is not a SEO-frieldly
-- child page loading takes 2 requests instead of single one (there are some tricks to avoid that in some cases but in general the rule is truthy)
-- you can't just use anchors on your page - they are used for page navigation as well
+- urls have to start with `#` that looks weird and is not a SEO-frieldly
+- internal page loading takes two requests instead of single one (there are some tricks to avoid that in some cases but in general the rule is truthy)
+- you should put anchors carefully because they used for page navigation as well
 
-So depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's future proof and the most transparent for client and server.
+Therefore depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's a future proof and the most transparent for client and server.
 
-## Frontend/backend setup
-Custom `data-ajaxify` attribute is used to mark html elements that might be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
+#### Animate page transitions in CSS
+Each content transition could be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
 
-```html
-...
-<nav data-ajaxify="menu"></nav>
-...
-<div data-ajaxify="content"></div>
-...
+```css
+/* style main content container */
+.site-content {
+    transform: translateX(0);
+    transition: transform 0.25s ease-in-out;
+}
+
+/* style element which is going to be hidden */
+.site-content + .site-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* style forward animation */
+.site-content[aria-hidden=true] {
+    transform: translateX(100%);
+}
+
+/* style backward animation */
+.site-content + .site-content[aria-hidden=true] {
+    transform: translateX(-100%);
+}
 ```
+
+Note: the animations may respect page history direction. For instance, for the animation above if user clieck on the back button in browser he or she sees a different animation from when forward button is pressed.
+
+#### Style disabled submit buttons
+In vanilla HTML there is an annoying issue that user still is able to click a submit button while form is submitting. The library fixes it by applying the `disabled` attribute while form request is in progress. You can use this feature to style such buttons to improve UX:
+
+```css
+button[disabled] {
+    background-image: url(spinner.gif) no-repeat center right;
+}
+```
+
+#### Setup analytics
+It's pretty straightforward to setup analytics via [custom events](#custom-events). Any successful page load triggers `ajaxify:load` event, so you can use it to notify Google Analytics for instance about each page load:
+
+```js
+// Google Analytics setup
+DOM.on("ajaxify:load", function(response) {
+    window.ga("send", "pageview", {
+        title: response.title,
+        page: response.url
+    });
+});
+```
+
+## Backend setup
+CSS selectors are used to mark html elements that might be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
+
 Server should respond in json format:
 
     {
         "title": "Page title",
         "url": "Optional page url, for a case when request and response urls should be different",
         "html": {
-            "menu": "innerHTML content for [data-ajaxify=menu] element",
-            "content": "innerHTML content for [data-ajaxify=content] element",
+            "body > header": "innerHTML content for page header",
+            ".site-content": "innerHTML content for the main content",
             ...
         }
     }
 
 For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
-
-### Multiclick fix
-The library prevents user from clicking on the same element twice. All repeated actions will be skipped.
-
-Additionally for forms all submit buttons become to be `[disabled]` until the submit request is completed (or failed). So you could use css to style these buttons (for example by adding a cool spinner to indicate that request is in progress).
-
-### Animations support
-Each content transition could be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
-
-```css
-[data-ajaxify=content] {
-    opacity: 1;
-    /* enable animations via CSS3 transition property */
-    -webkit-transition: opacity 0.3s ease-in;
-    transition: opacity 0.3s ease-in;
-}
-
-[data-ajaxify=content][aria-hidden=true] {
-    display: table-cell; /* override display:none */
-    opacity: 0;
-}
-
-/* style element which is going to be hidden */
-[data-ajaxify=content] + [data-ajaxify=content] {
-    position: absolute;
-    left: 200px;
-
-    -webkit-transition-delay: 0.15s;
-    transition-delay: 0.15s;
-}
-```
 
 ## Custom events
 The library exposes multiple custom events for advanced interaction.
