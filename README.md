@@ -1,6 +1,8 @@
 # better-ajaxify [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
 > Pjax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
+The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.
+
 [LIVE DEMO](http://chemerisuk.github.io/better-ajaxify/)
 
 ## Features
@@ -40,7 +42,26 @@ Then append the following html elements on your page:
 </html>
 ```
 
-Depending on requirements you usually have to include `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js`. The first script implements navigation via [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history), the second uses __hashchange__ to indicate current state.
+## Frontend setup
+
+### Determine strategy for browser history
+There are 2 main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) or via __hashchange__ event. Each has it's own advantages and disadvantages.
+
+HTML5 History API:
++ performance: initial page load always takes a single request 
++ clear and SEO-friendly address bar urls
++ you can use archors on your page as in regular case
+- there are some quirks in several old implementations (but all of them are solved in modern browsers)
+- some old browsers do [not support the HTML5 History API](http://caniuse.com/#search=push)
+
+Using __hashchange__ event:
++ [great browser support](http://caniuse.com/#search=hashchange)
++ consistent support in all browsers
+- urls have to start with `#` that look weird and is not a SEO-frieldly
+- child page loading takes 2 requests instead of single one (there are some tricks to avoid that in some cases but in general the rule is truthy)
+- you can't just use anchors on your page - they are used for page navigation as well
+
+So depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's future proof and the most transparent for client and server.
 
 ## Frontend/backend setup
 Custom `data-ajaxify` attribute is used to mark html elements that might be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
