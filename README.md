@@ -9,12 +9,10 @@ The library helps to solve one of the most important problem for a typical websi
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
 * fastclick support on mobile devices via checking `<meta name="viewport" content="width=device-width">`
-* `pushstate` or `hashchange` could be used to update address bar
-* advanced configuration via [custom events](#custom-events)
-* [page transition animations](#animations-support) support via CSS3
-* programmatic access via the custom `ajaxify:fetch` event
-* prevents [multiple clicks](#multiclick-fix) on the same element
-* makes submit buttons to be `[disabled]` until the request is completed
+* [`pushstate` or `hashchange`](#determine-strategy-for-browser-history) can be used to update address bar
+* advanced configuration and manipulation via [custom events](#custom-events)
+* [page transition animations](#animate-page-transitions-in-css) support via CSS3
+* prevents [multiple form submits](#style-disabled-submit-buttons) until the request is completed
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
@@ -44,7 +42,7 @@ Then append the following html elements on your page:
 
 ## Frontend setup
 
-#### Determine strategy for browser history
+### Determine strategy for browser history
 There are two main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) or via __hashchange__ event. Each has it's own advantages and disadvantages.
 
 __HTML5 History API__:
@@ -63,8 +61,8 @@ Using __hashchange__ event:
 
 Therefore depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's a future proof and the most transparent for client and server.
 
-#### Animate page transitions in CSS
-Each content transition could be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
+### Animate page transitions in CSS
+Each content transition can be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
 
 ```css
 /* style main content container */
@@ -91,18 +89,18 @@ Each content transition could be animated. Just use [common approach for animati
 }
 ```
 
-Note: the animations may respect page history direction. For instance, for the animation above if user clieck on the back button in browser he or she sees a different animation from when forward button is pressed.
+Note: the animations may respect page history direction. For instance, the animation above varies depending on which browser button was pressed: backward or forward.
 
-#### Style disabled submit buttons
-In vanilla HTML there is an annoying issue that user still is able to click a submit button while form is submitting. The library fixes it by applying the `disabled` attribute while form request is in progress. You can use this feature to style such buttons to improve UX:
+### Style disabled submit buttons
+In vanilla HTML there is an annoying issue that user is able to click a submit button while form is submitting. The library fixes it by applying the `disabled` attribute while form request is in progress. So you can use this feature to style such buttons to improve UX:
 
 ```css
-button[disabled] {
+[type=submit][disabled] {
     background-image: url(spinner.gif) no-repeat center right;
 }
 ```
 
-#### Setup analytics
+### Setup analytics
 It's pretty straightforward to setup analytics via [custom events](#custom-events). Any successful page load triggers `ajaxify:load` event, so you can use it to notify Google Analytics for instance about each page load:
 
 ```js
