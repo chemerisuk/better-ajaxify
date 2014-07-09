@@ -9,10 +9,10 @@ The library helps to solve one of the most important problem for a typical websi
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
 * fastclick support on mobile devices via checking `<meta name="viewport" content="width=device-width">`
-* [`pushstate` or `hashchange`](#determine-strategy-for-browser-history) can be used to update address bar
-* advanced configuration and manipulation via [custom events](#custom-events)
+* [`pushstate` or `hashchange`](#determine-strategy-for-browser-history) can be used to update browser address bar
 * [page transition animations](#animate-page-transitions-in-css) support via CSS3
 * prevents [multiple form submits](#style-disabled-submit-buttons) until the request is completed
+* advanced configuration and manipulation via [custom events](#custom-events)
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
@@ -122,13 +122,65 @@ Server should respond in json format:
         "title": "Page title",
         "url": "Optional page url, for a case when request and response urls should be different",
         "html": {
-            "body > header": "innerHTML content for page header",
             ".site-content": "innerHTML content for the main content",
             ...
         }
     }
 
 For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
+
+### Example of Node.js with express
+This example uses Handlebars for rendering HTML on backend. 
+
+#### Use layouts
+Make sure you understand how to change [layouts in Handlebars](https://github.com/barc/express-hbs#syntax) for example.
+
+So your `layout.hbs` might look like:
+
+```html
+<!DOCTYPE html>
+<html lang="{{locale}}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="site-content">{{{body}}}</div>
+    <script src="/js/scripts.js"></script>
+</body>
+</html>
+```
+
+#### Introduce JSON layout
+Add `layout.json` to return ajaxify output:
+
+```html
+{
+    {{#if title}}"title": "{{title}}",
+    {{/if}}{{#if url}}"url": "{{url}}",
+    {{/if}}"html": {
+        ".site-content": "{{{BODY}}}"
+    }
+}
+```
+
+#### Switch layouts depending on request type
+Now the trick. Add extra middleware to use appropriate layout based on `X-Http-Requested-With` header:
+
+```js
+app.use(function(req, res, next) {
+    if (req.xhr) {
+        app.set("view options", {layout: "layout.json"});
+        res.set("Content-Type", "application/json");
+    } else {
+        app.set("view options", {layout: "layout.hbs"});
+        res.set("Content-Type", "text/html");
+    }
+
+    next();
+});
+```
 
 ## Custom events
 The library exposes multiple custom events for advanced interaction.
