@@ -62,6 +62,15 @@ describe("xhr", function() {
         expect(sendSpy).toHaveBeenCalledWith("a=b");
 
         form.remove();
+
+        openSpy.calls.reset();
+        setRequestHeaderSpy.calls.reset();
+        sendSpy.calls.reset();
+
+        DOM.fire("ajaxify:fetch", form.get("action"), {c: "d", e: 122});
+        expect(openSpy).toHaveBeenCalled();
+        expect(setRequestHeaderSpy).toHaveBeenCalledWith("Content-Type", "application/x-www-form-urlencoded");
+        expect(sendSpy).toHaveBeenCalledWith("c=d&e=122");
     });
 
     describe("ajaxify:error", function() {
@@ -214,6 +223,27 @@ describe("xhr", function() {
 
             this.onreadystatechange.call({readyState: 4});
             expect(spy).toHaveBeenCalled();
+        });
+
+        DOM.fire("ajaxify:fetch", "55555");
+    });
+
+    it("should not fire load event if loadend was canceled", function() {
+        var spy = jasmine.createSpy("loadend").and.returnValue(false),
+            loadSpy = jasmine.createSpy("load");
+
+        DOM.once("ajaxify:loadend", spy);
+        DOM.once("ajaxify:load", loadSpy);
+
+        sendSpy.and.callFake(function() {
+            // request is not completed yet
+            this.onreadystatechange();
+
+            expect(spy).not.toHaveBeenCalled();
+
+            this.onreadystatechange.call({readyState: 4});
+            expect(spy).toHaveBeenCalled();
+            expect(loadSpy).not.toHaveBeenCalled();
         });
 
         DOM.fire("ajaxify:fetch", "55555");

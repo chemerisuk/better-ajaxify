@@ -1,13 +1,13 @@
 (function(DOM, location) {
     "use strict";
 
-    var baseUrl = location.pathname,
+    var baseUrl = location.href.split(/[\?#]/)[0],
         skipHashchange = false;
 
     DOM.on("ajaxify:loadend", function(response, xhr, target, _, canceled) {
         if (!canceled && typeof response === "object") {
             // update browser url
-            if (response.url !== location.hash.replace("#/", "")) {
+            if (response.url !== location.href.replace("#/", "")) {
                 skipHashchange = true;
 
                 location.hash = response.url.replace(baseUrl, "/");

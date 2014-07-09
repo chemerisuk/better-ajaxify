@@ -1,18 +1,18 @@
 # better-ajaxify [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
 > Pjax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
+The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.
+
 [LIVE DEMO](http://chemerisuk.github.io/better-ajaxify/)
 
 ## Features
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
 * fastclick support on mobile devices via checking `<meta name="viewport" content="width=device-width">`
-* `pushstate` or `hashchange` could be used to update address bar
-* advanced configuration via [custom events](#custom-events)
-* [page transition animations](#animations-support) support via CSS3
-* programmatic access via the custom `ajaxify:fetch` event
-* prevents [multiple clicks](#multiclick-fix) on the same element
-* makes submit buttons to be `[disabled]` until the request is completed
+* [`pushstate` or `hashchange`](#determine-strategy-for-browser-history) can be used to update browser address bar
+* [page transition animations](#animate-page-transitions-in-css) support via CSS3
+* prevents [multiple form submits](#style-disabled-submit-buttons) until the request is completed
+* advanced configuration and manipulation via [custom events](#custom-events)
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
@@ -40,61 +40,146 @@ Then append the following html elements on your page:
 </html>
 ```
 
-Depending on requirements you usually have to include `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js`. The first script implements navigation via [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history), the second uses __hashchange__ to indicate current state.
+## Frontend setup
 
-## Frontend/backend setup
-Custom `data-ajaxify` attribute is used to mark html elements that might be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
+### Determine strategy for browser history
+There are two main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) or via __hashchange__ event. Each has it's own advantages and disadvantages.
 
-```html
-...
-<nav data-ajaxify="menu"></nav>
-...
-<div data-ajaxify="content"></div>
-...
+__HTML5 History API__:
++ performance: initial page load always takes a single request 
++ clear and SEO-friendly address bar urls
++ you can use archors on your page as in regular case
+- there are some quirks in several old implementations (but all of them are solved in modern browsers)
+- some old browsers do [not support the HTML5 History API](http://caniuse.com/#search=push)
+
+Using __hashchange__ event:
++ [great browser support](http://caniuse.com/#search=hashchange)
++ consistent support in all browsers
+- urls have to start with `#` that looks weird and is not a SEO-frieldly
+- internal page loading takes two requests instead of single one (there are some tricks to avoid that in some cases but in general the rule is truthy)
+- you should put anchors carefully because they used for page navigation as well
+
+Therefore depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's a future proof and the most transparent for client and server.
+
+### Animate page transitions in CSS
+Each content transition can be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
+
+```css
+/* style main content container */
+.site-content {
+    transform: translateX(0);
+    transition: transform 0.25s ease-in-out;
+}
+
+/* style element which is going to be hidden */
+.site-content + .site-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* style forward animation */
+.site-content[aria-hidden=true] {
+    transform: translateX(100%);
+}
+
+/* style backward animation */
+.site-content + .site-content[aria-hidden=true] {
+    transform: translateX(-100%);
+}
 ```
+
+Note: the animations may respect page history direction. For instance, the animation above varies depending on which browser button was pressed: backward or forward.
+
+### Style disabled submit buttons
+In vanilla HTML there is an annoying issue that user is able to click a submit button while form is submitting. The library fixes it by applying the `disabled` attribute while form request is in progress. So you can use this feature to style such buttons to improve UX:
+
+```css
+[type=submit][disabled] {
+    background-image: url(spinner.gif) no-repeat center right;
+}
+```
+
+### Setup analytics
+It's pretty straightforward to setup analytics via [custom events](#custom-events). Any successful page load triggers `ajaxify:load` event, so you can use it to notify Google Analytics for instance about each page load:
+
+```js
+// Google Analytics setup
+DOM.on("ajaxify:load", function(response) {
+    window.ga("send", "pageview", {
+        title: response.title,
+        page: response.url
+    });
+});
+```
+
+## Backend setup
+CSS selectors are used to mark html elements that might be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
+
 Server should respond in json format:
 
     {
         "title": "Page title",
         "url": "Optional page url, for a case when request and response urls should be different",
         "html": {
-            "menu": "innerHTML content for [data-ajaxify=menu] element",
-            "content": "innerHTML content for [data-ajaxify=content] element",
+            ".site-content": "innerHTML content for the main content",
             ...
         }
     }
 
 For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
 
-### Multiclick fix
-The library prevents user from clicking on the same element twice. All repeated actions will be skipped.
+### Example of Node.js with express
+This example uses Handlebars for rendering HTML on backend. 
 
-Additionally for forms all submit buttons become to be `[disabled]` until the submit request is completed (or failed). So you could use css to style these buttons (for example by adding a cool spinner to indicate that request is in progress).
+#### Use layouts
+Make sure you understand how to change [layouts in Handlebars](https://github.com/barc/express-hbs#syntax) for example.
 
-### Animations support
-Each content transition could be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
+So your `layout.hbs` might look like:
 
-```css
-[data-ajaxify=content] {
-    opacity: 1;
-    /* enable animations via CSS3 transition property */
-    -webkit-transition: opacity 0.3s ease-in;
-    transition: opacity 0.3s ease-in;
+```html
+<!DOCTYPE html>
+<html lang="{{locale}}">
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="site-content">{{{body}}}</div>
+    <script src="/js/scripts.js"></script>
+</body>
+</html>
+```
+
+#### Introduce JSON layout
+Add `layout.json` to return ajaxify output:
+
+```html
+{
+    {{#if title}}"title": "{{title}}",
+    {{/if}}{{#if url}}"url": "{{url}}",
+    {{/if}}"html": {
+        ".site-content": "{{{BODY}}}"
+    }
 }
+```
 
-[data-ajaxify=content][aria-hidden=true] {
-    display: table-cell; /* override display:none */
-    opacity: 0;
-}
+#### Switch layouts depending on request type
+Now the trick. Add extra middleware to use appropriate layout based on `X-Http-Requested-With` header:
 
-/* style element which is going to be hidden */
-[data-ajaxify=content] + [data-ajaxify=content] {
-    position: absolute;
-    left: 200px;
+```js
+app.use(function(req, res, next) {
+    if (req.xhr) {
+        app.set("view options", {layout: "layout.json"});
+        res.set("Content-Type", "application/json");
+    } else {
+        app.set("view options", {layout: "layout.hbs"});
+        res.set("Content-Type", "text/html");
+    }
 
-    -webkit-transition-delay: 0.15s;
-    transition-delay: 0.15s;
-}
+    next();
+});
 ```
 
 ## Custom events

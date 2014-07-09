@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify.js
- * @version 1.6.0-rc.4 2014-05-10T15:50:10
+ * @version 1.6.0-rc.5 2014-07-09T23:42:36
  * @overview Pjax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -104,7 +104,7 @@
 
                     if (typeof query === "string") {
                         callback = switchContent;
-                    } else {
+                    } else if (typeof query === "function") {
                         callback = query;
                         query = null;
                     }
