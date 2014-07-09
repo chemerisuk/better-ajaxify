@@ -96,7 +96,7 @@
 
                     if (typeof query === "string") {
                         callback = switchContent;
-                    } else {
+                    } else if (typeof query === "function") {
                         callback = query;
                         query = null;
                     }
