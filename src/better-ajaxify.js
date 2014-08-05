@@ -1,7 +1,5 @@
-(function(DOM, location) {
+(function(DOM, location, LINK_HANDLER, FORM_HANDLER, TIMEOUT_PROP) {
     "use strict";
-
-    DOM.ajaxifyTimeout = 15000;
 
     DOM.ready(function() {
         var reAbsoluteUrl = /^.*\/\/[^\/]+/,
@@ -136,7 +134,7 @@
 
                 xhr = createXHR(target, url, callback);
                 xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + Date.now()), true);
-                xhr.timeout = DOM.ajaxifyTimeout;
+                xhr.timeout = DOM.get(TIMEOUT_PROP);
                 xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
                 if (query) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
@@ -157,30 +155,34 @@
             });
         });
 
-        DOM.on("click a", "defaultLinkClick");
-        DOM.defaultLinkClick = function(_, link, cancel) {
-            if (!cancel && !link.get("target")) {
-                var url = link.get("href");
+        DOM.set(TIMEOUT_PROP, 15000);
 
-                if (!url.indexOf("http")) {
-                    return !link.fire("ajaxify:fetch", url);
+        DOM
+            .on("click a", LINK_HANDLER)
+            .set(LINK_HANDLER, function(_, link, cancel) {
+                if (!cancel && !link.get("target")) {
+                    var url = link.get("href");
+
+                    if (!url.indexOf("http")) {
+                        return !link.fire("ajaxify:fetch", url);
+                    }
                 }
-            }
-        };
+            });
 
-        DOM.on("submit", "defaultFormSubmit");
-        DOM.defaultFormSubmit = function(form, _, cancel) {
-            if (!cancel && !form.get("target")) {
-                var url = form.get("action"),
-                    query = form.toQueryString();
+        DOM
+            .on("submit", FORM_HANDLER)
+            .set(FORM_HANDLER, function(form, _, cancel) {
+                if (!cancel && !form.get("target")) {
+                    var url = form.get("action"),
+                        query = form.toQueryString();
 
-                if (form.get("method") === "get") {
-                    return !form.fire("ajaxify:fetch", url + (~url.indexOf("?") ? "&" : "?") + query);
-                } else {
-                    return !form.fire("ajaxify:fetch", url, query);
+                    if (form.get("method") === "get") {
+                        return !form.fire("ajaxify:fetch", url + (~url.indexOf("?") ? "&" : "?") + query);
+                    } else {
+                        return !form.fire("ajaxify:fetch", url, query);
+                    }
                 }
-            }
-        };
+            });
 
         DOM.on("ajaxify:loadend", function(response, xhr, target, _, canceled) {
             var status = xhr.status,
@@ -265,4 +267,4 @@
             }, []).join("&").replace(/%20/g, "+");
         }
     });
-}(window.DOM, location));
+}(window.DOM, location, "-ajaxify-link-click", "-ajaxify-form-submit", "-ajaxify-timeout"));

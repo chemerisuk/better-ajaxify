@@ -50,7 +50,7 @@ __HTML5 History API__:
 + clear and SEO-friendly address bar urls
 + you can use archors on your page as in regular case
 - there are some quirks in several old implementations (but all of them are solved in modern browsers)
-- some old browsers do [not support the HTML5 History API](http://caniuse.com/#search=push)
+- some old browsers do [not support the HTML5 History API](http://caniuse.com/#search=push). Also early Android 4 has [lack of support](https://code.google.com/p/android/issues/detail?id=23979) as well.
 
 Using __hashchange__ event:
 + [great browser support](http://caniuse.com/#search=hashchange)
