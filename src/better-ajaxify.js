@@ -1,4 +1,4 @@
-(function(DOM, location, LINK_HANDLER, FORM_HANDLER, TIMEOUT_PROP) {
+(function(DOM, location, LINK_HANDLER, FORM_HANDLER, HISTORY_HANDLER, TIMEOUT_PROP) {
     "use strict";
 
     var reAbsoluteUrl = /^.*\/\/[^\/]+/,
@@ -38,14 +38,16 @@
         },
         makePair = function(name, value) {
             return encodeURIComponent(name) + "=" + encodeURIComponent(value);
-        };
+        },
+        createXHR = (function() {
+            // lock element to prevent double clicks
+            var lockedEl,
+                sharedXHR = new XMLHttpRequest();
 
-    DOM.on("ajaxify:fetch", (function() {
-        // lock element to prevent double clicks
-        var lockedEl,
-            sharedXHR = new XMLHttpRequest(),
-            createXHR = function(target, url, callback) {
+            return function(target, url, callback) {
                 var resultXHR = sharedXHR;
+
+                if (lockedEl === target && target !== DOM) return null;
 
                 if (callback === switchContent) {
                     // abort previous request if it's still in progress but
@@ -85,65 +87,66 @@
 
                 return resultXHR;
             };
+        }());
 
-        return function(url, query, callback, target, currentTarget, cancel) {
-            var len = arguments.length, xhr;
+    DOM.on("ajaxify:fetch", function(url, query, callback, target, currentTarget, cancel) {
+        var len = arguments.length, xhr;
 
-            if (len === 5) {
-                cancel = currentTarget;
-                currentTarget = target;
-                target = callback;
+        if (len === 5) {
+            cancel = currentTarget;
+            currentTarget = target;
+            target = callback;
 
-                if (typeof query === "string") {
-                    callback = switchContent;
-                } else if (typeof query === "function") {
-                    callback = query;
-                    query = null;
-                }
-            } else if (len === 4) {
-                // url, target, cancel
-                cancel = target;
-                currentTarget = callback;
-                target = query;
+            if (typeof query === "string") {
                 callback = switchContent;
+            } else if (typeof query === "function") {
+                callback = query;
                 query = null;
             }
+        } else if (len === 4) {
+            // url, target, cancel
+            cancel = target;
+            currentTarget = callback;
+            target = query;
+            callback = switchContent;
+            query = null;
+        }
 
-            if (len < 4 || typeof url !== "string") {
-                throw "URL value for ajaxify:fetch is not valid";
-            }
+        if (len < 4 || typeof url !== "string") {
+            throw "URL value for ajaxify:fetch is not valid";
+        }
 
-            if (cancel || lockedEl === target && target !== DOM) return;
+        url = url.replace("#/", "");
 
-            url = url.replace("#/", "");
+        if (query && Object.prototype.toString.call(query) === "[object Object]") {
+            query = Object.keys(query).reduce(function(memo, key) {
+                var name = encodeURIComponent(key),
+                    value = query[key];
 
-            if (query && Object.prototype.toString.call(query) === "[object Object]") {
-                query = Object.keys(query).reduce(function(memo, key) {
-                    var name = encodeURIComponent(key),
-                        value = query[key];
-
-                    if (Array.isArray(value)) {
-                        value.forEach(function(value) {
-                            memo.push(name + "=" + encodeURIComponent(value));
-                        });
-                    } else {
+                if (Array.isArray(value)) {
+                    value.forEach(function(value) {
                         memo.push(name + "=" + encodeURIComponent(value));
-                    }
+                    });
+                } else {
+                    memo.push(name + "=" + encodeURIComponent(value));
+                }
 
-                    return memo;
-                }, []).join("&").replace(/%20/g, "+");
-            }
+                return memo;
+            }, []).join("&").replace(/%20/g, "+");
+        }
 
-            xhr = createXHR(target, url, callback);
-            xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + Date.now()), true);
-            xhr.timeout = DOM.get(TIMEOUT_PROP);
-            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr = createXHR(target, url, callback);
 
-            if (query) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        if (cancel || !xhr) return;
 
-            if (target.fire("ajaxify:loadstart", xhr)) xhr.send(query);
-        };
-    }()));
+        xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + Date.now()), true);
+        xhr.timeout = DOM.get(TIMEOUT_PROP);
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+        if (query) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        if (target.fire("ajaxify:loadstart", xhr)) xhr.send(query);
+    });
 
     // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
     DOM.find("meta[name=viewport][content*='width=device-width']").each(function() {
@@ -186,6 +189,16 @@
             }
         });
 
+    DOM
+        .on("ajaxify:history", HISTORY_HANDLER)
+        .set(HISTORY_HANDLER, function(url) {
+            if (url in stateHistory) {
+                switchContent(stateHistory[url]);
+            } else {
+                DOM.fire("ajaxify:fetch", url);
+            }
+        });
+
     DOM.on("ajaxify:loadend", function(response, xhr, target, _, canceled) {
         var status = xhr.status,
             eventType;
@@ -205,14 +218,6 @@
         }
 
         if (target.fire(eventType, response, xhr)) response.callback(response);
-    });
-
-    DOM.on("ajaxify:history", function(url) {
-        if (url in stateHistory) {
-            switchContent(stateHistory[url]);
-        } else {
-            DOM.fire("ajaxify:fetch", url);
-        }
     });
 
     DOM.extend("form", {
@@ -264,4 +269,4 @@
             }, []).join("&").replace(/%20/g, "+");
         }
     });
-}(window.DOM, location, "-ajaxify-link-click", "-ajaxify-form-submit", "-ajaxify-timeout"));
+}(window.DOM, location, "-ajaxify-handle-link", "-ajaxify-handle-form", "-ajaxify-handle-history", "-ajaxify-timeout"));
