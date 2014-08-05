@@ -25,7 +25,7 @@
 
     if (~location.hash.indexOf("#/")) {
         DOM.ready(function() {
-            DOM.fire("ajaxify:fetch", location.href.replace("#/", ""));
+            DOM.fire("ajaxify:get", location.href.replace("#/", ""));
         });
     }
 }(window.DOM, location));

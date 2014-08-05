@@ -49,6 +49,8 @@
 
                 if (lockedEl === target && target !== DOM) return null;
 
+                url = url.replace("#/", ""); // fix hanschange case urls
+
                 if (callback === switchContent) {
                     // abort previous request if it's still in progress but
                     // skip cases when refresh was triggered programatically
@@ -135,7 +137,8 @@
         if (target.fire("ajaxify:loadstart", xhr)) xhr.send(query);
     });
 
-    DOM.on("ajaxify:get", function(url, callback, target) {
+    // TODO: drop "ajaxify:fetch"
+    DOM.on(["ajaxify:get", "ajaxify:fetch"], function(url, callback, target) {
         if (typeof callback !== "function") {
             target = callback;
             callback = switchContent;
@@ -148,61 +151,6 @@
         if (!xhr) return;
 
         if (target.fire("ajaxify:loadstart", xhr)) xhr.send(null);
-    });
-
-    DOM.on("ajaxify:fetch", function(url, query, callback, target, currentTarget, cancel) {
-        var len = arguments.length, xhr;
-
-        if (len === 5) {
-            cancel = currentTarget;
-            currentTarget = target;
-            target = callback;
-
-            if (typeof query === "string") {
-                callback = switchContent;
-            } else if (typeof query === "function") {
-                callback = query;
-                query = null;
-            }
-        } else if (len === 4) {
-            // url, target, cancel
-            cancel = target;
-            currentTarget = callback;
-            target = query;
-            callback = switchContent;
-            query = null;
-        }
-
-        if (len < 4 || typeof url !== "string") {
-            throw "URL value for ajaxify:fetch is not valid";
-        }
-
-        url = url.replace("#/", "");
-
-        if (query && Object.prototype.toString.call(query) === "[object Object]") {
-            query = Object.keys(query).reduce(function(memo, key) {
-                var name = encodeURIComponent(key),
-                    value = query[key];
-
-                if (Array.isArray(value)) {
-                    value.forEach(function(value) {
-                        memo.push(name + "=" + encodeURIComponent(value));
-                    });
-                } else {
-                    memo.push(name + "=" + encodeURIComponent(value));
-                }
-
-                return memo;
-            }, []).join("&").replace(/%20/g, "+");
-        }
-
-        xhr = createXHR(target, query ? url : (url + (~url.indexOf("?") ? "&" : "?") + Date.now()), query ? "POST" : "GET", callback);
-
-        if (cancel || !xhr) return;
-
-        if (query) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-        if (target.fire("ajaxify:loadstart", xhr)) xhr.send(query);
     });
 
     // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
@@ -226,7 +174,7 @@
                 var url = link.get("href");
 
                 if (!url.indexOf("http")) {
-                    return !link.fire("ajaxify:fetch", url);
+                    return !link.fire("ajaxify:get", url);
                 }
             }
         });
@@ -239,9 +187,9 @@
                     query = form.toQueryString();
 
                 if (form.get("method") === "get") {
-                    return !form.fire("ajaxify:fetch", url + (~url.indexOf("?") ? "&" : "?") + query);
+                    return !form.fire("ajaxify:get", url + (~url.indexOf("?") ? "&" : "?") + query);
                 } else {
-                    return !form.fire("ajaxify:fetch", url, query);
+                    return !form.fire("ajaxify:post", url, query);
                 }
             }
         });
@@ -252,7 +200,7 @@
             if (url in stateHistory) {
                 switchContent(stateHistory[url]);
             } else {
-                DOM.fire("ajaxify:fetch", url);
+                DOM.fire("ajaxify:get", url);
             }
         });
 
@@ -281,7 +229,7 @@
         constructor: function() {
             var submits = this.findAll("[type=submit]");
 
-            this.on("ajaxify:fetch", function() {
+            this.on(["ajaxify:get", "ajaxify:post"], function() {
                 submits.set("disabled", true);
             });
 

@@ -10,11 +10,11 @@ describe("xhr", function() {
         // onreadystatechangeSpy = spyOn(XMLHttpRequest, "onreadystatechange");
     });
 
-    it("should send GET XMLHttpRequest on ajaxify:fetch", function() {
+    it("should send GET XMLHttpRequest on ajaxify:get", function() {
         var openSpy = spyOn(XMLHttpRequest.prototype, "open"),
             setRequestHeaderSpy = spyOn(XMLHttpRequest.prototype, "setRequestHeader");
 
-        DOM.fire("ajaxify:fetch", "11111");
+        DOM.fire("ajaxify:get", "11111");
 
         openSpy.and.callFake(function(type, url) {
             expect(type).toBe("GET");
@@ -43,7 +43,7 @@ describe("xhr", function() {
             expect(this.onerror).toBeDefined();
         });
 
-        link.fire("ajaxify:fetch", link.get("href"));
+        link.fire("ajaxify:get", link.get("href"));
         expect(openSpy).toHaveBeenCalled();
         expect(setRequestHeaderSpy).toHaveBeenCalledWith("X-Requested-With", "XMLHttpRequest");
         expect(sendSpy).toHaveBeenCalledWith(null);
@@ -56,7 +56,7 @@ describe("xhr", function() {
             expect(this.onerror).toBeDefined();
         });
 
-        form.fire("ajaxify:fetch", form.get("action"), form.toQueryString());
+        form.fire("ajaxify:post", form.get("action"), form.toQueryString());
         expect(openSpy).toHaveBeenCalled();
         expect(setRequestHeaderSpy).toHaveBeenCalledWith("Content-Type", "application/x-www-form-urlencoded");
         expect(sendSpy).toHaveBeenCalledWith("a=b");
@@ -67,7 +67,7 @@ describe("xhr", function() {
         setRequestHeaderSpy.calls.reset();
         sendSpy.calls.reset();
 
-        DOM.fire("ajaxify:fetch", form.get("action"), {c: "d", e: 122});
+        DOM.fire("ajaxify:post", form.get("action"), {c: "d", e: 122});
         expect(openSpy).toHaveBeenCalled();
         expect(setRequestHeaderSpy).toHaveBeenCalledWith("Content-Type", "application/x-www-form-urlencoded");
         expect(sendSpy).toHaveBeenCalledWith("c=d&e=122");
@@ -89,7 +89,7 @@ describe("xhr", function() {
                 expect(spy).toHaveBeenCalled();
             });
 
-            DOM.fire("ajaxify:fetch", "ajaxify:error");
+            DOM.fire("ajaxify:get", "ajaxify:error");
             expect(sendSpy).toHaveBeenCalled();
         });
 
@@ -113,7 +113,7 @@ describe("xhr", function() {
                 DOM.off("ajaxify:error", spy);
             });
 
-            DOM.fire("ajaxify:fetch", "33333");
+            DOM.fire("ajaxify:get", "33333");
             expect(sendSpy).toHaveBeenCalled();
         });
     });
@@ -133,7 +133,7 @@ describe("xhr", function() {
                 expect(spy).toHaveBeenCalled();
             });
 
-            DOM.fire("ajaxify:fetch", "ajaxify:timeout");
+            DOM.fire("ajaxify:get", "ajaxify:timeout");
             expect(sendSpy).toHaveBeenCalled();
         });
     });
@@ -175,7 +175,7 @@ describe("xhr", function() {
                 DOM.off("ajaxify:load", spy);
             });
 
-            DOM.fire("ajaxify:fetch", "33333");
+            DOM.fire("ajaxify:get", "33333");
             expect(sendSpy).toHaveBeenCalled();
         });
 

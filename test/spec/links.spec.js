@@ -108,8 +108,8 @@ describe("links", function() {
 
         spy.calls.reset();
 
-        DOM.fire("ajaxify:fetch", "abc");
-        DOM.fire("ajaxify:fetch", "abc");
+        DOM.fire("ajaxify:get", "abc");
+        DOM.fire("ajaxify:get", "abc");
         expect(spy.calls.count()).toBe(2);
     });
 
