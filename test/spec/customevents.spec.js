@@ -26,7 +26,7 @@ describe("Custom events", function() {
         });
     });
 
-    describe("ajaxify:fetch", function() {
+    describe("ajaxify:get", function() {
         var spy;
 
         beforeEach(function() {
@@ -35,7 +35,7 @@ describe("Custom events", function() {
 
         it("should trigger ajax request", function(done) {
             DOM.ready(function() {
-                DOM.fire("ajaxify:fetch", "test");
+                DOM.fire("ajaxify:get", "test");
             });
 
             setTimeout(function() {
@@ -45,15 +45,15 @@ describe("Custom events", function() {
             }, 100);
         });
 
-        it("should respect defaultPrevented", function() {
+        it("should not respect defaultPrevented", function() {
             var cancelSpy = jasmine.createSpy("cancel").and.returnValue(false),
                 body = DOM.find("body");
 
-            body.once("ajaxify:fetch", cancelSpy);
-            body.fire("ajaxify:fetch", "test");
+            body.once("ajaxify:get", cancelSpy);
+            body.fire("ajaxify:get", "test");
 
             expect(cancelSpy).toHaveBeenCalled();
-            expect(spy).not.toHaveBeenCalled();
+            expect(spy).toHaveBeenCalled();
         });
 
         it("should throw error if argument is invalid", function(done) {
@@ -62,8 +62,8 @@ describe("Custom events", function() {
             window.onerror = spy;
 
             DOM.ready(function() {
-                DOM.fire("ajaxify:fetch");
-                DOM.fire("ajaxify:fetch", null);
+                DOM.fire("ajaxify:get");
+                DOM.fire("ajaxify:get", null);
             });
 
             setTimeout(function() {
@@ -77,7 +77,7 @@ describe("Custom events", function() {
 
         it("should support optional callback argument", function(done) {
             DOM.ready(function() {
-                DOM.fire("ajaxify:fetch", "test", function() {});
+                DOM.fire("ajaxify:get", "test", function() {});
             });
 
             setTimeout(function() {
@@ -92,7 +92,7 @@ describe("Custom events", function() {
                 var loadstartSpy = jasmine.createSpy("loadstart").and.returnValue(false);
 
                 DOM.once("ajaxify:loadstart", loadstartSpy);
-                DOM.fire("ajaxify:fetch", "test");
+                DOM.fire("ajaxify:get", "test");
                 expect(loadstartSpy).toHaveBeenCalled();
             });
 
@@ -108,7 +108,7 @@ describe("Custom events", function() {
         it("should trigger page reload if url is not in history cache", function(done) {
             var fetchSpy = jasmine.createSpy("fetch");
 
-            DOM.once("ajaxify:fetch", fetchSpy);
+            DOM.once("ajaxify:get", fetchSpy);
 
             DOM.ready(function() {
                 DOM.fire("ajaxify:history", "???");
