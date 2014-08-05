@@ -16,8 +16,7 @@
 
                 if (content != null) {
                     if (typeof content === "string") {
-                        // can't use hide() because of animation quirks in Safari
-                        content = el.clone(false).set(content).set("aria-hidden", "true");
+                        content = el.clone(false).set(content).hide();
                     }
                     // insert new response content
                     el[response.ts > currentState.ts ? "before" : "after"](content);
@@ -95,6 +94,22 @@
             };
         }());
 
+    // TODO: drop "ajaxify:fetch", it's deprecated
+    DOM.on(["ajaxify:get", "ajaxify:fetch"], function(url, callback, target) {
+        if (typeof callback !== "function") {
+            target = callback;
+            callback = switchContent;
+        }
+
+        url = url + (~url.indexOf("?") ? "&" : "?") + Date.now();
+
+        var xhr = createXHR(target, url, "GET", callback);
+
+        if (xhr && target.fire("ajaxify:loadstart", xhr)) {
+            xhr.send(null);
+        }
+    });
+
     DOM.on("ajaxify:post", function(url, query, callback, target) {
         if (Object.prototype.toString.call(query) === "[object Object]") {
             query = Object.keys(query).reduce(function(memo, key) {
@@ -130,27 +145,11 @@
 
         var xhr = createXHR(target, url, "POST", callback);
 
-        if (!xhr) return;
+        if (xhr) {
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
-        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-
-        if (target.fire("ajaxify:loadstart", xhr)) xhr.send(query);
-    });
-
-    // TODO: drop "ajaxify:fetch"
-    DOM.on(["ajaxify:get", "ajaxify:fetch"], function(url, callback, target) {
-        if (typeof callback !== "function") {
-            target = callback;
-            callback = switchContent;
+            if (target.fire("ajaxify:loadstart", xhr)) xhr.send(query);
         }
-
-        url = url + (~url.indexOf("?") ? "&" : "?") + Date.now();
-
-        var xhr = createXHR(target, url, "GET", callback);
-
-        if (!xhr) return;
-
-        if (target.fire("ajaxify:loadstart", xhr)) xhr.send(null);
     });
 
     // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
