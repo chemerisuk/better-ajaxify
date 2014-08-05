@@ -44,7 +44,7 @@
             var lockedEl,
                 sharedXHR = new XMLHttpRequest();
 
-            return function(target, url, callback) {
+            return function(target, url, method, callback) {
                 var resultXHR = sharedXHR;
 
                 if (lockedEl === target && target !== DOM) return null;
@@ -85,9 +85,70 @@
                     }
                 };
 
+                resultXHR.open(method, url, true);
+                resultXHR.timeout = DOM.get(TIMEOUT_PROP);
+                resultXHR.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
                 return resultXHR;
             };
         }());
+
+    DOM.on("ajaxify:post", function(url, query, callback, target) {
+        if (Object.prototype.toString.call(query) === "[object Object]") {
+            query = Object.keys(query).reduce(function(memo, key) {
+                var name = encodeURIComponent(key),
+                    value = query[key];
+
+                if (Array.isArray(value)) {
+                    value.forEach(function(value) {
+                        memo.push(name + "=" + encodeURIComponent(value));
+                    });
+                } else {
+                    memo.push(name + "=" + encodeURIComponent(value));
+                }
+
+                return memo;
+            }, []).join("&").replace(/%20/g, "+");
+        }
+
+        if (!query || typeof query === "string") {
+            if (typeof callback !== "function") {
+                target = callback;
+                callback = switchContent;
+            }
+        } else if (typeof query === "function") {
+            target = callback;
+            callback = query;
+            query = null;
+        } else {
+            target = query;
+            callback = switchContent;
+            query = null;
+        }
+
+        var xhr = createXHR(target, url, "POST", callback);
+
+        if (!xhr) return;
+
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        if (target.fire("ajaxify:loadstart", xhr)) xhr.send(query);
+    });
+
+    DOM.on("ajaxify:get", function(url, callback, target) {
+        if (typeof callback !== "function") {
+            target = callback;
+            callback = switchContent;
+        }
+
+        url = url + (~url.indexOf("?") ? "&" : "?") + Date.now();
+
+        var xhr = createXHR(target, url, "GET", callback);
+
+        if (!xhr) return;
+
+        if (target.fire("ajaxify:loadstart", xhr)) xhr.send(null);
+    });
 
     DOM.on("ajaxify:fetch", function(url, query, callback, target, currentTarget, cancel) {
         var len = arguments.length, xhr;
@@ -135,13 +196,9 @@
             }, []).join("&").replace(/%20/g, "+");
         }
 
-        xhr = createXHR(target, url, callback);
+        xhr = createXHR(target, query ? url : (url + (~url.indexOf("?") ? "&" : "?") + Date.now()), query ? "POST" : "GET", callback);
 
         if (cancel || !xhr) return;
-
-        xhr.open(query ? "POST" : "GET", query ? url : (url + (~url.indexOf("?") ? "&" : "?") + Date.now()), true);
-        xhr.timeout = DOM.get(TIMEOUT_PROP);
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
         if (query) xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 
