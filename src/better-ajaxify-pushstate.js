@@ -13,10 +13,10 @@
     if (history.pushState) {
         window.addEventListener("popstate", function(e) {
             if (e.state) {
-                DOM.fire("ajaxify:history", location.pathname + location.search);
+                DOM.fire("ajaxify:history", location.href);
             }
         });
-        // update initial state
+        // update initial state address url
         history.replaceState(true, DOM.get("title"));
         // fix bug with external pages
         window.addEventListener("beforeunload", function() {

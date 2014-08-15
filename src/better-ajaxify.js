@@ -1,9 +1,8 @@
 (function(DOM, location, LINK_HANDLER, FORM_HANDLER, HISTORY_HANDLER, TIMEOUT_PROP) {
     "use strict";
 
-    var reAbsoluteUrl = /^.*\/\/[^\/]+/,
-        stateHistory = {}, // in-memory storage for states
-        currentState = {ts: Date.now(), url: location.href.replace(reAbsoluteUrl, "").split("#")[0]},
+    var stateHistory = {}, // in-memory storage for states
+        currentState = {ts: Date.now(), url: location.href.split("#")[0]},
         switchContent = function(response) {
             if (typeof response !== "object" || typeof response.html !== "object") return;
 
@@ -209,8 +208,9 @@
 
         if (canceled) return false;
 
+        // remove cache bursting parameter
+        response.url = response.url.replace(/[&?]\d+/, "");
         // populate default values
-        response.url = response.url.replace(reAbsoluteUrl, "");
         response.title = response.title || DOM.get("title");
         response.callback = response.callback || switchContent;
         response.ts = Date.now();
