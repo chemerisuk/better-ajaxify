@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify-hashchange.js
- * @version 1.6.0-rc.6 2014-08-05T13:11:16
+ * @version 1.6.0 2014-08-16T00:32:14
  * @overview Pjax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -30,10 +30,4 @@
             DOM.fire("ajaxify:history", baseUrl + location.hash.replace("#/", ""));
         }
     };
-
-    if (~location.hash.indexOf("#/")) {
-        DOM.ready(function() {
-            DOM.fire("ajaxify:get", location.href.replace("#/", ""));
-        });
-    }
 }(window.DOM, location));
