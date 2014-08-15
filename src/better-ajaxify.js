@@ -55,14 +55,14 @@
                     // skip cases when refresh was triggered programatically
                     sharedXHR.abort();
 
-                    if (lockedEl) lockedEl.fire("ajaxify:abort", sharedXHR);
+                    if (lockedEl) lockedEl.fire("ajaxify:abort", null, sharedXHR);
 
                     lockedEl = target;
                 } else {
                     resultXHR = new XMLHttpRequest();
                 }
 
-                resultXHR.ontimeout = function() { target.fire("ajaxify:timeout", this) };
+                resultXHR.ontimeout = function() { target.fire("ajaxify:timeout", null, this) };
                 resultXHR.onerror = function() { target.fire("ajaxify:error", null, this) };
                 resultXHR.onreadystatechange = function() {
                     if (this.readyState === 4) {
@@ -228,12 +228,12 @@
         constructor: function() {
             var submits = this.findAll("[type=submit]");
 
-            this.on(["ajaxify:get", "ajaxify:post"], function() {
-                submits.set("disabled", true);
+            this.on("ajaxify:loadstart", function(xhr, target) {
+                if (this === target) submits.set("disabled", true);
             });
 
-            this.on(["ajaxify:load", "ajaxify:error", "ajaxify:abort", "ajaxify:timeout"], function() {
-                submits.set("disabled", false);
+            this.on(["ajaxify:load", "ajaxify:error", "ajaxify:abort", "ajaxify:timeout"], function(data, xhr, target) {
+                if (this === target) submits.set("disabled", false);
             });
         },
         toQueryString: function() {

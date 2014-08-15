@@ -122,9 +122,10 @@ describe("xhr", function() {
         it("should trigger ajaxify:timeout on XHR error", function() {
             sendSpy.and.callFake(function() {
                 var xhr = this,
-                    spy = jasmine.createSpy("timeout").and.callFake(function(data) {
+                    spy = jasmine.createSpy("timeout").and.callFake(function(data, obj) {
                         expect(this).toBe(DOM);
-                        expect(data).toBe(xhr);
+                        expect(data).toBeNull();
+                        expect(obj).toBe(xhr);
                     });
 
                 DOM.once("ajaxify:timeout", spy);
