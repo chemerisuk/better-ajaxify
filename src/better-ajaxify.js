@@ -1,9 +1,8 @@
 (function(DOM, location, LINK_HANDLER, FORM_HANDLER, HISTORY_HANDLER, TIMEOUT_PROP) {
     "use strict";
 
-    var reAbsoluteUrl = /^.*\/\/[^\/]+/,
-        stateHistory = {}, // in-memory storage for states
-        currentState = {ts: Date.now(), url: location.href.replace(reAbsoluteUrl, "").split("#")[0]},
+    var stateHistory = {}, // in-memory storage for states
+        currentState = {ts: Date.now(), url: location.href.split("#")[0]},
         switchContent = function(response) {
             if (typeof response !== "object" || typeof response.html !== "object") return;
 
@@ -55,14 +54,14 @@
                     // skip cases when refresh was triggered programatically
                     sharedXHR.abort();
 
-                    if (lockedEl) lockedEl.fire("ajaxify:abort", sharedXHR);
+                    if (lockedEl) lockedEl.fire("ajaxify:abort", null, sharedXHR);
 
                     lockedEl = target;
                 } else {
                     resultXHR = new XMLHttpRequest();
                 }
 
-                resultXHR.ontimeout = function() { target.fire("ajaxify:timeout", this) };
+                resultXHR.ontimeout = function() { target.fire("ajaxify:timeout", null, this) };
                 resultXHR.onerror = function() { target.fire("ajaxify:error", null, this) };
                 resultXHR.onreadystatechange = function() {
                     if (this.readyState === 4) {
@@ -209,8 +208,9 @@
 
         if (canceled) return false;
 
+        // remove cache bursting parameter
+        response.url = response.url.replace(/[&?]\d+/, "");
         // populate default values
-        response.url = response.url.replace(reAbsoluteUrl, "");
         response.title = response.title || DOM.get("title");
         response.callback = response.callback || switchContent;
         response.ts = Date.now();
@@ -228,12 +228,12 @@
         constructor: function() {
             var submits = this.findAll("[type=submit]");
 
-            this.on(["ajaxify:get", "ajaxify:post"], function() {
-                submits.set("disabled", true);
+            this.on("ajaxify:loadstart", function(xhr, target) {
+                if (this === target) submits.set("disabled", true);
             });
 
-            this.on(["ajaxify:load", "ajaxify:error", "ajaxify:abort", "ajaxify:timeout"], function() {
-                submits.set("disabled", false);
+            this.on(["ajaxify:load", "ajaxify:error", "ajaxify:abort", "ajaxify:timeout"], function(data, xhr, target) {
+                if (this === target) submits.set("disabled", false);
             });
         },
         toQueryString: function() {

@@ -1,5 +1,5 @@
 # better-ajaxify [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
-> Pjax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
+> Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
 The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.
 
@@ -129,7 +129,7 @@ Server should respond in json format:
 
 For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
 
-### Example of Node.js with express
+### Example of Node configuration using express.js
 This example uses Handlebars for rendering HTML on backend. 
 
 #### Use layouts
@@ -185,28 +185,45 @@ app.use(function(req, res, next) {
 ## Custom events
 The library exposes multiple custom events for advanced interaction.
 
-#### ajaxify:fetch `URL[, callback(response)]`
-Triggered every time a new content is loaded. `target` of this event is the element that is firing loading a new page (usually link or form). The event could be triggered programmatically, for example `DOM.fire("ajaxify:fetch", url)`. It also supports function callback instead of url.
+#### ajaxify:get `URL, callback`
+Event is trigerred for each `GET` request. Argument `callback` is optional, it's used for making such requests manually:
+
+```js
+DOM.fire("ajaxify:get", "test_url", function(data) {
+    // handle response data here
+});
+```
+
+#### ajaxify:post `URL, query, callback`
+Event is trigerred for each `POST` request. Argument `query` can be either `String` or `Object`, later it will be sent as a request data. Argument `callback` is optional, it's used for making such requests manually:
+
+```js
+var query = {param1: "a", param2: "b"};
+
+DOM.fire("ajaxify:post", "test_url", query, function(data) {
+    // handle response data here
+});
+```
 
 #### ajaxify:loadstart `XMLHttpRequest`
 Triggered before doing an ajax call. `data` if this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent.
 
-#### ajaxify:loadend `XMLHttpRequest`
+#### ajaxify:loadend `data, XMLHttpRequest`
 Triggered when an ajaxify request is completed (successfully or not)
 
-#### ajaxify:load `response`
+#### ajaxify:load `data, XMLHttpRequest`
 Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string
 
 #### ajaxify:history `URL`
 Triggered when a user navigates through history in browser. `data` of this event is target history entry url
 
-#### ajaxify:error `XMLHttpRequest`
+#### ajaxify:error `data, XMLHttpRequest`
 Triggered only if server returned unsuccesfull response code
 
-#### ajaxify:timeout `XMLHttpRequest`
+#### ajaxify:timeout `data, XMLHttpRequest`
 Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds
 
-#### ajaxify:abort `XMLHttpRequest`
+#### ajaxify:abort `data, XMLHttpRequest`
 Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed
 
 ## Browser support

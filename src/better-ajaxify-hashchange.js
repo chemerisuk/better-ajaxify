@@ -22,10 +22,4 @@
             DOM.fire("ajaxify:history", baseUrl + location.hash.replace("#/", ""));
         }
     };
-
-    if (~location.hash.indexOf("#/")) {
-        DOM.ready(function() {
-            DOM.fire("ajaxify:get", location.href.replace("#/", ""));
-        });
-    }
 }(window.DOM, location));

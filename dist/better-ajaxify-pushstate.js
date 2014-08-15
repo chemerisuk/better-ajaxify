@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify-pushstate.js
- * @version 1.6.0-rc.6 2014-08-05T13:11:16
+ * @version 1.6.0 2014-08-16T00:32:14
  * @overview Pjax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -21,10 +21,10 @@
     if (history.pushState) {
         window.addEventListener("popstate", function(e) {
             if (e.state) {
-                DOM.fire("ajaxify:history", location.pathname + location.search);
+                DOM.fire("ajaxify:history", location.href);
             }
         });
-        // update initial state
+        // update initial state address url
         history.replaceState(true, DOM.get("title"));
         // fix bug with external pages
         window.addEventListener("beforeunload", function() {
