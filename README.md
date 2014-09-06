@@ -66,25 +66,25 @@ Each content transition can be animated. Just use [common approach for animation
 
 ```css
 /* style main content container */
-.site-content {
+main {
     transform: translateX(0);
     transition: transform 0.25s ease-in-out;
 }
 
 /* style element which is going to be hidden */
-.site-content + .site-content {
+main + main {
     position: absolute;
     top: 0;
     left: 0;
 }
 
 /* style forward animation */
-.site-content[aria-hidden=true] {
+main[aria-hidden=true] {
     transform: translateX(100%);
 }
 
 /* style backward animation */
-.site-content + .site-content[aria-hidden=true] {
+main + main[aria-hidden=true] {
     transform: translateX(-100%);
 }
 ```
@@ -114,20 +114,18 @@ DOM.on("ajaxify:load", function(response) {
 ```
 
 ## Backend setup
-CSS selectors are used to mark html elements that might be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
-
-Server should respond in json format:
+In order to make it work you need to modify your web server to return JSON response for ajaxify. The format of this response is pretty straighforward:
 
     {
         "title": "Page title",
-        "url": "Optional page url, for a case when request and response urls should be different",
+        "url": "Optional page url, if you need to update address url additionally",
         "html": {
-            ".site-content": "innerHTML content for the main content",
+            "main": "innerHTML content for the main content",
             ...
         }
     }
 
-For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
+The client part parses such response and uses keys of the `html` object as CSS selectors to find the area on your page to update. Value is used to update `innerHTML` property.
 
 ### Example of Node configuration using express.js
 This example uses Handlebars for rendering HTML on backend. 
@@ -146,11 +144,13 @@ So your `layout.hbs` might look like:
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <div class="site-content">{{{body}}}</div>
+    <main>{{{body}}}</main>
     <script src="/js/scripts.js"></script>
 </body>
 </html>
 ```
+
+Our application contains dynamic content inside of the `<main>` element.
 
 #### Introduce JSON layout
 Add `layout.json` to return ajaxify output:
@@ -160,7 +160,7 @@ Add `layout.json` to return ajaxify output:
     {{#if title}}"title": "{{title}}",
     {{/if}}{{#if url}}"url": "{{url}}",
     {{/if}}"html": {
-        ".site-content": "{{{BODY}}}"
+        "main": "{{{BODY}}}"
     }
 }
 ```
@@ -181,6 +181,17 @@ app.use(function(req, res, next) {
     next();
 });
 ```
+
+#### Fix redirects
+`XMLHttpRequest` objects can handle redirects for you, but they do not provide a way to determine the final page URL. This is an important disadvantage, because we need to update browser address into the correct URL value.
+
+To fix this issue you can use the `url` key that we have in JSON response for ajaxify. Just add one line below into a middleware to store the latest request url into a variable accessible for views:
+
+```js
+res.locals.url = req.protocol + "://" + req.get("host") + req.originalUrl;
+```
+
+I recommend to use full url value there, because it avoids problems related to cross-domain requests.
 
 ## Custom events
 The library exposes multiple custom events for advanced interaction.
