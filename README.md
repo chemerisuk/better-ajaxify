@@ -99,6 +99,20 @@ In vanilla HTML there is an annoying issue that user is able to click a submit b
     background-image: url(spinner.gif) no-repeat center right;
 }
 ```
+### Use custom events
+The library exposes several custom events for advanced interaction.
+
+| Event name | Arguments | Description |
+| ---------- | --------- | ----------- |
+| `ajaxify:get` | url, callback | Event is trigerred for each `GET` request. Argument `callback` is optional, it's used for making such requests manually. |
+| `ajaxify:post` | url, data, callback | Event is trigerred for each `POST` request. Argument `query` can be either `String` or `Object`, later it will be sent as a request data. Argument `callback` is optional, it's used for making such requests manually. |
+| `ajaxify:loadstart` | xhr | Triggered before doing an ajax call. `xhr` of this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding extra request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent. |
+| `ajaxify:loadend` | data, xhr | Triggered when an ajaxify request is completed (successfully or not). |
+| `ajaxify:load` | data, xhr | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string. |
+| `ajaxify:error` | data, xhr | Triggered only if server returned unsuccesfull response code or requests was failed because of a network error. |
+| `ajaxify:timeout` | data, xhr | Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds. |
+| `ajaxify:abort` | data, xhr | Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed. |
+| `ajaxify:history` | url | Triggered when a user navigates through history in browser. |
 
 ### Setup analytics
 It's pretty straightforward to setup analytics via [custom events](#custom-events). Any successful page load triggers `ajaxify:load` event, so you can use it to notify Google Analytics for instance about each page load:
@@ -192,50 +206,6 @@ res.locals.url = req.protocol + "://" + req.get("host") + req.originalUrl;
 ```
 
 I recommend to use full url value there, because it avoids problems related to cross-domain requests.
-
-## Custom events
-The library exposes multiple custom events for advanced interaction.
-
-#### ajaxify:get `URL, callback`
-Event is trigerred for each `GET` request. Argument `callback` is optional, it's used for making such requests manually:
-
-```js
-DOM.fire("ajaxify:get", "test_url", function(data) {
-    // handle response data here
-});
-```
-
-#### ajaxify:post `URL, query, callback`
-Event is trigerred for each `POST` request. Argument `query` can be either `String` or `Object`, later it will be sent as a request data. Argument `callback` is optional, it's used for making such requests manually:
-
-```js
-var query = {param1: "a", param2: "b"};
-
-DOM.fire("ajaxify:post", "test_url", query, function(data) {
-    // handle response data here
-});
-```
-
-#### ajaxify:loadstart `XMLHttpRequest`
-Triggered before doing an ajax call. `data` if this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent.
-
-#### ajaxify:loadend `data, XMLHttpRequest`
-Triggered when an ajaxify request is completed (successfully or not)
-
-#### ajaxify:load `data, XMLHttpRequest`
-Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string
-
-#### ajaxify:history `URL`
-Triggered when a user navigates through history in browser. `data` of this event is target history entry url
-
-#### ajaxify:error `data, XMLHttpRequest`
-Triggered only if server returned unsuccesfull response code
-
-#### ajaxify:timeout `data, XMLHttpRequest`
-Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds
-
-#### ajaxify:abort `data, XMLHttpRequest`
-Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed
 
 ## Browser support
 #### Desktop
