@@ -221,7 +221,7 @@ I recommend to use full url value there, because it avoids problems related to c
 * Chrome for Android
 
 [travis-url]: http://travis-ci.org/chemerisuk/better-ajaxify
-[travis-image]: https://api.travis-ci.org/chemerisuk/better-ajaxify.png?branch=master
+[travis-image]: http://img.shields.io/travis/chemerisuk/better-ajaxify/master.svg
 
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-ajaxify
-[coveralls-image]: https://coveralls.io/repos/chemerisuk/better-ajaxify/badge.png?branch=master
+[coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-ajaxify/master.svg

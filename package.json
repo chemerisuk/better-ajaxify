@@ -20,10 +20,12 @@
     "grunt-github-publish": "~0.1.1",
     "grunt-shell": "~0.6.0",
     "grunt-contrib-connect": "0.3.0",
-    "coveralls": "^2.8.0"
+    "coveralls": "^2.8.0",
+    "jasmine-ajax": "git://github.com/pivotal/jasmine-ajax"
   },
   "scripts": {
     "test": "grunt test",
+    "start": "grunt dev",
     "coveralls": "cat ./coverage/PhantomJS*/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   }
 }
