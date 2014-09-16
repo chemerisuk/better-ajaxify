@@ -25,7 +25,6 @@
   },
   "scripts": {
     "test": "grunt test",
-    "start": "grunt dev",
-    "travis": "grunt karma:coveralls"
+    "start": "grunt dev"
   }
 }

@@ -58,6 +58,7 @@ module.exports = function(grunt) {
     });
 
     grunt.registerTask("test", ["jshint", "karma:unit"]);
+    grunt.registerTask("travis", ["jshint", "karma:coveralls"]);
     grunt.registerTask("dev", ["jshint", "karma:watch", "connect", "watch"]);
     grunt.registerTask("publish", "Publish a new version", function(version) {
         grunt.task.run([
