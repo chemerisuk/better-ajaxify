@@ -10,6 +10,7 @@ describe("serialize", function() {
         test("<form id='f6'><select name='n6'><option value='v6'></option><option value='v66' selected></option></select></form>", {n6: "v66"});
         test("<form id='f7'><select name='n7' multiple><option value='v7' selected></option><option value='v77' selected></option></select></form>", {n7: ["v7", "v77"]});
         test("<form id='f8'><select name='n8'><option selected>v8</option></select></form>", {n8: "v8"});
+        test("<form id='f7'><select name='n9' multiple><option value='v9' selected></option><option value='v99' selected><option value='v999' selected></option></select></form>", {n9: ["v9", "v99", "v999"]});
         test("<form id='f9'><input type='hidden' name='n1' value='v1 v2'><input type='text' value='v2'></form>", {n1: "v1 v2"});
     });
 

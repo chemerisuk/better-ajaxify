@@ -100,6 +100,21 @@ describe("links", function() {
         expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
     });
 
+    // it("should have fastclick support", function() {
+    //     var link = DOM.mock("a[href=test");
+
+    //     this.sandbox.append(link);
+
+    //     link.fire("touchend");
+
+    //     this.xhr = jasmine.Ajax.requests.mostRecent();
+
+    //     expect(this.xhr).toBeDefined();
+    //     expect(this.xhr.readyState).toBe(2);
+    //     expect(this.xhr.method).toBe("GET");
+    //     expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
+    // });
+
     // var spy, sandbox;
 
     // beforeEach(function() {

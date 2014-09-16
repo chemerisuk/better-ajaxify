@@ -15,7 +15,8 @@ module.exports = function(config) {
             "src/*.js",
             "test/spec/serialize.spec.js",
             "test/spec/links.spec.js",
-            "test/spec/forms.spec.js"
+            "test/spec/forms.spec.js",
+            "test/spec/events.spec.js"
         ]
     });
 };
