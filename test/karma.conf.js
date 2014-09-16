@@ -14,7 +14,8 @@ module.exports = function(config) {
             "bower_components/better-xhr/dist/better-xhr.js",
             "src/*.js",
             "test/spec/serialize.spec.js",
-            "test/spec/links.spec.js"
+            "test/spec/links.spec.js",
+            "test/spec/forms.spec.js"
         ]
     });
 };

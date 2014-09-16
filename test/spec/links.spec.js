@@ -1,8 +1,6 @@
 describe("links", function() {
     "use strict";
 
-    var XHR_SENT = 2;
-
     beforeEach(function() {
         jasmine.Ajax.install();
 
@@ -29,12 +27,12 @@ describe("links", function() {
         this.xhr = jasmine.Ajax.requests.mostRecent();
 
         expect(this.xhr).toBeDefined();
-        expect(this.xhr.readyState).toBe(XHR_SENT);
+        expect(this.xhr.readyState).toBe(2);
         expect(this.xhr.method).toBe("GET");
         expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
     });
 
-    it("should skip canceled links", function() {
+    it("should skip canceled events", function() {
         var link = DOM.create("a[href=test]"),
             spy = jasmine.createSpy("click");
 
@@ -49,7 +47,7 @@ describe("links", function() {
         expect(this.xhr).not.toBeDefined();
     });
 
-    it("should skip links with target", function() {
+    it("should skip elements with target", function() {
         var link = DOM.create("a[href=test target=_blank]");
 
         this.sandbox.append(link);
@@ -60,7 +58,7 @@ describe("links", function() {
         expect(this.xhr).not.toBeDefined();
     });
 
-    it("should skip non-http links", function() {
+    it("should skip non-http", function() {
         var link = DOM.create("a[href=`mailto:support@google.com`]"),
             spy = jasmine.createSpy("unload"),
             onunload = window.onbeforeunload;
@@ -77,7 +75,7 @@ describe("links", function() {
         expect(this.xhr).not.toBeDefined();
     });
 
-    it("should skip links without href", function() {
+    it("should skip absent href", function() {
         var link = DOM.create("a");
 
         this.sandbox.append(link);
@@ -97,7 +95,7 @@ describe("links", function() {
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
         expect(this.xhr).toBeDefined();
-        expect(this.xhr.readyState).toBe(XHR_SENT);
+        expect(this.xhr.readyState).toBe(2);
         expect(this.xhr.method).toBe("GET");
         expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
     });

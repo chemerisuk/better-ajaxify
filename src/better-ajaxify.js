@@ -127,9 +127,10 @@
     DOM.on("submit", function(form, _, cancel) {
         if (!cancel && !form.get("target")) {
             var url = form.get("action"),
+                method = form.get("method"),
                 query = form.serialize();
 
-            if (form.get("method") === "get") {
+            if (!method || method === "get") {
                 return !form.fire("ajaxify:get", url, query);
             } else {
                 return !form.fire("ajaxify:post", url, query);

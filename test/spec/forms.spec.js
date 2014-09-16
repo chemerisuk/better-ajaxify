@@ -1,67 +1,75 @@
 describe("forms", function() {
     "use strict";
 
-    var spy, sandbox;
-
     beforeEach(function() {
-        spy = spyOn(XMLHttpRequest.prototype, "send");
-        sandbox = DOM.create("div");
-        DOM.find("body").append(sandbox);
+        jasmine.Ajax.install();
+
+        this.sandbox = DOM.create("div");
+
+        DOM.find("body").append(this.sandbox);
     });
 
-    it("should skip submits in some cases", function() {
-        var form = DOM.mock("<form target=_blank method='post'></form>"),
-            spy2 = jasmine.createSpy("submit").and.returnValue(false);
+    afterEach(function() {
+        jasmine.Ajax.uninstall();
 
-        sandbox.append(form);
+        this.sandbox.remove();
 
-        DOM.on("submit", spy2);
-        form.fire("submit");
-
-        expect(spy).not.toHaveBeenCalled();
-        expect(spy2).toHaveBeenCalled();
-
-        form = DOM.mock("<form onsubmit='return false'></form>");
-        sandbox.append(form);
-
-        DOM.on("submit", spy2);
-        form.fire("submit");
-
-        expect(spy).not.toHaveBeenCalled();
-        expect(spy2).toHaveBeenCalled();
+        this.xhr = null;
     });
 
-    it("should prevent default submits and send ajax-request instead", function() {
-        var form = DOM.mock("<form action='test' method='post'><input name='1' value='2'></form>"),
-            spy2 = jasmine.createSpy("submit").and.callFake(function(defaultPrevented) {
-            expect(defaultPrevented).toBe(true);
-            // cancel submit anyway
-            return false;
-        });
+    it("should send AJAX request for GET method", function() {
+        var form = DOM.mock("form[action=test]");
 
-        sandbox.append(form);
+        this.sandbox.append(form);
 
-        DOM.on("submit", spy2, ["defaultPrevented"]);
+        form.fire("submit");
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+
+        expect(this.xhr).toBeDefined();
+        expect(this.xhr.readyState).toBe(2);
+        expect(this.xhr.method).toBe("GET");
+        expect(this.xhr.url.indexOf(form.get("action"))).toBe(0);
+    });
+
+    it("should send AJAX request for POST method", function() {
+        var form = DOM.mock("form[action=test method=post]");
+
+        this.sandbox.append(form);
+
+        form.fire("submit");
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+
+        expect(this.xhr).toBeDefined();
+        expect(this.xhr.readyState).toBe(2);
+        expect(this.xhr.method).toBe("POST");
+        expect(this.xhr.url.indexOf(form.get("action"))).toBe(0);
+    });
+
+    it("should skip canceled events", function() {
+        var form = DOM.mock("form[action=test]"),
+            spy = jasmine.createSpy("click");
+
+        this.sandbox.append(form);
+
+        form.on("submit", spy.and.returnValue(false));
         form.fire("submit");
 
         expect(spy).toHaveBeenCalled();
-        expect(spy2).toHaveBeenCalled();
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
     });
 
-    it("should handle get forms too", function() {
-        var form = DOM.mock("<form method='get' action='test?a=b'></form>"),
-            spy2 = jasmine.createSpy("submit").and.callFake(function(defaultPrevented) {
-            expect(defaultPrevented).toBe(true);
-            // cancel submit anyway
-            return false;
-        });
+    it("should skip elements with target", function() {
+        var form = DOM.mock("form[action=test target=_blank]");
 
-        sandbox.append(form);
+        this.sandbox.append(form);
 
-        DOM.on("submit", spy2, ["defaultPrevented"]);
         form.fire("submit");
 
-        expect(spy).toHaveBeenCalled();
-        expect(spy2).toHaveBeenCalled();
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
     });
 });
