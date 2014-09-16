@@ -10,22 +10,22 @@
   },
   "devDependencies": {
     "grunt": "0.4.1",
-    "grunt-contrib-jshint": "0.5.4",
-    "grunt-contrib-watch": "0.4.3",
-    "grunt-karma": "0.8.2",
-    "karma": "0.12.0",
-    "karma-jasmine": "^0.2",
-    "karma-coverage": "^0.1",
-    "karma-phantomjs-launcher": "^0.1",
-    "grunt-github-publish": "~0.1.1",
+    "grunt-contrib-connect": "^0.8.0",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-contrib-watch": "^0.6.0",
+    "grunt-github-publish": "^0.1.1",
+    "grunt-karma": "^0.9.0",
     "grunt-shell": "~0.6.0",
-    "grunt-contrib-connect": "0.3.0",
-    "coveralls": "^2.8.0",
-    "jasmine-ajax": "git://github.com/pivotal/jasmine-ajax"
+    "jasmine-ajax": "git://github.com/pivotal/jasmine-ajax",
+    "karma": "^0.12.0",
+    "karma-coverage": "^0.1",
+    "karma-coveralls": "^0.1.4",
+    "karma-jasmine": "^0.2",
+    "karma-phantomjs-launcher": "^0.1"
   },
   "scripts": {
     "test": "grunt test",
     "start": "grunt dev",
-    "coveralls": "cat ./coverage/PhantomJS*/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+    "travis": "grunt karma:coveralls"
   }
 }
