@@ -34,25 +34,20 @@
             // update page title
             DOM.set("title", response.title);
         },
-        makePair = function(name, value) {
-            return encodeURIComponent(name) + "=" + encodeURIComponent(value);
-        },
         createXHR = (function() {
             // lock element to prevent double clicks
             var lockedEl;
 
-            return function(target, method, url, config, callback) {
-                if (lockedEl === target && target !== DOM) return null;
+            return function(target, method, url, config) {
+                if (lockedEl === target) return null;
 
-                url = url.replace("#/", ""); // fix hanschange case urls
+                if (target !== DOM) lockedEl = target;
 
-                if (callback === switchContent) {
-                    lockedEl = target;
-                }
+                url = url.replace("#/", ""); // fix hanschange urls
 
                 var handleResponse = function(response) {
                     // cleanup outer variables
-                    if (callback === switchContent) lockedEl = null;
+                    if (target !== DOM) lockedEl = null;
 
                     if (typeof response === "string") {
                         // response is a text content
@@ -73,30 +68,36 @@
 
                 return XHR(method, url, config).then(handleResponse, handleResponse);
             };
-        }());
+        }()),
+        appendParam = function(memo, name, value) {
+            if (name in memo) {
+                if (Array.isArray(memo[name])) {
+                    memo[name].push(value);
+                } else {
+                    memo[name] = [ memo[name], value ];
+                }
+            } else {
+                memo[name] = value;
+            }
+        };
 
     DOM.on(["ajaxify:get", "ajaxify:post"], function(url, query, type, target) {
         var method = type.split(":").pop(),
             config = {data: query},
+            handleXHR = function(type) {
+                return function(response) {
+                    if (target.fire("ajaxify:loadend", response) && target.fire(type, response)) {
+                        switchContent(response);
+                    }
+                };
+            },
             xhr;
 
         if (target.fire("ajaxify:loadstart", config)) {
-            xhr = createXHR(target, method, url, config, switchContent);
+            xhr = createXHR(target, method, url, config);
 
             if (xhr) {
-                xhr.then(function(response) {
-                    if (target.fire("ajaxify:loadend", response)) {
-                        if (target.fire("ajaxify:load", response)) {
-                            switchContent(response);
-                        }
-                    }
-                }, function(response) {
-                    if (target.fire("ajaxify:loadend", response)) {
-                        if (target.fire("ajaxify:error", response)) {
-                            switchContent(response);
-                        }
-                    }
-                });
+                xhr.then(handleXHR("ajaxify:load"), handleXHR("ajaxify:error"));
             }
         }
     }, ["type", "target"]);
@@ -130,7 +131,7 @@
         .set(FORM_HANDLER, function(form, _, cancel) {
             if (!cancel && !form.get("target")) {
                 var url = form.get("action"),
-                    query = form.toQueryString();
+                    query = form.serialize();
 
                 if (form.get("method") === "get") {
                     return !form.fire("ajaxify:get", url, query);
@@ -154,15 +155,15 @@
         constructor: function() {
             var submits = this.findAll("[type=submit]");
 
-            this.on("ajaxify:loadstart", function(xhr, target) {
+            this.on("ajaxify:loadstart", function(_, target) {
                 if (this === target) submits.set("disabled", true);
             });
 
-            this.on(["ajaxify:load", "ajaxify:error", "ajaxify:abort", "ajaxify:timeout"], function(data, xhr, target) {
+            this.on("ajaxify:loadend", function(_, target) {
                 if (this === target) submits.set("disabled", false);
             });
         },
-        toQueryString: function() {
+        serialize: function() {
             return this.findAll("[name]").reduce(function(memo, el) {
                 var name = el.get("name");
                 // don't include disabled form fields or without names
@@ -173,7 +174,7 @@
                     case "select-multiple":
                         el.children().each(function(option) {
                             if (option.get("selected")) {
-                                memo.push(makePair(name, option.get()));
+                                appendParam(memo, name, option.get());
                             }
                         });
                         break;
@@ -191,12 +192,12 @@
                         if (!el.get("checked")) break;
                         /* falls through */
                     default:
-                        memo.push(makePair(name, el.get()));
+                        appendParam(memo, name, el.get());
                     }
                 }
 
                 return memo;
-            }, []).join("&").replace(/%20/g, "+");
+            }, {});
         }
     });
 }(window.DOM, location, "-ajaxify-handle-link", "-ajaxify-handle-form", "-ajaxify-handle-history"));

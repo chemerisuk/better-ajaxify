@@ -13,7 +13,7 @@ module.exports = function(config) {
             "bower_components/promise-polyfill/Promise.js",
             "bower_components/better-xhr/dist/better-xhr.js",
             "src/*.js",
-            "test/spec/querystring.spec.js",
+            "test/spec/serialize.spec.js",
             "test/spec/links.spec.js"
         ]
     });
