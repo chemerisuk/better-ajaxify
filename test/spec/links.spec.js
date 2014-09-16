@@ -1,6 +1,107 @@
 describe("links", function() {
     "use strict";
 
+    var XHR_SENT = 2;
+
+    beforeEach(function() {
+        jasmine.Ajax.install();
+
+        this.sandbox = DOM.create("div");
+
+        DOM.find("body").append(this.sandbox);
+    });
+
+    afterEach(function() {
+        jasmine.Ajax.uninstall();
+
+        this.sandbox.remove();
+
+        this.xhr = null;
+    });
+
+    it("should send AJAX request for links", function() {
+        var link = DOM.create("a[href=test]");
+
+        this.sandbox.append(link);
+
+        link.fire("click");
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+
+        expect(this.xhr).toBeDefined();
+        expect(this.xhr.readyState).toBe(XHR_SENT);
+        expect(this.xhr.method).toBe("GET");
+        expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
+    });
+
+    it("should skip canceled links", function() {
+        var link = DOM.create("a[href=test]"),
+            spy = jasmine.createSpy("click");
+
+        this.sandbox.append(link);
+
+        link.on("click", spy.and.returnValue(false));
+        link.fire("click");
+
+        expect(spy).toHaveBeenCalled();
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
+
+    it("should skip links with target", function() {
+        var link = DOM.create("a[href=test target=_blank]");
+
+        this.sandbox.append(link);
+
+        link.fire("click");
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
+
+    it("should skip non-http links", function() {
+        var link = DOM.create("a[href=`mailto:support@google.com`]"),
+            spy = jasmine.createSpy("unload"),
+            onunload = window.onbeforeunload;
+
+        this.sandbox.append(link);
+
+        window.onbeforeunload = spy;
+        link.fire("click");
+        window.onbeforeunload = onunload;
+
+        expect(spy).toHaveBeenCalled();
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
+
+    it("should skip links without href", function() {
+        var link = DOM.create("a");
+
+        this.sandbox.append(link);
+
+        link.fire("click");
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
+
+    it("should handle click on elements with internal tree", function() {
+        var link = DOM.create("a[href=test]>i>`icon`");
+
+        this.sandbox.append(link);
+
+        link.child(0).fire("click");
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).toBeDefined();
+        expect(this.xhr.readyState).toBe(XHR_SENT);
+        expect(this.xhr.method).toBe("GET");
+        expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
+    });
+
     // var spy, sandbox;
 
     // beforeEach(function() {
@@ -13,82 +114,12 @@ describe("links", function() {
     //     sandbox.remove();
     // });
 
-    // it("should skip clicks on a element with target attribute", function() {
-    //     var spy2 = jasmine.createSpy("click").and.returnValue(false);
-
-    //     DOM.on("click", spy2);
-
-    //     sandbox.set("<a target=_blank>123</a>");
-    //     sandbox.find("a").fire("click");
-    //     expect(spy).not.toHaveBeenCalled();
-    //     expect(spy2).toHaveBeenCalled();
-    // });
-
-    // it("should skip links if default action was prevented", function() {
-    //     var spy2 = jasmine.createSpy("click").and.returnValue(false);
-
-    //     DOM.on("click", spy2);
-
-    //     sandbox.set("<a href='test' onclick='return false'>123</a>");
-    //     sandbox.find("a").fire("click");
-    //     expect(spy).not.toHaveBeenCalled();
-    //     expect(spy2).toHaveBeenCalled();
-    // });
-
     // it("should allow links from a different domain", function() {
     //     var spy2 = jasmine.createSpy("click").and.returnValue(false);
 
     //     DOM.on("click", spy2);
 
     //     sandbox.set("<a href='http://google.com'>123</a>");
-    //     sandbox.find("a").fire("click");
-    //     expect(spy).toHaveBeenCalled();
-    //     expect(spy2).toHaveBeenCalled();
-    // });
-
-    // it("should skip links without href", function() {
-    //     var spy2 = jasmine.createSpy("click").and.returnValue(false);
-
-    //     DOM.on("click", spy2);
-
-    //     // sandbox.set("<a href='#test'>123</a>");
-    //     // sandbox.find("a").fire("click");
-    //     // expect(spy).not.toHaveBeenCalled();
-    //     // expect(spy2).toHaveBeenCalled();
-
-    //     sandbox.set("<a>123</a>");
-    //     sandbox.find("a").fire("click");
-    //     expect(spy).not.toHaveBeenCalled();
-    //     expect(spy2).toHaveBeenCalled();
-    // });
-
-    // it("should skip non-http(s) links", function() {
-    //     sandbox.set("<a href='mailto:support@google.com'>123</a>");
-    //     sandbox.find("a").fire("click");
-    //     expect(spy).not.toHaveBeenCalled();
-    // });
-
-    // it("should handle click on elements with internal tree", function() {
-    //     var spy2 = jasmine.createSpy("click").and.returnValue(false);
-
-    //     DOM.on("click", spy2);
-
-    //     sandbox.set("<a href='test'><i>icon</i>123</a>");
-    //     sandbox.find("i").fire("click");
-    //     expect(spy).toHaveBeenCalled();
-    //     expect(spy2).toHaveBeenCalled();
-    // });
-
-    // it("should prevent default clicks and send ajax-request instead", function() {
-    //     var spy2 = jasmine.createSpy("click").and.callFake(function(defaultPrevented) {
-    //         expect(defaultPrevented).toBe(true);
-    //         // cancel click anyway
-    //         return false;
-    //     });
-
-    //     DOM.on("click", spy2, ["defaultPrevented"]);
-
-    //     sandbox.set("<a href='test'>123</a>");
     //     sandbox.find("a").fire("click");
     //     expect(spy).toHaveBeenCalled();
     //     expect(spy2).toHaveBeenCalled();

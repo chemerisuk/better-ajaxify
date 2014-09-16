@@ -1,4 +1,4 @@
-(function(DOM, location, LINK_HANDLER, FORM_HANDLER, HISTORY_HANDLER) {
+(function(DOM, location) {
     "use strict";
 
     var stateHistory = {}, // in-memory storage for states
@@ -114,42 +114,36 @@
         });
     });
 
-    DOM
-        .on("click a", LINK_HANDLER)
-        .set(LINK_HANDLER, function(_, link, cancel) {
-            if (!cancel && !link.get("target")) {
-                var url = link.get("href");
+    DOM.on("click a", function(_, link, cancel) {
+        if (!cancel && !link.get("target")) {
+            var url = link.get("href");
 
-                if (!url.indexOf("http")) {
-                    return !link.fire("ajaxify:get", url, null);
-                }
+            if (!url.indexOf("http")) {
+                return !link.fire("ajaxify:get", url, null);
             }
-        });
+        }
+    });
 
-    DOM
-        .on("submit", FORM_HANDLER)
-        .set(FORM_HANDLER, function(form, _, cancel) {
-            if (!cancel && !form.get("target")) {
-                var url = form.get("action"),
-                    query = form.serialize();
+    DOM.on("submit", function(form, _, cancel) {
+        if (!cancel && !form.get("target")) {
+            var url = form.get("action"),
+                query = form.serialize();
 
-                if (form.get("method") === "get") {
-                    return !form.fire("ajaxify:get", url, query);
-                } else {
-                    return !form.fire("ajaxify:post", url, query);
-                }
-            }
-        });
-
-    DOM
-        .on("ajaxify:history", HISTORY_HANDLER)
-        .set(HISTORY_HANDLER, function(url) {
-            if (url in stateHistory) {
-                switchContent(stateHistory[url]);
+            if (form.get("method") === "get") {
+                return !form.fire("ajaxify:get", url, query);
             } else {
-                DOM.fire("ajaxify:get", url, null);
+                return !form.fire("ajaxify:post", url, query);
             }
-        });
+        }
+    });
+
+    DOM.on("ajaxify:history", function(url) {
+        if (url in stateHistory) {
+            switchContent(stateHistory[url]);
+        } else {
+            DOM.fire("ajaxify:get", url, null);
+        }
+    });
 
     DOM.extend("form", {
         constructor: function() {
@@ -200,4 +194,4 @@
             }, {});
         }
     });
-}(window.DOM, location, "-ajaxify-handle-link", "-ajaxify-handle-form", "-ajaxify-handle-history"));
+}(window.DOM, location));
