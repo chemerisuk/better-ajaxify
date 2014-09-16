@@ -45,28 +45,30 @@
 
                 url = url.replace("#/", ""); // fix hanschange urls
 
-                var handleResponse = function(response) {
-                    // cleanup outer variables
-                    if (target !== DOM) lockedEl = null;
+                var complete = function(success) {
+                    return function(response) {
+                        // cleanup outer variables
+                        if (target !== DOM) lockedEl = null;
 
-                    if (typeof response === "string") {
-                        // response is a text content
-                        response = {html: response};
+                        if (typeof response === "string") {
+                            // response is a text content
+                            response = {html: response};
+                        }
+
+                        // populate local values
+                        response.url = response.url || url;
+                        response.title = response.title || DOM.get("title");
+
+                        // remove cache bursting parameter
+                        response.url = response.url.replace(/[&?]\d+/, "");
+                        // add internal property
+                        response.ts = Date.now();
+
+                        return Promise[success ? "resolve" : "reject"](response);
                     }
-
-                    // populate local values
-                    response.url = response.url || url;
-                    response.title = response.title || DOM.get("title");
-
-                    // remove cache bursting parameter
-                    response.url = response.url.replace(/[&?]\d+/, "");
-                    // add internal property
-                    response.ts = Date.now();
-
-                    return Promise.resolve(response);
                 };
 
-                return XHR(method, url, config).then(handleResponse, handleResponse);
+                return XHR(method, url, config).then(complete(true), complete(false));
             };
         }()),
         appendParam = function(memo, name, value) {
@@ -84,11 +86,14 @@
     DOM.on(["ajaxify:get", "ajaxify:post"], function(url, query, type, target) {
         var method = type.split(":").pop(),
             config = {data: query},
-            handleXHR = function(type) {
+            complete = function(success) {
+                var eventType = success ? "ajaxify:load" : "ajaxify:error";
+
                 return function(response) {
-                    if (target.fire("ajaxify:loadend", response) && target.fire(type, response)) {
-                        switchContent(response);
-                    }
+                    if (target.fire("ajaxify:loadend", response) &&
+                        target.fire(eventType, response)) {
+                            switchContent(response);
+                        }
                 };
             },
             xhr;
@@ -96,9 +101,7 @@
         if (target.fire("ajaxify:loadstart", config)) {
             xhr = createXHR(target, method, url, config);
 
-            if (xhr) {
-                xhr.then(handleXHR("ajaxify:load"), handleXHR("ajaxify:error"));
-            }
+            if (xhr) xhr.then(complete(true), complete(false));
         }
     }, ["type", "target"]);
 
