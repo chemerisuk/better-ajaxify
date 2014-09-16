@@ -99,7 +99,7 @@ In vanilla HTML there is an annoying issue that user is able to click a submit b
     background-image: url(spinner.gif) no-repeat center right;
 }
 ```
-### Use custom events
+### Custom events
 The library exposes several custom events for advanced interaction.
 
 | Event name | Arguments | Description |
