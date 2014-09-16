@@ -1,4 +1,4 @@
-describe("forms", function() {
+describe("form", function() {
     "use strict";
 
     beforeEach(function() {
@@ -72,4 +72,30 @@ describe("forms", function() {
         this.xhr = jasmine.Ajax.requests.mostRecent();
         expect(this.xhr).not.toBeDefined();
     });
+
+    describe("submit buttons", function() {
+        it("should be disabled until request is completed", function(done) {
+            var form = DOM.mock("form[action=test]>button[type=submit]"),
+                submit = form.child(0),
+                spy = jasmine.createSpy("load");
+
+            this.sandbox.append(form);
+
+            form.on("ajaxify:load", spy);
+            form.fire("submit");
+
+            expect(submit.get("disabled")).toBeTruthy();
+
+            this.xhr = jasmine.Ajax.requests.mostRecent();
+            this.xhr.response({status: 200});
+
+            spy.and.callFake(function() {
+                expect(submit.get("disabled")).toBeFalsy();
+
+                done();
+            });
+        });
+    });
+
+
 });

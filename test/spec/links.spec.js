@@ -100,78 +100,21 @@ describe("links", function() {
         expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
     });
 
-    // it("should have fastclick support", function() {
-    //     var link = DOM.mock("a[href=test");
+    it("should not allow to send the same request twice", function() {
+        var link = DOM.create("a[href=test]");
 
-    //     this.sandbox.append(link);
+        this.sandbox.append(link);
 
-    //     link.fire("touchend");
+        link.fire("click");
+        link.fire("click");
 
-    //     this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(jasmine.Ajax.requests.count()).toBe(1);
+    });
 
-    //     expect(this.xhr).toBeDefined();
-    //     expect(this.xhr.readyState).toBe(2);
-    //     expect(this.xhr.method).toBe("GET");
-    //     expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
-    // });
+    it("should allow multiple requests for DOM", function() {
+        DOM.fire("ajaxify:get", "url1", null);
+        DOM.fire("ajaxify:get", "url2");
 
-    // var spy, sandbox;
-
-    // beforeEach(function() {
-    //     spy = spyOn(XMLHttpRequest.prototype, "send");
-    //     sandbox = DOM.create("div");
-    //     DOM.find("body").append(sandbox);
-    // });
-
-    // afterEach(function() {
-    //     sandbox.remove();
-    // });
-
-    // it("should allow links from a different domain", function() {
-    //     var spy2 = jasmine.createSpy("click").and.returnValue(false);
-
-    //     DOM.on("click", spy2);
-
-    //     sandbox.set("<a href='http://google.com'>123</a>");
-    //     sandbox.find("a").fire("click");
-    //     expect(spy).toHaveBeenCalled();
-    //     expect(spy2).toHaveBeenCalled();
-    // });
-
-    // it("should not allow to send the same request twice except it's DOM", function() {
-    //     sandbox.set("<a href='abc'>123</a>");
-
-    //     var link = sandbox.find("a"),
-    //         spy2 = jasmine.createSpy("click").and.returnValue(false);
-
-    //     DOM.on("click", spy2);
-
-    //     link.fire("click");
-    //     link.fire("click");
-    //     expect(spy.calls.count()).toBe(1);
-
-    //     spy.calls.reset();
-
-    //     DOM.fire("ajaxify:get", "abc");
-    //     DOM.fire("ajaxify:get", "abc");
-    //     expect(spy.calls.count()).toBe(2);
-    // });
-
-    // it("should have fastclick support", function() {
-    //     sandbox.set("<a href='http://google.com'>123</a>");
-
-    //     var spy2 = jasmine.createSpy("click").and.returnValue(false),
-    //         link = sandbox.find("a");
-
-    //     DOM.on("click", spy2);
-
-
-    //     link.fire("touchstart");
-    //     expect(spy).not.toHaveBeenCalled();
-
-    //     link.style("touch-action", "none");
-
-    //     link.fire("touchstart");
-    //     expect(spy).toHaveBeenCalled();
-    // });
+        expect(jasmine.Ajax.requests.count()).toBe(2);
+    });
 });

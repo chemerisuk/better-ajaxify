@@ -84,6 +84,12 @@
         };
 
     DOM.on(["ajaxify:get", "ajaxify:post"], function(url, query, type, target) {
+        if (query && Object.prototype.toString.call(query) !== "[object Object]") {
+            target = type;
+            type = query;
+            query = null;
+        }
+
         var method = type.split(":").pop(),
             config = {data: query},
             complete = function(success) {
@@ -121,7 +127,7 @@
             var url = link.get("href");
 
             if (!url.indexOf("http")) {
-                return !link.fire("ajaxify:get", url, null);
+                return !link.fire("ajaxify:get", url);
             }
         }
     });
@@ -144,7 +150,7 @@
         if (url in stateHistory) {
             switchContent(stateHistory[url]);
         } else {
-            DOM.fire("ajaxify:get", url, null);
+            DOM.fire("ajaxify:get", url);
         }
     });
 
@@ -152,7 +158,7 @@
         constructor: function() {
             var submits = this.findAll("[type=submit]");
 
-            this.on("ajaxify:loadstart", function(_, target) {
+            this.on("submit", function(_, target) {
                 if (this === target) submits.set("disabled", true);
             });
 
