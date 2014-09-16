@@ -48,7 +48,7 @@ describe("event", function() {
 
     describe("ajaxify:loadend", function() {
         it("should be fired on success", function(done) {
-            var link = DOM.mock("a[href=test]");
+            var link = DOM.mock("a[href=test]"),
                 spy = jasmine.createSpy("loadend"),
                 nextSpy = jasmine.createSpy("load");
 
@@ -61,17 +61,15 @@ describe("event", function() {
             this.xhr = jasmine.Ajax.requests.mostRecent();
             this.xhr.response({ status: 200 });
 
-            setTimeout(function() {
-                if (spy.calls.count() === 1) {
-                    expect(nextSpy).toHaveBeenCalled();
+            spy.and.callFake(function() {
+                expect(nextSpy).not.toHaveBeenCalled();
 
-                    done();
-                }
-            }, 50);
+                done();
+            });
         });
 
         it("should be fired on error", function(done) {
-            var link = DOM.mock("a[href=test]");
+            var link = DOM.mock("a[href=test]"),
                 spy = jasmine.createSpy("loadend"),
                 nextSpy = jasmine.createSpy("error");
 
@@ -84,17 +82,15 @@ describe("event", function() {
             this.xhr = jasmine.Ajax.requests.mostRecent();
             this.xhr.response({ status: 400 });
 
-            setTimeout(function() {
-                if (spy.calls.count() === 1) {
-                    expect(nextSpy).toHaveBeenCalled();
+            spy.and.callFake(function() {
+                expect(nextSpy).not.toHaveBeenCalled();
 
-                    done();
-                }
-            }, 50);
+                done();
+            });
         });
 
         it("should allow to prevent next steps", function(done) {
-            var link = DOM.mock("a[href=test]");
+            var link = DOM.mock("a[href=test]"),
                 spy = jasmine.createSpy("loadend"),
                 nextSpy = jasmine.createSpy("load");
 
@@ -107,17 +103,15 @@ describe("event", function() {
             this.xhr = jasmine.Ajax.requests.mostRecent();
             this.xhr.response({ status: 200 });
 
-            setTimeout(function() {
-                if (spy.calls.count() === 1) {
-                    expect(nextSpy).not.toHaveBeenCalled();
+            spy.and.callFake(function() {
+                expect(nextSpy).not.toHaveBeenCalled();
 
-                    done();
-                }
-            }, 50);
+                done();
+            });
         });
 
         it("should accept response object", function(done) {
-            var link = DOM.mock("a[href=test]");
+            var link = DOM.mock("a[href=test]"),
                 spy = jasmine.createSpy("loadend"),
                 response = {
                     url: link.get("href"),
@@ -135,15 +129,26 @@ describe("event", function() {
                 responseText: JSON.stringify(response)
             });
 
-            setTimeout(function() {
-                if (spy.calls.count() === 1) {
-                    response.ts = spy.calls.argsFor(0)[0].ts;
+            spy.and.callFake(function() {
+                response.ts = spy.calls.argsFor(0)[0].ts;
 
-                    expect(spy).toHaveBeenCalledWith(response, link, link, false);
+                expect(spy).toHaveBeenCalledWith(response, link, link, false);
 
-                    done();
-                }
-            }, 50);
+                done();
+            });
+        });
+    });
+
+    describe("ajaxify:history", function() {
+        it("should trigger fetching of non-stored states", function() {
+            DOM.fire("ajaxify:history", "some-url");
+
+            this.xhr = jasmine.Ajax.requests.mostRecent();
+
+            expect(this.xhr).toBeDefined();
+            expect(this.xhr.readyState).toBe(2);
+            expect(this.xhr.method).toBe("GET");
+            expect(this.xhr.url.indexOf("some-url")).toBe(0);
         });
     });
 });

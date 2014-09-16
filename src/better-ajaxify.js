@@ -65,7 +65,7 @@
                         response.ts = Date.now();
 
                         return Promise[success ? "resolve" : "reject"](response);
-                    }
+                    };
                 };
 
                 return XHR(method, url, config).then(complete(true), complete(false));
@@ -90,10 +90,9 @@
                 var eventType = success ? "ajaxify:load" : "ajaxify:error";
 
                 return function(response) {
-                    if (target.fire("ajaxify:loadend", response) &&
-                        target.fire(eventType, response)) {
-                            switchContent(response);
-                        }
+                    if (target.fire("ajaxify:loadend", response) && target.fire(eventType, response)) {
+                        switchContent(response);
+                    }
                 };
             },
             xhr;
