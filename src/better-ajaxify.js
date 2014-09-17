@@ -1,4 +1,4 @@
-(function(DOM, location) {
+(function(DOM, XHR, location) {
     "use strict";
 
     var stateHistory = {}, // in-memory storage for states
@@ -83,46 +83,34 @@
             }
         };
 
-    DOM.on(["ajaxify:get", "ajaxify:post"], function(url, query, type, target) {
-        if (query && Object.prototype.toString.call(query) !== "[object Object]") {
-            target = type;
-            type = query;
-            query = null;
-        }
+    ["get", "post"].forEach(function(method) {
+        DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, query, target) {
+            if (query && Object.prototype.toString.call(query) !== "[object Object]") {
+                target = query;
+                query = null;
+            }
 
-        var method = type.split(":").pop(),
-            config = {data: query},
-            complete = function(success) {
-                var eventType = success ? "ajaxify:load" : "ajaxify:error";
+            var config = {data: query},
+                complete = function(success) {
+                    var eventType = success ? "ajaxify:load" : "ajaxify:error";
 
-                return function(response) {
-                    if (target.fire("ajaxify:loadend", response) && target.fire(eventType, response)) {
-                        switchContent(response);
-                    }
-                };
-            },
-            xhr;
+                    return function(response) {
+                        if (target.fire("ajaxify:loadend", response) && target.fire(eventType, response)) {
+                            switchContent(response);
+                        }
+                    };
+                },
+                xhr;
 
-        if (target.fire("ajaxify:loadstart", config)) {
-            xhr = createXHR(target, method, url, config);
+            if (target.fire("ajaxify:loadstart", config)) {
+                xhr = createXHR(target, method, url, config);
 
-            if (xhr) xhr.then(complete(true), complete(false));
-        }
-    }, ["type", "target"]);
-
-    // http://updates.html5rocks.com/2013/12/300ms-tap-delay-gone-away
-    DOM.find("meta[name=viewport][content*='width=device-width']").each(function() {
-        // fastclick support via handling some events earlier
-        DOM.on("touchend a", function(_, el, cancel) {
-            return !cancel || !el.fire("click");
-        });
-
-        DOM.on("touchend [type=submit]", function(_, el, cancel) {
-            return !cancel || !el.parent("form").fire("submit");
+                if (xhr) xhr.then(complete(true), complete(false));
+            }
         });
     });
 
-    DOM.on("click a", function(_, link, cancel) {
+    DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel) {
         if (!cancel && !link.get("target")) {
             var url = link.get("href");
 
@@ -132,7 +120,7 @@
         }
     });
 
-    DOM.on("submit", function(form, _, cancel) {
+    DOM.on("submit", ["target", "defaultPrevented"], function(form, cancel) {
         if (!cancel && !form.get("target")) {
             var url = form.get("action"),
                 method = form.get("method"),
@@ -158,12 +146,16 @@
         constructor: function() {
             var submits = this.findAll("[type=submit]");
 
-            this.on("submit", function(_, target) {
-                if (this === target) submits.set("disabled", true);
+            this.on("submit", ["target"], function(target) {
+                if (this === target) {
+                    submits.forEach(function(el) { el.set("disabled", true) });
+                }
             });
 
-            this.on("ajaxify:loadend", function(_, target) {
-                if (this === target) submits.set("disabled", false);
+            this.on("ajaxify:loadend", ["target"], function(target) {
+                if (this === target) {
+                    submits.forEach(function(el) { el.set("disabled", false) });
+                }
             });
         },
         serialize: function() {
@@ -180,7 +172,7 @@
                     switch(el.get("type")) {
                     case "select-one":
                     case "select-multiple":
-                        el.children().each(function(option) {
+                        el.children().forEach(function(option) {
                             if (option.get("selected")) {
                                 appendParam(memo, name, option.get());
                             }
@@ -208,4 +200,4 @@
             }, {});
         }
     });
-}(window.DOM, location));
+}(window.DOM, window.XHR, window.location));
