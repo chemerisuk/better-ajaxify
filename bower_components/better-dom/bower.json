@@ -1,26 +1,26 @@
 {
   "name": "better-dom",
-  "version": "1.7.7",
+  "version": "2.0.0-rc.2",
   "main": [
     "dist/better-dom.js",
-    "dist/better-dom-legacy.js",
-    "dist/better-dom-legacy.htc"
+    "dist/better-dom.htc"
   ],
   "ignore": [
     ".*",
     "test",
     "src",
-    "extra",
-    "legacy",
+    "conf",
+    "task",
     "Gruntfile.js",
     "package.json",
-    "bower.json",
-    "main.sublime-project"
+    "bower.json"
   ],
   "devDependencies": {
     "jquery": "latest",
-    "jasmine": "~2.0.0",
-    "html5shiv": "3.6.2",
-    "es5-shim": "2.3.0"
+    "jasmine": "~2.0.0"
+  },
+  "dependencies": {
+    "html5shiv": "latest",
+    "es5-shim": "latest"
   }
 }

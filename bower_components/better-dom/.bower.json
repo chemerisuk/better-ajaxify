@@ -1,36 +1,36 @@
 {
   "name": "better-dom",
-  "version": "1.7.7",
+  "version": "2.0.0-rc.2",
   "main": [
     "dist/better-dom.js",
-    "dist/better-dom-legacy.js",
-    "dist/better-dom-legacy.htc"
+    "dist/better-dom.htc"
   ],
   "ignore": [
     ".*",
     "test",
     "src",
-    "extra",
-    "legacy",
+    "conf",
+    "task",
     "Gruntfile.js",
     "package.json",
-    "bower.json",
-    "main.sublime-project"
+    "bower.json"
   ],
   "devDependencies": {
     "jquery": "latest",
-    "jasmine": "~2.0.0",
-    "html5shiv": "3.6.2",
-    "es5-shim": "2.3.0"
+    "jasmine": "~2.0.0"
+  },
+  "dependencies": {
+    "html5shiv": "latest",
+    "es5-shim": "latest"
   },
   "homepage": "https://github.com/chemerisuk/better-dom",
-  "_release": "1.7.7",
+  "_release": "2.0.0-rc.2",
   "_resolution": {
     "type": "version",
-    "tag": "v1.7.7",
-    "commit": "965607e860861897594a489ff6e3f09bea30832a"
+    "tag": "v2.0.0-rc.2",
+    "commit": "7448dd0a879426de998ce7b5b5d569f9262897f5"
   },
   "_source": "git://github.com/chemerisuk/better-dom.git",
-  "_target": "^1.7.7",
+  "_target": "~2.0.0",
   "_originalSource": "better-dom"
 }
