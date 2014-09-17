@@ -5,70 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width">
     <title>better-ajaxify demo</title>
+    <link rel="stylesheet" href="demo/main.css">
     <style>
-    html, body {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        overflow: hidden;
-    }
 
-    html {
-        background: #CCC;
-    }
+    /* animation example */
 
-    body {
-        font-family: "Open Sans", sans-serif;
-        color: #393838;
-        width: 55em;
-    }
-
-    nav, main {
-        height: 100%;
-
-        -webkit-box-sizing: border-box;
-        -moz-box-sizing: border-box;
-        box-sizing: border-box;
-    }
-
-    nav {
-        background: #578cdb;
-        color: #FFF;
-
-        position: absolute;
-        z-index: 1;
-
-        width: 15em;
-        padding: 1.5em;
-    }
-
-    nav > .logo {
-        font-size: 150%;
-    }
-
-    nav a {
-        color: inherit;
-        font-size: larger;
-        text-decoration: none;
-    }
-
-    main {
-        margin-left: 15em;
-        background: #FFF;
-
-        padding: 1.5em;
-        width: 40em;
-
-        border: 1px solid;
-        border-top: 0;
-        border-bottom: 0;
-    }
-
-    main a:link {
-        color: #578cdb;
-    }
-
-    /* animation */
     main {
         -webkit-transform: translateX(0);
         transform: translateX(0);
@@ -98,11 +39,6 @@
         <script src="bower_components/es5-shim/es5-shim.js"></script>
         <script src="bower_components/html5shiv/dist/html5shiv.js"></script>
     <![endif]-->
-    <script src="bower_components/promise-polyfill/Promise.js"></script>
-    <script src="bower_components/better-xhr/dist/better-xhr.js"></script>
-    <script src="bower_components/better-dom/dist/better-dom.js"></script>
-    <script src="src/better-ajaxify.js"></script>
-    <script src="src/better-ajaxify-hashchange.js"></script>
 </head>
 <body>
     <nav>
@@ -118,5 +54,10 @@
         <p>Ajax website engine for <a href="https://github.com/chemerisuk/better-dom" target="_blank" class="logo">better-dom</a></p>
         <p>The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.</p>
     </main>
+    <script src="bower_components/promise-polyfill/Promise.js"></script>
+    <script src="bower_components/better-xhr/dist/better-xhr.js"></script>
+    <script src="bower_components/better-dom/dist/better-dom.js"></script>
+    <script src="src/better-ajaxify.js"></script>
+    <script src="src/better-ajaxify-hashchange.js"></script>
 </body>
 </html>

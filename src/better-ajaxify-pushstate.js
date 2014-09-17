@@ -1,7 +1,7 @@
 (function(DOM, location, history) {
     "use strict";
 
-    DOM.on("ajaxify:loadend", function(response, xhr, target, _, canceled) {
+    DOM.on("ajaxify:loadend", [1, "defaultPrevented"], function(response, canceled) {
         if (!canceled && typeof response === "object") {
             // update url in address bar
             if (response.url !== location.pathname + location.search) {
@@ -24,7 +24,7 @@
         });
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", function(xhr, sender, _, canceled) {
+        DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], function(sender, canceled) {
             if (!canceled && sender.get("method") !== "post") {
                 // load a new page in legacy browsers
                 if (sender.matches("form")) {
