@@ -26,31 +26,39 @@ Then append the following html elements on your page:
 <script src="bower_components/better-dom/dist/better-dom.js"></script>
 <script src="bower_components/better-ajaxify/dist/better-ajaxify.js"></script>
 <!-- 
-    Plus better-ajaxify-pushstate.js or better-ajaxify-pushstate.js 
+    Plus better-ajaxify-pushstate.js or better-ajaxify-hashchange.js 
     See the next section for defaults
 -->
 ```
 
-## Frontend setup
-
-### Determine strategy for browser history
+## Determine strategy for browser history
 There are two main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) or via __hashchange__ event. Each has it's own advantages and disadvantages.
 
-__HTML5 History API__:
+### HTML5 History API
+
+__Pros__:
 + performance: initial page load always takes a single request 
 + clear and SEO-friendly address bar urls
 + you can use archors on your page as in regular case
+
+__Cons__:
 - there are some quirks in several old implementations (but all of them are solved in modern browsers)
 - some old browsers do [not support the HTML5 History API](http://caniuse.com/#search=push). Also early Android 4 has [lack of support](https://code.google.com/p/android/issues/detail?id=23979) as well.
 
-Using __hashchange__ event:
+### __hashchange__ event
+
+__Pros__:
 + [great browser support](http://caniuse.com/#search=hashchange)
 + consistent support in all browsers
+
+__Cons__:
 - urls have to start with `#` that looks weird and is not a SEO-frieldly
 - internal page loading takes two requests instead of single one (there are some tricks to avoid that in some cases but in general the rule is truthy)
 - you should put anchors carefully because they used for page navigation as well
 
-Therefore depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's a future proof and the most transparent for client and server.
+Depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's a future proof and the most transparent for client and server.
+
+## Frontend setup
 
 ### Custom events
 The library exposes several custom events for advanced interaction.
