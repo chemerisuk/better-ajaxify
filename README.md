@@ -8,11 +8,10 @@ The library helps to solve one of the most important problem for a typical websi
 ## Features
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
-* fastclick support on mobile devices via checking `<meta name="viewport" content="width=device-width">`
 * [`pushstate` or `hashchange`](#determine-strategy-for-browser-history) can be used to update browser address bar
+* advanced configuration via [custom events](#custom-events)
 * [page transition animations](#animate-page-transitions-in-css) support via CSS3
 * prevents [multiple form submits](#style-disabled-submit-buttons) until the request is completed
-* advanced configuration and manipulation via [custom events](#custom-events)
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
@@ -24,20 +23,12 @@ This will clone the latest version of the __better-ajaxify__ into the `bower_com
 Then append the following html elements on your page:
 
 ```html
-<html>
-<head>
-    ...
-    <!--[if IE]>
-        <link href="bower_components/better-dom/dist/better-dom-legacy.htc" rel="htc"/>
-        <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
-    <![endif]-->
-</head>
-<body>
-    ...
-    <script src="bower_components/better-dom/dist/better-dom.js"></script>
-    <script src="bower_components/better-ajaxify/dist/better-ajaxify.js"></script>
-</body>
-</html>
+<script src="bower_components/better-dom/dist/better-dom.js"></script>
+<script src="bower_components/better-ajaxify/dist/better-ajaxify.js"></script>
+<!-- 
+    Plus better-ajaxify-pushstate.js or better-ajaxify-pushstate.js 
+    See the next section for defaults
+-->
 ```
 
 ## Frontend setup
@@ -60,6 +51,35 @@ Using __hashchange__ event:
 - you should put anchors carefully because they used for page navigation as well
 
 Therefore depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's a future proof and the most transparent for client and server.
+
+### Custom events
+The library exposes several custom events for advanced interaction.
+
+_TODO: update this section to reflect changes in 1.7_
+
+| Event name | Arguments | Description |
+| ---------- | --------- | ----------- |
+| `ajaxify:get` | url, callback | Event is trigerred for each `GET` request. Argument `callback` is optional, it's used for making such requests manually. |
+| `ajaxify:post` | url, data, callback | Event is trigerred for each `POST` request. Argument `query` can be either `String` or `Object`, later it will be sent as a request data. Argument `callback` is optional, it's used for making such requests manually. |
+| `ajaxify:loadstart` | xhr | Triggered before doing an ajax call. `xhr` of this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding extra request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent. |
+| `ajaxify:loadend` | data, xhr | Triggered when an ajaxify request is completed (successfully or not). |
+| `ajaxify:load` | data, xhr | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string. |
+| `ajaxify:error` | data, xhr | Triggered only if server returned unsuccesfull response code or requests was failed because of a network error. |
+| `ajaxify:timeout` | data, xhr | Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds. |
+| `ajaxify:abort` | data, xhr | Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed. |
+| `ajaxify:history` | url | Triggered when a user navigates through history in browser. |
+
+Below is an example how you can setup Google Analytics using `ajaxify:load` event:
+
+```js
+// Google Analytics setup
+DOM.on("ajaxify:load", function(response) {
+    window.ga("send", "pageview", {
+        title: response.title,
+        page: response.url
+    });
+});
+```
 
 ### Animate page transitions in CSS
 Each content transition can be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
@@ -98,33 +118,6 @@ In vanilla HTML there is an annoying issue that user is able to click a submit b
 [type=submit][disabled] {
     background-image: url(spinner.gif) no-repeat center right;
 }
-```
-### Custom events
-The library exposes several custom events for advanced interaction.
-
-| Event name | Arguments | Description |
-| ---------- | --------- | ----------- |
-| `ajaxify:get` | url, callback | Event is trigerred for each `GET` request. Argument `callback` is optional, it's used for making such requests manually. |
-| `ajaxify:post` | url, data, callback | Event is trigerred for each `POST` request. Argument `query` can be either `String` or `Object`, later it will be sent as a request data. Argument `callback` is optional, it's used for making such requests manually. |
-| `ajaxify:loadstart` | xhr | Triggered before doing an ajax call. `xhr` of this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding extra request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent. |
-| `ajaxify:loadend` | data, xhr | Triggered when an ajaxify request is completed (successfully or not). |
-| `ajaxify:load` | data, xhr | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string. |
-| `ajaxify:error` | data, xhr | Triggered only if server returned unsuccesfull response code or requests was failed because of a network error. |
-| `ajaxify:timeout` | data, xhr | Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds. |
-| `ajaxify:abort` | data, xhr | Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed. |
-| `ajaxify:history` | url | Triggered when a user navigates through history in browser. |
-
-### Setup analytics
-It's pretty straightforward to setup analytics via [custom events](#custom-events). Any successful page load triggers `ajaxify:load` event, so you can use it to notify Google Analytics for instance about each page load:
-
-```js
-// Google Analytics setup
-DOM.on("ajaxify:load", function(response) {
-    window.ga("send", "pageview", {
-        title: response.title,
-        page: response.url
-    });
-});
 ```
 
 ## Backend setup
