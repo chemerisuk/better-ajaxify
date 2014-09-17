@@ -167,11 +167,16 @@
             });
         },
         serialize: function() {
+            var names = arguments.length ? Array.prototype.slice.call(arguments) : null;
+
             return this.findAll("[name]").reduce(function(memo, el) {
                 var name = el.get("name");
                 // don't include disabled form fields or without names
                 // skip inner form elements of a disabled fieldset
                 if (name && !el.get("disabled") && !el.parent("fieldset").get("disabled")) {
+                    // skip filtered names
+                    if (names && names.indexOf(name) < 0) return memo;
+
                     switch(el.get("type")) {
                     case "select-one":
                     case "select-multiple":

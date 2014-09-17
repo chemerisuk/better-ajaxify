@@ -26,6 +26,14 @@ describe("serialize", function() {
         test("form>input[type=text name=a value=b disabled]", {});
     });
 
+    it("should support passing optional names", function() {
+        var form = DOM.mock("form>input[name=one value=1]+input[name=two value=2]");
+
+        expect(form.serialize("one")).toEqual({one: "1"});
+        expect(form.serialize("two")).toEqual({two: "2"});
+        expect(form.serialize()).toEqual({one: "1", two: "2"});
+    });
+
     function test(html, value) {
         it("should serialize " + html, function() {
             var form = DOM.mock(html);

@@ -3,7 +3,7 @@ module.exports = function(config) {
 
     config.set({
         basePath: "..",
-        frameworks: ["jasmine"],
+        frameworks: ["jasmine-ajax", "jasmine"],
         browsers: ["PhantomJS"],
         preprocessors: { "src/better-ajaxify.js": "coverage" },
         files: [
