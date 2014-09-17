@@ -21,6 +21,9 @@
 
     "globals": {
         "DOM": true,
+        "XHR": true,
+        "Promise": true,
+
         "module": true,
         "require": true,
         "define": true,

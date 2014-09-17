@@ -1,0 +1,29 @@
+{
+  "name": "better-xhr",
+  "version": "0.3.0",
+  "main": [
+    "dist/better-xhr.js"
+  ],
+  "ignore": [
+    ".*",
+    "test",
+    "src",
+    "index.html",
+    "Gruntfile.js",
+    "package.json",
+    "bower.json"
+  ],
+  "dependencies": {
+    "promise-polyfill": "~1.1.4"
+  },
+  "homepage": "https://github.com/chemerisuk/better-xhr",
+  "_release": "0.3.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v0.3.0",
+    "commit": "36b124e7b372c1b38f957c760e40706b0b41661d"
+  },
+  "_source": "git://github.com/chemerisuk/better-xhr.git",
+  "_target": "~0.3.0",
+  "_originalSource": "better-xhr"
+}

@@ -1,0 +1,19 @@
+{
+  "name": "better-xhr",
+  "version": "0.3.0",
+  "main": [
+    "dist/better-xhr.js"
+  ],
+  "ignore": [
+    ".*",
+    "test",
+    "src",
+    "index.html",
+    "Gruntfile.js",
+    "package.json",
+    "bower.json"
+  ],
+  "dependencies": {
+    "promise-polyfill": "~1.1.4"
+  }
+}

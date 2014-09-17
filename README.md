@@ -8,11 +8,10 @@ The library helps to solve one of the most important problem for a typical websi
 ## Features
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
-* fastclick support on mobile devices via checking `<meta name="viewport" content="width=device-width">`
 * [`pushstate` or `hashchange`](#determine-strategy-for-browser-history) can be used to update browser address bar
+* advanced configuration via [custom events](#custom-events)
 * [page transition animations](#animate-page-transitions-in-css) support via CSS3
 * prevents [multiple form submits](#style-disabled-submit-buttons) until the request is completed
-* advanced configuration and manipulation via [custom events](#custom-events)
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
@@ -24,67 +23,96 @@ This will clone the latest version of the __better-ajaxify__ into the `bower_com
 Then append the following html elements on your page:
 
 ```html
-<html>
-<head>
-    ...
-    <!--[if IE]>
-        <link href="bower_components/better-dom/dist/better-dom-legacy.htc" rel="htc"/>
-        <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
-    <![endif]-->
-</head>
-<body>
-    ...
-    <script src="bower_components/better-dom/dist/better-dom.js"></script>
-    <script src="bower_components/better-ajaxify/dist/better-ajaxify.js"></script>
-</body>
-</html>
+<script src="bower_components/better-dom/dist/better-dom.js"></script>
+<script src="bower_components/better-ajaxify/dist/better-ajaxify.js"></script>
+<!-- 
+    Plus better-ajaxify-pushstate.js or better-ajaxify-hashchange.js 
+    See the next section for defaults
+-->
 ```
 
-## Frontend setup
-
-### Determine strategy for browser history
+## Determine strategy for browser history
 There are two main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) or via __hashchange__ event. Each has it's own advantages and disadvantages.
 
-__HTML5 History API__:
+### HTML5 History API
+
+__Pros__:
 + performance: initial page load always takes a single request 
 + clear and SEO-friendly address bar urls
 + you can use archors on your page as in regular case
+
+__Cons__:
 - there are some quirks in several old implementations (but all of them are solved in modern browsers)
 - some old browsers do [not support the HTML5 History API](http://caniuse.com/#search=push). Also early Android 4 has [lack of support](https://code.google.com/p/android/issues/detail?id=23979) as well.
 
-Using __hashchange__ event:
+### __hashchange__ event
+
+__Pros__:
 + [great browser support](http://caniuse.com/#search=hashchange)
 + consistent support in all browsers
+
+__Cons__:
 - urls have to start with `#` that looks weird and is not a SEO-frieldly
 - internal page loading takes two requests instead of single one (there are some tricks to avoid that in some cases but in general the rule is truthy)
 - you should put anchors carefully because they used for page navigation as well
 
-Therefore depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's a future proof and the most transparent for client and server.
+Depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's a future proof and the most transparent for client and server.
+
+## Frontend setup
+
+### Custom events
+The library exposes several custom events for advanced interaction.
+
+_TODO: update this section to reflect changes in 1.7_
+
+| Event name | Arguments | Description |
+| ---------- | --------- | ----------- |
+| `ajaxify:get` | url, callback | Event is trigerred for each `GET` request. Argument `callback` is optional, it's used for making such requests manually. |
+| `ajaxify:post` | url, data, callback | Event is trigerred for each `POST` request. Argument `query` can be either `String` or `Object`, later it will be sent as a request data. Argument `callback` is optional, it's used for making such requests manually. |
+| `ajaxify:loadstart` | xhr | Triggered before doing an ajax call. `xhr` of this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding extra request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent. |
+| `ajaxify:loadend` | data, xhr | Triggered when an ajaxify request is completed (successfully or not). |
+| `ajaxify:load` | data, xhr | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string. |
+| `ajaxify:error` | data, xhr | Triggered only if server returned unsuccesfull response code or requests was failed because of a network error. |
+| `ajaxify:timeout` | data, xhr | Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds. |
+| `ajaxify:abort` | data, xhr | Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed. |
+| `ajaxify:history` | url | Triggered when a user navigates through history in browser. |
+
+Below is an example how you can setup Google Analytics using `ajaxify:load` event:
+
+```js
+// Google Analytics setup
+DOM.on("ajaxify:load", function(response) {
+    window.ga("send", "pageview", {
+        title: response.title,
+        page: response.url
+    });
+});
+```
 
 ### Animate page transitions in CSS
 Each content transition can be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
 
 ```css
 /* style main content container */
-.site-content {
+main {
     transform: translateX(0);
     transition: transform 0.25s ease-in-out;
 }
 
 /* style element which is going to be hidden */
-.site-content + .site-content {
+main + main {
     position: absolute;
     top: 0;
     left: 0;
 }
 
 /* style forward animation */
-.site-content[aria-hidden=true] {
+main[aria-hidden=true] {
     transform: translateX(100%);
 }
 
 /* style backward animation */
-.site-content + .site-content[aria-hidden=true] {
+main + main[aria-hidden=true] {
     transform: translateX(-100%);
 }
 ```
@@ -100,34 +128,19 @@ In vanilla HTML there is an annoying issue that user is able to click a submit b
 }
 ```
 
-### Setup analytics
-It's pretty straightforward to setup analytics via [custom events](#custom-events). Any successful page load triggers `ajaxify:load` event, so you can use it to notify Google Analytics for instance about each page load:
-
-```js
-// Google Analytics setup
-DOM.on("ajaxify:load", function(response) {
-    window.ga("send", "pageview", {
-        title: response.title,
-        page: response.url
-    });
-});
-```
-
 ## Backend setup
-CSS selectors are used to mark html elements that might be reloaded dynamically. The value of this attribute is a key of the `html` object in json response from server.
-
-Server should respond in json format:
+In order to make it work you need to modify your web server to return JSON response for ajaxify. The format of this response is pretty straighforward:
 
     {
         "title": "Page title",
-        "url": "Optional page url, for a case when request and response urls should be different",
+        "url": "Optional page url, if you need to update address url additionally",
         "html": {
-            ".site-content": "innerHTML content for the main content",
+            "main": "innerHTML content for the main content",
             ...
         }
     }
 
-For History API case It's useful to check for existance of the `X-Requested-With` header if website needs to support direct links, and return json only if a request has it.
+The client part parses such response and uses keys of the `html` object as CSS selectors to find the area on your page to update. Value is used to update `innerHTML` property.
 
 ### Example of Node configuration using express.js
 This example uses Handlebars for rendering HTML on backend. 
@@ -146,11 +159,13 @@ So your `layout.hbs` might look like:
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
-    <div class="site-content">{{{body}}}</div>
+    <main>{{{body}}}</main>
     <script src="/js/scripts.js"></script>
 </body>
 </html>
 ```
+
+Our application contains dynamic content inside of the `<main>` element.
 
 #### Introduce JSON layout
 Add `layout.json` to return ajaxify output:
@@ -160,7 +175,7 @@ Add `layout.json` to return ajaxify output:
     {{#if title}}"title": "{{title}}",
     {{/if}}{{#if url}}"url": "{{url}}",
     {{/if}}"html": {
-        ".site-content": "{{{BODY}}}"
+        "main": "{{{BODY}}}"
     }
 }
 ```
@@ -182,49 +197,16 @@ app.use(function(req, res, next) {
 });
 ```
 
-## Custom events
-The library exposes multiple custom events for advanced interaction.
+#### Fix redirects
+`XMLHttpRequest` objects can handle redirects for you, but they do not provide a way to determine the final page URL. This is an important disadvantage, because we need to update browser address into the correct URL value.
 
-#### ajaxify:get `URL, callback`
-Event is trigerred for each `GET` request. Argument `callback` is optional, it's used for making such requests manually:
-
-```js
-DOM.fire("ajaxify:get", "test_url", function(data) {
-    // handle response data here
-});
-```
-
-#### ajaxify:post `URL, query, callback`
-Event is trigerred for each `POST` request. Argument `query` can be either `String` or `Object`, later it will be sent as a request data. Argument `callback` is optional, it's used for making such requests manually:
+To fix this issue you can use the `url` key that we have in JSON response for ajaxify. Just add one line below into a middleware to store the latest request url into a variable accessible for views:
 
 ```js
-var query = {param1: "a", param2: "b"};
-
-DOM.fire("ajaxify:post", "test_url", query, function(data) {
-    // handle response data here
-});
+res.locals.url = req.protocol + "://" + req.get("host") + req.originalUrl;
 ```
 
-#### ajaxify:loadstart `XMLHttpRequest`
-Triggered before doing an ajax call. `data` if this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent.
-
-#### ajaxify:loadend `data, XMLHttpRequest`
-Triggered when an ajaxify request is completed (successfully or not)
-
-#### ajaxify:load `data, XMLHttpRequest`
-Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string
-
-#### ajaxify:history `URL`
-Triggered when a user navigates through history in browser. `data` of this event is target history entry url
-
-#### ajaxify:error `data, XMLHttpRequest`
-Triggered only if server returned unsuccesfull response code
-
-#### ajaxify:timeout `data, XMLHttpRequest`
-Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds
-
-#### ajaxify:abort `data, XMLHttpRequest`
-Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed
+I recommend to use full url value there, because it avoids problems related to cross-domain requests.
 
 ## Browser support
 #### Desktop
@@ -240,7 +222,7 @@ Triggered when request was aborted. It may happen when user clicks on a link bef
 * Chrome for Android
 
 [travis-url]: http://travis-ci.org/chemerisuk/better-ajaxify
-[travis-image]: https://api.travis-ci.org/chemerisuk/better-ajaxify.png?branch=master
+[travis-image]: http://img.shields.io/travis/chemerisuk/better-ajaxify/master.svg
 
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-ajaxify
-[coveralls-image]: https://coveralls.io/repos/chemerisuk/better-ajaxify/badge.png?branch=master
+[coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-ajaxify/master.svg
