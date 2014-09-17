@@ -10,47 +10,93 @@
         margin: 0;
         padding: 0;
         height: 100%;
+        overflow: hidden;
+    }
+
+    html {
+        background: #CCC;
     }
 
     body {
-        display: table;
+        font-family: "Open Sans", sans-serif;
+        color: #393838;
+        width: 55em;
     }
 
-    .table-cell {
-        display: table-cell;
-        vertical-align: top;
+    nav, main {
+        height: 100%;
+
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
     }
 
-    body > nav {
-        width: 200px;
-        background: yellow;
-    }
+    nav {
+        background: #578cdb;
+        color: #FFF;
 
-    .main-content {
-        padding-left: 20px;
-
-        opacity: 1;
-        /* enable animations via CSS3 transition property */
-        -webkit-transition: opacity 0.3s ease-in;
-        transition: opacity 0.3s ease-in;
-    }
-
-    .main-content[aria-hidden=true] {
-        opacity: 0;
-    }
-
-    /* style element which is going to be hidden */
-    .main-content + .main-content {
         position: absolute;
-        left: 200px;
+        z-index: 1;
 
-        -webkit-transition-delay: 0.15s;
-        transition-delay: 0.15s;
+        width: 15em;
+        padding: 1.5em;
+    }
+
+    nav > .logo {
+        font-size: 150%;
+    }
+
+    nav a {
+        color: inherit;
+        font-size: larger;
+        text-decoration: none;
+    }
+
+    main {
+        margin-left: 15em;
+        background: #FFF;
+
+        padding: 1.5em;
+        width: 40em;
+
+        border: 1px solid;
+        border-top: 0;
+        border-bottom: 0;
+    }
+
+    main a:link {
+        color: #578cdb;
+    }
+
+    /* animation */
+    main {
+        -webkit-transform: translateX(0);
+        transform: translateX(0);
+
+        -webkit-transition: -webkit-transform 0.25s ease-in-out;
+        transition: transform 0.25s ease-in-out;
+    }
+
+    main[aria-hidden=true] {
+        -webkit-transform: translateX(100%);
+        transform: translateX(100%);
+    }
+
+    main + main {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+
+    main + main[aria-hidden=true] {
+        -webkit-transform: translateX(-100%);
+        transform: translateX(-100%);
     }
     </style>
     <!--[if IE]>
-        <link href="bower_components/better-dom/dist/better-dom-legacy.htc" rel="htc"/>
-        <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
+        <link href="bower_components/better-dom/dist/better-dom.htc" rel="htc"/>
+        <script src="bower_components/es5-shim/es5-shim.js"></script>
+        <script src="bower_components/html5shiv/dist/html5shiv.js"></script>
     <![endif]-->
     <script src="bower_components/promise-polyfill/Promise.js"></script>
     <script src="bower_components/better-xhr/dist/better-xhr.js"></script>
@@ -59,16 +105,18 @@
     <script src="src/better-ajaxify-hashchange.js"></script>
 </head>
 <body>
-    <nav class="table-cell">
+    <nav>
+        <a href="https://github.com/chemerisuk/better-ajaxify" target="_self" class="logo">better-ajaxify</a>
         <ul>
             <li><a href="/better-ajaxify/demo/installing.html">Installing</a></li>
             <li><a href="/better-ajaxify/demo/frontend-setup.html">Frontend setup</a></li>
             <li><a href="/better-ajaxify/demo/backend-setup.html">Backend setup</a></li>
         </ul>
     </nav>
-    <section class="main-content table-cell">
+    <main>
         <h1>Home page</h1>
-        Pjax website engine for better-dom
-    </section>
+        <p>Ajax website engine for <a href="https://github.com/chemerisuk/better-dom" target="_blank" class="logo">better-dom</a></p>
+        <p>The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.</p>
+    </main>
 </body>
 </html>
