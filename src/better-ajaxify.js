@@ -84,13 +84,8 @@
         };
 
     ["get", "post"].forEach(function(method) {
-        DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, query, target) {
-            if (query && Object.prototype.toString.call(query) !== "[object Object]") {
-                target = query;
-                query = null;
-            }
-
-            var config = {data: query},
+        DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, data, target) {
+            var config = {data: data},
                 complete = function(success) {
                     var eventType = success ? "ajaxify:load" : "ajaxify:error";
 

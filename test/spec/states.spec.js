@@ -66,4 +66,11 @@ describe("state", function() {
             done();
         });
     });
+
+    it("should allow multiple requests for DOM", function() {
+        DOM.fire("ajaxify:get", "url1", null);
+        DOM.fire("ajaxify:get", "url2");
+
+        expect(jasmine.Ajax.requests.count()).toBe(2);
+    });
 });
