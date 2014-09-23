@@ -141,7 +141,7 @@
         constructor: function() {
             var submits = this.findAll("[type=submit]");
 
-            this.on("submit", ["target"], function(target) {
+            this.on("ajaxify:loadstart", ["target"], function(target) {
                 if (this === target) {
                     submits.forEach(function(el) { el.set("disabled", true) });
                 }

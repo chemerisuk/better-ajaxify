@@ -1,4 +1,4 @@
-# better-ajaxify [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
+# better-ajaxify<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
 > Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
 The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.
@@ -214,7 +214,7 @@ I recommend to use full url value there, because it avoids problems related to c
 * Safari 6.0+
 * Firefox 16+
 * Opera 12.10+
-* IE8+
+* Internet Explorer 8+ (see [notes](https://github.com/chemerisuk/better-dom#notes-about-old-ies))
 
 #### Mobile
 * iOS Safari 6+

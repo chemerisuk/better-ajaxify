@@ -6,6 +6,10 @@ module.exports = function(config) {
         frameworks: ["jasmine-ajax", "jasmine"],
         browsers: ["PhantomJS"],
         preprocessors: { "src/better-ajaxify.js": "coverage" },
+        coverageReporter: {
+            type: "html",
+            dir: "coverage/"
+        },
         files: [
             "bower_components/es5-shim/es5-shim.js",
             "bower_components/better-dom/dist/better-dom.js",
