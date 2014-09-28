@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify-hashchange.js
- * @version 1.7.0-beta.1 2014-09-17T21:32:06
+ * @version 1.7.0-beta.2 2014-09-28T16:15:52
  * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT

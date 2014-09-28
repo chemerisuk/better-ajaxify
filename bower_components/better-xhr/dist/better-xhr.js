@@ -1,19 +1,24 @@
 /**
  * @file src/better-xhr.js
- * @version 0.3.0 2014-09-15T20:40:37
+ * @version 0.3.1 2014-09-22T11:14:59
  * @overview Better abstraction for XMLHttpRequest
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
  * @see https://github.com/chemerisuk/better-xhr
  */
 (function() {
+    "use strict";
+
     var global = this || window,
         toString = Object.prototype.toString,
-        XHR = function(method, url, config) {
+        Promise;
+
+    function XHR(method, url, config) {
         config = config || {};
+        method = method.toUpperCase();
 
         var headers = config.headers || {},
-            charset = "charset" in config ? config.charset : "UTF-8",
+            charset = "charset" in config ? config.charset : XHR.defaults.charset,
             cacheBurst = "cacheBurst" in config ? config.cacheBurst : XHR.defaults.cacheBurst,
             data = config.data;
 
@@ -35,12 +40,12 @@
         }
 
         if (typeof data === "string") {
-            if (method === "get") {
+            if (method === "GET") {
                 url += (~url.indexOf("?") ? "&" : "?") + data;
 
                 data = null;
             } else {
-                headers["Content-Type"] = "application/x-www-form-urlencoded";
+                headers["Content-Type"] = "application/x-www-form-urlencoded; charset=" + charset;
             }
         }
 
@@ -50,16 +55,16 @@
             headers["Content-Type"] = "application/json; charset=" + charset;
         }
 
-        if (cacheBurst) {
+        if (cacheBurst && method === "GET") {
             url += (~url.indexOf("?") ? "&" : "?") + cacheBurst + "=" + Date.now();
         }
 
         return new Promise(function(resolve, reject) {
             var xhr = new XMLHttpRequest();
 
-            xhr.onabort = function() { reject(null) };
-            xhr.ontimeout = function() { reject(null) };
-            xhr.onerror = function() { reject(null) };
+            xhr.onabort = function() { reject(new Error("abort")) };
+            xhr.onerror = function() { reject(new Error("fail")) };
+            xhr.ontimeout = function() { reject(new Error("timeout")) };
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     var status = xhr.status;
@@ -78,7 +83,7 @@
                 }
             };
 
-            xhr.open(method.toUpperCase(), url, true);
+            xhr.open(method, url, true);
             xhr.timeout = config.timeout || XHR.defaults.timeout;
 
             Object.keys(XHR.defaults.headers).forEach(function(key) {
@@ -95,8 +100,7 @@
 
             xhr.send(data);
         });
-    },
-    Promise;
+    }
 
     XHR.get = function(url, config) {
         return XHR("get", url, config);
@@ -109,6 +113,7 @@
     XHR.defaults = {
         timeout: 15000,
         cacheBurst: "_",
+        charset: "UTF-8",
         headers: {
             "X-Requested-With": "XMLHttpRequest"
         }
@@ -116,11 +121,9 @@
 
     if (typeof module !== "undefined" && module.exports) {
         Promise = require("promise-polyfill");
-
-        module.exports = XHR;
     } else {
         Promise = global.Promise;
-
-        global.XHR = XHR;
     }
+
+    global.XHR = XHR;
 })();

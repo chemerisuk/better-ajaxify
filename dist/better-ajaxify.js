@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify.js
- * @version 1.7.0-beta.1 2014-09-17T21:32:06
+ * @version 1.7.0-beta.2 2014-09-28T16:15:52
  * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -114,30 +114,32 @@
     });
 
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel) {
-        if (!cancel && !link.get("target")) {
-            var url = link.get("href");
+        if (cancel || link.get("target")) return;
 
-            if (!url.indexOf("http")) {
-                return !link.fire("ajaxify:get", url);
-            }
+        var url = link.get("href");
+
+        if (!url.indexOf("http")) {
+            return !link.fire("ajaxify:get", url);
         }
     });
 
     DOM.on("submit", ["target", "defaultPrevented"], function(form, cancel) {
-        if (!cancel && !form.get("target")) {
-            var url = form.get("action"),
-                method = form.get("method"),
-                query = form.serialize();
+        if (cancel || form.get("target")) return;
 
-            if (!method || method === "get") {
-                return !form.fire("ajaxify:get", url, query);
-            } else {
-                return !form.fire("ajaxify:post", url, query);
-            }
+        var url = form.get("action"),
+            method = form.get("method"),
+            query = form.serialize();
+
+        if (!method || method === "get") {
+            return !form.fire("ajaxify:get", url, query);
+        } else {
+            return !form.fire("ajaxify:post", url, query);
         }
     });
 
-    DOM.on("ajaxify:history", function(url) {
+    DOM.on("ajaxify:history", [1, "defaultPrevented"], function(url, cancel) {
+        if (!url || cancel) return;
+
         if (url in stateHistory) {
             switchContent(stateHistory[url]);
         } else {
@@ -149,7 +151,7 @@
         constructor: function() {
             var submits = this.findAll("[type=submit]");
 
-            this.on("submit", ["target"], function(target) {
+            this.on("ajaxify:loadstart", ["target"], function(target) {
                 if (this === target) {
                     submits.forEach(function(el) { el.set("disabled", true) });
                 }
@@ -167,10 +169,11 @@
             return this.findAll("[name]").reduce(function(memo, el) {
                 var name = el.get("name");
                 // don't include disabled form fields or without names
-                // skip inner form elements of a disabled fieldset
-                if (name && !el.get("disabled") && !el.parent("fieldset").get("disabled")) {
+                if (name && !el.get("disabled")) {
                     // skip filtered names
                     if (names && names.indexOf(name) < 0) return memo;
+                    // skip inner form elements of a disabled fieldset
+                    if (el.closest("fieldset").get("disabled")) return memo;
 
                     switch(el.get("type")) {
                     case "select-one":

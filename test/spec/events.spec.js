@@ -150,5 +150,19 @@ describe("event", function() {
             expect(this.xhr.method).toBe("GET");
             expect(this.xhr.url.indexOf("some-url")).toBe(0);
         });
+
+        it("should respect defaultPrevented", function() {
+            var spy = jasmine.createSpy("history").and.returnValue(false),
+                body = DOM.find("body");
+
+            body.once("ajaxify:history", spy);
+            body.fire("ajaxify:history", "some-url");
+
+            expect(spy).toHaveBeenCalled();
+
+            this.xhr = jasmine.Ajax.requests.mostRecent();
+
+            expect(this.xhr).not.toBeDefined();
+        });
     });
 });
