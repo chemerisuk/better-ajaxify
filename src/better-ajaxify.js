@@ -130,7 +130,7 @@
     });
 
     DOM.on("ajaxify:history", [1, "defaultPrevented"], function(url, cancel) {
-        if (cancel) return;
+        if (!url || cancel) return;
 
         if (url in stateHistory) {
             switchContent(stateHistory[url]);

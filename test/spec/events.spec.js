@@ -155,7 +155,7 @@ describe("event", function() {
             var spy = jasmine.createSpy("history").and.returnValue(false),
                 body = DOM.find("body");
 
-            body.on("ajaxify:history", spy);
+            body.once("ajaxify:history", spy);
             body.fire("ajaxify:history", "some-url");
 
             expect(spy).toHaveBeenCalled();
