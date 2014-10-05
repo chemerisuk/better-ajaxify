@@ -1,4 +1,4 @@
-# better-ajaxify<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
+# better-ajaxify<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][fury-image]][fury-url]
 > Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
 The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.
@@ -63,19 +63,15 @@ Depending on project requirements you have to include extra `better-ajaxify-push
 ### Custom events
 The library exposes several custom events for advanced interaction.
 
-_TODO: update this section to reflect changes in 1.7_
-
 | Event name | Arguments | Description |
 | ---------- | --------- | ----------- |
-| `ajaxify:get` | url, callback | Event is trigerred for each `GET` request. Argument `callback` is optional, it's used for making such requests manually. |
-| `ajaxify:post` | url, data, callback | Event is trigerred for each `POST` request. Argument `query` can be either `String` or `Object`, later it will be sent as a request data. Argument `callback` is optional, it's used for making such requests manually. |
-| `ajaxify:loadstart` | xhr | Triggered before doing an ajax call. `xhr` of this event is particular instance of the `XMLHttpRequest` object. Could be used for advanced configuration, like adding extra request headers via calling `xhr.setRequestHeader` method etc. If any handler prevents default behavior then no request will be sent. |
-| `ajaxify:loadend` | data, xhr | Triggered when an ajaxify request is completed (successfully or not). |
-| `ajaxify:load` | data, xhr | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `data` of this event may be a javascript object of raw response string. |
-| `ajaxify:error` | data, xhr | Triggered only if server returned unsuccesfull response code or requests was failed because of a network error. |
-| `ajaxify:timeout` | data, xhr | Triggered when request was cancelled because of timeout. Timeout is not configurable for now and it equals to 15 seconds. |
-| `ajaxify:abort` | data, xhr | Triggered when request was aborted. It may happen when user clicks on a link before previous request was completed. |
-| `ajaxify:history` | url | Triggered when a user navigates through history in browser. |
+| `ajaxify:get` | `url` | Event is trigerred for each `GET` request. |
+| `ajaxify:post` | `url`, `data` | Event is trigerred for each `POST` request. Argument `data` can be either `String` or `Object`, later it will be passed as a request data. |
+| `ajaxify:loadstart` | `config` | Triggered before doing an ajax call. `config` of this event will be passed into `XHR` object instance. is particular instance of the `XMLHttpRequest` object. See [details](https://github.com/chemerisuk/better-xhr#configuration) about possible configuration. If any handler prevents default behavior then no request will be sent. |
+| `ajaxify:loadend` | `response` | Triggered when an ajaxify request is completed (successfully or not). |
+| `ajaxify:load` | `response` | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `response` of this event may be a javascript object of raw response string. |
+| `ajaxify:error` | `response` | Triggered if server returned unsuccesfull response code or there was other cause of failing. |
+| `ajaxify:history` | `url` | Triggered when a user navigates through history in browser. |
 
 Below is an example how you can setup Google Analytics using `ajaxify:load` event:
 
@@ -87,6 +83,27 @@ DOM.on("ajaxify:load", function(response) {
         page: response.url
     });
 });
+```
+
+### Method `serialize`
+The plugin extends `form` element wrappers with a new method `serialize`. This method is used internally to collect a form data for AJAX requests, but you can use it too.
+
+Returned object is a key/value map of form elements. For instance
+
+```html
+<form id="myform" action="/some-url">
+    <input type="text" name="user" value="user1">
+    <select name="gender">
+        <option value="m" selected>Male</option>
+        <option value="f">Female</option>
+    </select>
+</form>
+```
+
+can be serialized like below:
+
+```js
+DOM.find("#myform").serialize(); // => {user: "user1", "gender": "m"}
 ```
 
 ### Animate page transitions in CSS
@@ -226,3 +243,6 @@ I recommend to use full url value there, because it avoids problems related to c
 
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-ajaxify
 [coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-ajaxify/master.svg
+
+[fury-url]: http://badge.fury.io/bo/better-ajaxify
+[fury-image]: https://badge.fury.io/bo/better-ajaxify.svg
