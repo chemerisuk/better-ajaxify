@@ -16,7 +16,7 @@ The library helps to solve one of the most important problem for a typical websi
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
 
-    bower install better-ajaxify
+    bower install better-ajaxify --save
 
 This will clone the latest version of the __better-ajaxify__ into the `bower_components` directory at the root of your project.
 
@@ -32,7 +32,7 @@ Then append the following html elements on your page:
 ```
 
 ## Determine strategy for browser history
-There are two main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) or via __hashchange__ event. Each has it's own advantages and disadvantages.
+There are two main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) (`better-ajaxify-pushstate.js`) or via __hashchange__ event (`better-ajaxify-hashchange.js`). Each has it's own advantages and disadvantages.
 
 ### HTML5 History API
 
@@ -45,18 +45,15 @@ __Cons__:
 - there are some quirks in several old implementations (but all of them are solved in modern browsers)
 - some old browsers do [not support the HTML5 History API](http://caniuse.com/#search=push). Also early Android 4 has [lack of support](https://code.google.com/p/android/issues/detail?id=23979) as well.
 
-### __hashchange__ event
+### `hashchange` event
 
 __Pros__:
-+ [great browser support](http://caniuse.com/#search=hashchange)
-+ consistent support in all browsers
++ [great and consistent support](http://caniuse.com/#search=hashchange) in all browsers
 
 __Cons__:
 - urls have to start with `#` that looks weird and is not a SEO-frieldly
 - internal page loading takes two requests instead of single one (there are some tricks to avoid that in some cases but in general the rule is truthy)
 - you should put anchors carefully because they used for page navigation as well
-
-Depending on project requirements you have to include extra `better-ajaxify-pushstate.js` or `better-ajaxify-hashchange.js` file on your page. I'd recommend to use the first strategy when possible. It's a future proof and the most transparent for client and server.
 
 ## Frontend setup
 
@@ -107,7 +104,7 @@ DOM.find("#myform").serialize(); // => {user: "user1", "gender": "m"}
 ```
 
 ### Animate page transitions in CSS
-Each content transition can be animated. Just use [common approach for animations in better-dom](http://jsfiddle.net/C3WeM/4/) on apropriate elements to enable them:
+Each content transition can be animated:
 
 ```css
 /* style main content container */
