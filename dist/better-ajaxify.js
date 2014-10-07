@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify.js
- * @version 1.7.0-beta.2 2014-09-28T16:15:52
+ * @version 1.7.0-rc.1 2014-10-07T19:19:31
  * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
@@ -53,6 +53,8 @@
 
                 url = url.replace("#/", ""); // fix hanschange urls
 
+                var cacheBurst = config.cacheBurst || XHR.defaults.cacheBurst;
+
                 var complete = function(success) {
                     return function(response) {
                         // cleanup outer variables
@@ -65,10 +67,10 @@
 
                         // populate local values
                         response.url = response.url || url;
-                        response.title = response.title || DOM.get("title");
-
                         // remove cache bursting parameter
-                        response.url = response.url.replace(/[&?]\d+/, "");
+                        response.url = response.url.replace(cacheBurst + "=", "").replace(/[&?]\d+/, "");
+
+                        response.title = response.title || DOM.get("title");
                         // add internal property
                         response.ts = Date.now();
 

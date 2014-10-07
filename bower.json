@@ -1,6 +1,6 @@
 {
   "name": "better-ajaxify",
-  "version": "1.7.0-beta.2",
+  "version": "1.7.0-rc.1",
   "main": [
     "dist/better-ajaxify.js",
     "dist/better-ajaxify-pushstate.js",
@@ -19,6 +19,6 @@
   ],
   "dependencies": {
     "better-dom": "~2.0.0",
-    "better-xhr": "~0.3.0"
+    "better-xhr": "~0.3.1"
   }
 }

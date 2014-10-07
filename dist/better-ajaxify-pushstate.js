@@ -1,6 +1,6 @@
 /**
  * @file src/better-ajaxify-pushstate.js
- * @version 1.7.0-beta.2 2014-09-28T16:15:52
+ * @version 1.7.0-rc.1 2014-10-07T19:19:31
  * @overview Ajax website engine for better-dom
  * @copyright Maksim Chemerisuk 2014
  * @license MIT
