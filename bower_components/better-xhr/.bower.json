@@ -24,6 +24,6 @@
     "commit": "7a2b31e19373f467f98854cfb78daf8aa0b6b3e1"
   },
   "_source": "git://github.com/chemerisuk/better-xhr.git",
-  "_target": "~0.3.0",
+  "_target": "~0.3.1",
   "_originalSource": "better-xhr"
 }
