@@ -45,6 +45,8 @@
 
                 url = url.replace("#/", ""); // fix hanschange urls
 
+                var cacheBurst = config.cacheBurst || XHR.defaults.cacheBurst;
+
                 var complete = function(success) {
                     return function(response) {
                         // cleanup outer variables
@@ -57,10 +59,10 @@
 
                         // populate local values
                         response.url = response.url || url;
-                        response.title = response.title || DOM.get("title");
-
                         // remove cache bursting parameter
-                        response.url = response.url.replace(/[&?]\d+/, "");
+                        response.url = response.url.replace(cacheBurst + "=", "").replace(/[&?]\d+/, "");
+
+                        response.title = response.title || DOM.get("title");
                         // add internal property
                         response.ts = Date.now();
 
