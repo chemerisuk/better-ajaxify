@@ -103,7 +103,7 @@ can be serialized like below:
 DOM.find("#myform").serialize(); // => {user: "user1", "gender": "m"}
 ```
 
-### Animate page transitions in CSS
+### Animating page transitions
 Each content transition can be animated:
 
 ```css
@@ -133,7 +133,7 @@ main + main[aria-hidden=true] {
 
 Note: the animations may respect page history direction. For instance, the animation above varies depending on which browser button was pressed: backward or forward.
 
-### Style disabled submit buttons
+### Styling disabled submit buttons
 In vanilla HTML there is an annoying issue that user is able to click a submit button while form is submitting. The library fixes it by applying the `disabled` attribute while form request is in progress. So you can use this feature to style such buttons to improve UX:
 
 ```css
