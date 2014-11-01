@@ -95,6 +95,19 @@ describe("form", function() {
                 done();
             });
         });
+
+        it("disabled only when ajaxify:loadstart succeed", function() {
+            var form = DOM.mock("form[action=test]>button[type=submit]"),
+                submit = form.child(0),
+                spy = jasmine.createSpy("loadstart").and.returnValue(false);
+
+            this.sandbox.append(form);
+
+            form.on("ajaxify:loadstart", spy);
+            form.fire("submit");
+
+            expect(submit.get("disabled")).toBeFalsy();
+        });
     });
 
 

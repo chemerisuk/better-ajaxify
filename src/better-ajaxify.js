@@ -86,19 +86,23 @@
     ["get", "post"].forEach((method) => {
         DOM.on("ajaxify:" + method, [1, 2, "target"], (url, data, target) => {
             var config = {data: data},
+                submits = target.matches("form") ? target.findAll("[type=submit]") : [],
                 complete = (success) => {
                     var eventType = success ? "ajaxify:load" : "ajaxify:error";
 
                     return (response) => {
+                        submits.forEach((el) => { el.set("disabled", false) });
+
                         if (target.fire("ajaxify:loadend", response) && target.fire(eventType, response)) {
                             switchContent(response);
                         }
                     };
-                },
-                xhr;
+                };
 
             if (target.fire("ajaxify:loadstart", config)) {
-                xhr = createXHR(target, method, url, config);
+                submits.forEach((el) => { el.set("disabled", true) });
+
+                let xhr = createXHR(target, method, url, config);
 
                 if (xhr) xhr.then(complete(true), complete(false));
             }
@@ -166,21 +170,6 @@
     }
 
     DOM.extend("form", {
-        constructor() {
-            var submits = this.findAll("[type=submit]");
-
-            this.on("ajaxify:loadstart", ["target"], (target) => {
-                if (this === target) {
-                    submits.forEach((el) => { el.set("disabled", true) });
-                }
-            });
-
-            this.on("ajaxify:loadend", ["target"], (target) => {
-                if (this === target) {
-                    submits.forEach((el) => { el.set("disabled", false) });
-                }
-            });
-        },
         serialize(...names) {
             if (!names.length) names = false;
 
