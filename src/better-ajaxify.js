@@ -33,6 +33,10 @@
             currentState = response;
             // update page title
             DOM.set("title", response.title);
+            // update url in address bar
+            if (response.url !== location.pathname + location.search) {
+                history.pushState(true, response.title, response.url);
+            }
         },
         createXHR = (function() {
             // lock element to prevent double clicks
