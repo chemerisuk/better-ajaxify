@@ -3,13 +3,13 @@
 
     var stateHistory = {}, // in-memory storage for states
         currentState = {ts: Date.now(), url: location.href.split("#")[0]},
-        switchContent = function(response) {
+        switchContent = (response) => {
             if (typeof response !== "object" || typeof response.html !== "object") return;
 
             currentState.html = {};
             currentState.title = DOM.get("title");
 
-            Object.keys(response.html).forEach(function(selector) {
+            Object.keys(response.html).forEach((selector) => {
                 var el = DOM.find(selector),
                     content = response.html[selector];
 
@@ -20,7 +20,7 @@
                     // insert new response content
                     el[response.ts > currentState.ts ? "before" : "after"](content);
                     // hide old content and remove when it's done
-                    el.hide(function() { el.remove() });
+                    el.hide(() => { el.remove() });
                     // show current content
                     content.show();
                     // store reference to node in memory
@@ -38,7 +38,7 @@
             // lock element to prevent double clicks
             var lockedEl;
 
-            return function(target, method, url, config) {
+            return (target, method, url, config) => {
                 if (lockedEl === target) return null;
 
                 if (target !== DOM) lockedEl = target;
@@ -47,33 +47,31 @@
 
                 var cacheBurst = config.cacheBurst || XHR.defaults.cacheBurst;
 
-                var complete = function(success) {
-                    return function(response) {
-                        // cleanup outer variables
-                        if (target !== DOM) lockedEl = null;
+                var complete = (success) => (response) => {
+                    // cleanup outer variables
+                    if (target !== DOM) lockedEl = null;
 
-                        if (typeof response === "string") {
-                            // response is a text content
-                            response = {html: response};
-                        }
+                    if (typeof response === "string") {
+                        // response is a text content
+                        response = {html: response};
+                    }
 
-                        // populate local values
-                        response.url = response.url || url;
-                        // remove cache bursting parameter
-                        response.url = response.url.replace(cacheBurst + "=", "").replace(/[&?]\d+/, "");
+                    // populate local values
+                    response.url = response.url || url;
+                    // remove cache bursting parameter
+                    response.url = response.url.replace(cacheBurst + "=", "").replace(/[&?]\d+/, "");
 
-                        response.title = response.title || DOM.get("title");
-                        // add internal property
-                        response.ts = Date.now();
+                    response.title = response.title || DOM.get("title");
+                    // add internal property
+                    response.ts = Date.now();
 
-                        return Promise[success ? "resolve" : "reject"](response);
-                    };
+                    return Promise[success ? "resolve" : "reject"](response);
                 };
 
                 return XHR(method, url, config).then(complete(true), complete(false));
             };
         }()),
-        appendParam = function(memo, name, value) {
+        appendParam = (memo, name, value) => {
             if (name in memo) {
                 if (Array.isArray(memo[name])) {
                     memo[name].push(value);
@@ -85,13 +83,13 @@
             }
         };
 
-    ["get", "post"].forEach(function(method) {
-        DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, data, target) {
+    ["get", "post"].forEach((method) => {
+        DOM.on("ajaxify:" + method, [1, 2, "target"], (url, data, target) => {
             var config = {data: data},
-                complete = function(success) {
+                complete = (success) => {
                     var eventType = success ? "ajaxify:load" : "ajaxify:error";
 
-                    return function(response) {
+                    return (response) => {
                         if (target.fire("ajaxify:loadend", response) && target.fire(eventType, response)) {
                             switchContent(response);
                         }
@@ -107,7 +105,7 @@
         });
     });
 
-    DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel) {
+    DOM.on("click", "a", ["currentTarget", "defaultPrevented"], (link, cancel) => {
         if (cancel || link.get("target")) return;
 
         var url = link.get("href");
@@ -117,7 +115,7 @@
         }
     });
 
-    DOM.on("submit", ["target", "defaultPrevented"], function(form, cancel) {
+    DOM.on("submit", ["target", "defaultPrevented"], (form, cancel) => {
         if (cancel || form.get("target")) return;
 
         var url = form.get("action"),
@@ -131,7 +129,7 @@
         }
     });
 
-    DOM.on("ajaxify:history", [1, "defaultPrevented"], function(url, cancel) {
+    DOM.on("ajaxify:history", [1, "defaultPrevented"], (url, cancel) => {
         if (!url || cancel) return;
 
         if (url in stateHistory) {
@@ -143,7 +141,7 @@
 
     /* istanbul ignore else */
     if (history.pushState) {
-        window.addEventListener("popstate", function(e) {
+        window.addEventListener("popstate", (e) => {
             if (e.state) {
                 DOM.fire("ajaxify:history", location.href);
             }
@@ -151,12 +149,12 @@
         // update initial state address url
         history.replaceState(true, DOM.get("title"));
         // fix bug with external pages
-        window.addEventListener("beforeunload", function() {
+        window.addEventListener("beforeunload", () => {
             history.replaceState(null, DOM.get("title"));
         });
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], function(sender, canceled) {
+        DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], (sender, canceled) => {
             if (canceled) return;
             // load a new page in legacy browsers
             if (sender.matches("form")) {
@@ -168,25 +166,25 @@
     }
 
     DOM.extend("form", {
-        constructor: function() {
+        constructor() {
             var submits = this.findAll("[type=submit]");
 
-            this.on("ajaxify:loadstart", ["target"], function(target) {
+            this.on("ajaxify:loadstart", ["target"], (target) => {
                 if (this === target) {
-                    submits.forEach(function(el) { el.set("disabled", true) });
+                    submits.forEach((el) => { el.set("disabled", true) });
                 }
             });
 
-            this.on("ajaxify:loadend", ["target"], function(target) {
+            this.on("ajaxify:loadend", ["target"], (target) => {
                 if (this === target) {
-                    submits.forEach(function(el) { el.set("disabled", false) });
+                    submits.forEach((el) => { el.set("disabled", false) });
                 }
             });
         },
-        serialize: function() {
-            var names = arguments.length ? Array.prototype.slice.call(arguments) : null;
+        serialize(...names) {
+            if (!names.length) names = false;
 
-            return this.findAll("[name]").reduce(function(memo, el) {
+            return this.findAll("[name]").reduce((memo, el) => {
                 var name = el.get("name");
                 // don't include disabled form fields or without names
                 if (name && !el.get("disabled")) {
@@ -198,7 +196,7 @@
                     switch(el.get("type")) {
                     case "select-one":
                     case "select-multiple":
-                        el.children().forEach(function(option) {
+                        el.children().forEach((option) => {
                             if (option.get("selected")) {
                                 appendParam(memo, name, option.get());
                             }

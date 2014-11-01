@@ -11,13 +11,13 @@ The library helps to solve one of the most important problem for a typical websi
 * advanced configuration via [custom events](#custom-events)
 * [page transition animations](#animate-page-transitions-in-css) support via CSS3
 * prevents [multiple form submits](#style-disabled-submit-buttons) until the request is completed
-* for browsers that [don't support HTML5 History API](http://caniuse.com/#search=history) standard featch is used.
+* for browsers that [don't support HTML5 History API](http://caniuse.com/#search=history) standard fetch is used.
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
 
 ```sh
-$ bower install better-ajaxify --save
+$ bower install better-ajaxify
 ```
 
 This will clone the latest version of the __better-ajaxify__ into the `bower_components` directory at the root of your project.
