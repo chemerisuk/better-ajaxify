@@ -1,39 +1,39 @@
-/**
- * @file src/better-ajaxify.js
- * @version 1.7.0-rc.1 2014-10-07T19:19:31
- * @overview Ajax website engine for better-dom
- * @copyright Maksim Chemerisuk 2014
- * @license MIT
- * @see https://github.com/chemerisuk/better-ajaxify
- */
 (function(DOM, XHR, location) {
     "use strict";
 
     var stateHistory = {}, // in-memory storage for states
         currentState = {ts: Date.now(), url: location.href.split("#")[0]},
-        switchContent = function(response) {
+        previousEls = [],
+        switchContent = function(response)  {
             if (typeof response !== "object" || typeof response.html !== "object") return;
 
             currentState.html = {};
             currentState.title = DOM.get("title");
+            // always make sure that previous state was completed
+            // it can be in-progress on very fast history navigation
+            previousEls.forEach(function(el)  { el.remove() });
 
-            Object.keys(response.html).forEach(function(selector) {
+            previousEls = Object.keys(response.html).map(function(selector)  {
                 var el = DOM.find(selector),
                     content = response.html[selector];
 
+                // store reference to node in the state object
+                currentState.html[selector] = el;
+                // hide old content and remove when it's done
+                el.hide(function()  { el.remove() });
+
                 if (content != null) {
                     if (typeof content === "string") {
-                        content = el.clone(false).set(content).hide();
+                        // clone el that is already in the hidden state
+                        content = el.clone(false).set(content);
                     }
                     // insert new response content
                     el[response.ts > currentState.ts ? "before" : "after"](content);
-                    // hide old content and remove when it's done
-                    el.hide(function() { el.remove() });
                     // show current content
                     content.show();
-                    // store reference to node in memory
-                    currentState.html[selector] = el;
                 }
+
+                return el;
             });
             // store previous state difference
             stateHistory[currentState.url] = currentState;
@@ -41,12 +41,16 @@
             currentState = response;
             // update page title
             DOM.set("title", response.title);
+            // update url in address bar
+            if (response.url !== location.href) {
+                history.pushState(true, response.title, response.url);
+            }
         },
         createXHR = (function() {
             // lock element to prevent double clicks
             var lockedEl;
 
-            return function(target, method, url, config) {
+            return function(target, method, url, config)  {
                 if (lockedEl === target) return null;
 
                 if (target !== DOM) lockedEl = target;
@@ -55,33 +59,31 @@
 
                 var cacheBurst = config.cacheBurst || XHR.defaults.cacheBurst;
 
-                var complete = function(success) {
-                    return function(response) {
-                        // cleanup outer variables
-                        if (target !== DOM) lockedEl = null;
+                var complete = function(success)  {return function(response)  {
+                    // cleanup outer variables
+                    if (target !== DOM) lockedEl = null;
 
-                        if (typeof response === "string") {
-                            // response is a text content
-                            response = {html: response};
-                        }
+                    if (typeof response === "string") {
+                        // response is a text content
+                        response = {html: response};
+                    }
 
-                        // populate local values
-                        response.url = response.url || url;
-                        // remove cache bursting parameter
-                        response.url = response.url.replace(cacheBurst + "=", "").replace(/[&?]\d+/, "");
+                    // populate local values
+                    response.url = response.url || url;
+                    // remove cache bursting parameter
+                    response.url = response.url.replace(cacheBurst + "=", "").replace(/[&?]\d+/, "");
 
-                        response.title = response.title || DOM.get("title");
-                        // add internal property
-                        response.ts = Date.now();
+                    response.title = response.title || DOM.get("title");
+                    // add internal property
+                    response.ts = Date.now();
 
-                        return Promise[success ? "resolve" : "reject"](response);
-                    };
-                };
+                    return Promise[success ? "resolve" : "reject"](response);
+                }};
 
                 return XHR(method, url, config).then(complete(true), complete(false));
             };
         }()),
-        appendParam = function(memo, name, value) {
+        appendParam = function(memo, name, value)  {
             if (name in memo) {
                 if (Array.isArray(memo[name])) {
                     memo[name].push(value);
@@ -93,29 +95,33 @@
             }
         };
 
-    ["get", "post"].forEach(function(method) {
-        DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, data, target) {
+    ["get", "post"].forEach(function(method)  {
+        DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, data, target)  {
             var config = {data: data},
-                complete = function(success) {
+                submits = target.matches("form") ? target.findAll("[type=submit]") : [],
+                complete = function(success)  {
                     var eventType = success ? "ajaxify:load" : "ajaxify:error";
 
-                    return function(response) {
+                    return function(response)  {
+                        submits.forEach(function(el)  { el.set("disabled", false) });
+
                         if (target.fire("ajaxify:loadend", response) && target.fire(eventType, response)) {
                             switchContent(response);
                         }
                     };
-                },
-                xhr;
+                };
 
             if (target.fire("ajaxify:loadstart", config)) {
-                xhr = createXHR(target, method, url, config);
+                submits.forEach(function(el)  { el.set("disabled", true) });
+
+                var xhr = createXHR(target, method, url, config);
 
                 if (xhr) xhr.then(complete(true), complete(false));
             }
         });
     });
 
-    DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel) {
+    DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel)  {
         if (cancel || link.get("target")) return;
 
         var url = link.get("href");
@@ -125,7 +131,7 @@
         }
     });
 
-    DOM.on("submit", ["target", "defaultPrevented"], function(form, cancel) {
+    DOM.on("submit", ["target", "defaultPrevented"], function(form, cancel)  {
         if (cancel || form.get("target")) return;
 
         var url = form.get("action"),
@@ -139,7 +145,7 @@
         }
     });
 
-    DOM.on("ajaxify:history", [1, "defaultPrevented"], function(url, cancel) {
+    DOM.on("ajaxify:history", [1, "defaultPrevented"], function(url, cancel)  {
         if (!url || cancel) return;
 
         if (url in stateHistory) {
@@ -149,26 +155,37 @@
         }
     });
 
+    /* istanbul ignore else */
+    if (history.pushState) {
+        window.addEventListener("popstate", function(e)  {
+            if (e.state) {
+                DOM.fire("ajaxify:history", location.href);
+            }
+        });
+        // update initial state address url
+        history.replaceState(true, DOM.get("title"));
+        // fix bug with external pages
+        window.addEventListener("beforeunload", function()  {
+            history.replaceState(null, DOM.get("title"));
+        });
+    } else {
+        // when url should be changed don't start request in old browsers
+        DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], function(sender, canceled)  {
+            if (canceled) return;
+            // load a new page in legacy browsers
+            if (sender.matches("form")) {
+                sender.fire("submit");
+            } else if (sender.matches("a")) {
+                location.href = sender.get("href");
+            }
+        });
+    }
+
     DOM.extend("form", {
-        constructor: function() {
-            var submits = this.findAll("[type=submit]");
+        serialize: function() {var SLICE$0 = Array.prototype.slice;var names = SLICE$0.call(arguments, 0);
+            if (!names.length) names = false;
 
-            this.on("ajaxify:loadstart", ["target"], function(target) {
-                if (this === target) {
-                    submits.forEach(function(el) { el.set("disabled", true) });
-                }
-            });
-
-            this.on("ajaxify:loadend", ["target"], function(target) {
-                if (this === target) {
-                    submits.forEach(function(el) { el.set("disabled", false) });
-                }
-            });
-        },
-        serialize: function() {
-            var names = arguments.length ? Array.prototype.slice.call(arguments) : null;
-
-            return this.findAll("[name]").reduce(function(memo, el) {
+            return this.findAll("[name]").reduce(function(memo, el)  {
                 var name = el.get("name");
                 // don't include disabled form fields or without names
                 if (name && !el.get("disabled")) {
@@ -180,7 +197,7 @@
                     switch(el.get("type")) {
                     case "select-one":
                     case "select-multiple":
-                        el.children().forEach(function(option) {
+                        el.children().forEach(function(option)  {
                             if (option.get("selected")) {
                                 appendParam(memo, name, option.get());
                             }

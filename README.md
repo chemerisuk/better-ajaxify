@@ -1,4 +1,4 @@
-# better-ajaxify<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][fury-image]][fury-url]
+# better-ajaxify<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 > Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
 The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.
@@ -8,15 +8,17 @@ The library helps to solve one of the most important problem for a typical websi
 ## Features
 * handles `<a>` and `<form>` elements and sends ajax requests instead
 * respects the `target` attribute on `<a>` or `<form>`
-* [`pushstate` or `hashchange`](#determine-strategy-for-browser-history) can be used to update browser address bar
 * advanced configuration via [custom events](#custom-events)
 * [page transition animations](#animate-page-transitions-in-css) support via CSS3
 * prevents [multiple form submits](#style-disabled-submit-buttons) until the request is completed
+* for browsers that [don't support HTML5 History API](http://caniuse.com/#search=history) standard fetch is used.
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
 
-    bower install better-ajaxify --save
+```sh
+$ bower install better-ajaxify
+```
 
 This will clone the latest version of the __better-ajaxify__ into the `bower_components` directory at the root of your project.
 
@@ -25,37 +27,10 @@ Then append the following html elements on your page:
 ```html
 <script src="bower_components/better-dom/dist/better-dom.js"></script>
 <script src="bower_components/better-ajaxify/dist/better-ajaxify.js"></script>
-<!-- 
-    Plus better-ajaxify-pushstate.js or better-ajaxify-hashchange.js 
-    See the next section for defaults
--->
 ```
 
-## Determine strategy for browser history
-There are two main strategies that allows you to work with browser history (so back/forward buttons will work properly): using [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) (`better-ajaxify-pushstate.js`) or via __hashchange__ event (`better-ajaxify-hashchange.js`). Each has it's own advantages and disadvantages.
-
-### HTML5 History API
-
-__Pros__:
-+ performance: initial page load always takes a single request 
-+ clear and SEO-friendly address bar urls
-+ you can use archors on your page as in regular case
-
-__Cons__:
-- there are some quirks in several old implementations (but all of them are solved in modern browsers)
-- some old browsers do [not support the HTML5 History API](http://caniuse.com/#search=push). Also early Android 4 has [lack of support](https://code.google.com/p/android/issues/detail?id=23979) as well.
-
-### `hashchange` event
-
-__Pros__:
-+ [great and consistent support](http://caniuse.com/#search=hashchange) in all browsers
-
-__Cons__:
-- urls have to start with `#` that looks weird and is not a SEO-frieldly
-- internal page loading takes two requests instead of single one (there are some tricks to avoid that in some cases but in general the rule is truthy)
-- you should put anchors carefully because they used for page navigation as well
-
 ## Frontend setup
+Starting from version 1.7 only [HTML5 History API](https://developer.mozilla.org/en/docs/DOM/Manipulating_the_browser_history) is supported to manage browser history.
 
 ### Custom events
 The library exposes several custom events for advanced interaction.
@@ -103,7 +78,7 @@ can be serialized like below:
 DOM.find("#myform").serialize(); // => {user: "user1", "gender": "m"}
 ```
 
-### Animate page transitions in CSS
+### Animating page transitions
 Each content transition can be animated:
 
 ```css
@@ -133,7 +108,7 @@ main + main[aria-hidden=true] {
 
 Note: the animations may respect page history direction. For instance, the animation above varies depending on which browser button was pressed: backward or forward.
 
-### Style disabled submit buttons
+### Styling disabled submit buttons
 In vanilla HTML there is an annoying issue that user is able to click a submit button while form is submitting. The library fixes it by applying the `disabled` attribute while form request is in progress. So you can use this feature to style such buttons to improve UX:
 
 ```css
@@ -241,5 +216,5 @@ I recommend to use full url value there, because it avoids problems related to c
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-ajaxify
 [coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-ajaxify/master.svg
 
-[fury-url]: http://badge.fury.io/bo/better-ajaxify
-[fury-image]: https://badge.fury.io/bo/better-ajaxify.svg
+[bower-url]: https://github.com/chemerisuk/better-ajaxify
+[bower-image]: http://img.shields.io/bower/v/better-ajaxify.svg
