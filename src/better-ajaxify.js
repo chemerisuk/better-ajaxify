@@ -11,7 +11,7 @@
             currentState.title = DOM.get("title");
             // always make sure that previous state was completed
             // it can be in-progress on very fast history navigation
-            previousEls.forEach((el) => { if (el) el.remove() });
+            previousEls.forEach((el) => { el.remove() });
 
             previousEls = Object.keys(response.html).map((selector) => {
                 var el = DOM.find(selector),
