@@ -34,7 +34,7 @@
             // update page title
             DOM.set("title", response.title);
             // update url in address bar
-            if (response.url !== location.pathname + location.search) {
+            if (response.url !== location.href) {
                 history.pushState(true, response.title, response.url);
             }
         },
