@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 1.7.0-rc.2 Sat, 01 Nov 2014 10:09:25 GMT
+ * @version 1.7.0 Tue, 04 Nov 2014 21:33:39 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2014 Maksim Chemerisuk
  * @license MIT
@@ -10,29 +10,37 @@
 
     var stateHistory = {}, // in-memory storage for states
         currentState = {ts: Date.now(), url: location.href.split("#")[0]},
+        previousEls = [],
         switchContent = function(response)  {
             if (typeof response !== "object" || typeof response.html !== "object") return;
 
             currentState.html = {};
             currentState.title = DOM.get("title");
+            // always make sure that previous state was completed
+            // it can be in-progress on very fast history navigation
+            previousEls.forEach(function(el)  { el.remove() });
 
-            Object.keys(response.html).forEach(function(selector)  {
+            previousEls = Object.keys(response.html).map(function(selector)  {
                 var el = DOM.find(selector),
                     content = response.html[selector];
 
+                // store reference to node in the state object
+                currentState.html[selector] = el;
+                // hide old content and remove when it's done
+                el.hide(function()  { el.remove() });
+
                 if (content != null) {
                     if (typeof content === "string") {
-                        content = el.clone(false).set(content).hide();
+                        // clone el that is already in the hidden state
+                        content = el.clone(false).set(content);
                     }
                     // insert new response content
                     el[response.ts > currentState.ts ? "before" : "after"](content);
-                    // hide old content and remove when it's done
-                    el.hide(function()  { el.remove() });
                     // show current content
                     content.show();
-                    // store reference to node in memory
-                    currentState.html[selector] = el;
                 }
+
+                return el;
             });
             // store previous state difference
             stateHistory[currentState.url] = currentState;
@@ -41,7 +49,7 @@
             // update page title
             DOM.set("title", response.title);
             // update url in address bar
-            if (response.url !== location.pathname + location.search) {
+            if (response.url !== location.href) {
                 history.pushState(true, response.title, response.url);
             }
         },
