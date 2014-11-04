@@ -14,13 +14,15 @@
                     content = response.html[selector];
 
                 if (content != null) {
+                    // hide old content and remove when it's done
+                    el.hide(() => { el.remove() });
+
                     if (typeof content === "string") {
-                        content = el.clone(false).set(content).hide();
+                        // clone el that is already in the hidden state
+                        content = el.clone(false).set(content);
                     }
                     // insert new response content
                     el[response.ts > currentState.ts ? "before" : "after"](content);
-                    // hide old content and remove when it's done
-                    el.hide(() => { el.remove() });
                     // show current content
                     content.show();
                     // store reference to node in memory
