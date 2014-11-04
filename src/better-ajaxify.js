@@ -3,20 +3,26 @@
 
     var stateHistory = {}, // in-memory storage for states
         currentState = {ts: Date.now(), url: location.href.split("#")[0]},
+        previousEls = [],
         switchContent = (response) => {
             if (typeof response !== "object" || typeof response.html !== "object") return;
 
             currentState.html = {};
             currentState.title = DOM.get("title");
+            // always make sure that previous state was completed
+            // it can be in-progress on very fast history navigation
+            previousEls.forEach((el) => { if (el) el.remove() });
 
-            Object.keys(response.html).forEach((selector) => {
+            previousEls = Object.keys(response.html).map((selector) => {
                 var el = DOM.find(selector),
                     content = response.html[selector];
 
-                if (content != null) {
-                    // hide old content and remove when it's done
-                    el.hide(() => { el.remove() });
+                // store reference to node in the state object
+                currentState.html[selector] = el;
+                // hide old content and remove when it's done
+                el.hide(() => { el.remove() });
 
+                if (content != null) {
                     if (typeof content === "string") {
                         // clone el that is already in the hidden state
                         content = el.clone(false).set(content);
@@ -25,9 +31,9 @@
                     el[response.ts > currentState.ts ? "before" : "after"](content);
                     // show current content
                     content.show();
-                    // store reference to node in memory
-                    currentState.html[selector] = el;
                 }
+
+                return el;
             });
             // store previous state difference
             stateHistory[currentState.url] = currentState;
