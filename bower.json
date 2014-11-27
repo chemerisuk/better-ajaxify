@@ -15,7 +15,7 @@
     "better-dom"
   ],
   "dependencies": {
-    "better-dom": "~2.0.0",
+    "better-dom": "~2.1.0",
     "better-xhr": "~0.3.1"
   }
 }

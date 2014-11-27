@@ -11,7 +11,7 @@
             currentState.title = DOM.get("title");
             // always make sure that previous state was completed
             // it can be in-progress on very fast history navigation
-            previousEls.forEach((el) => { el.remove() });
+            previousEls.forEach((el) => el.remove());
 
             previousEls = Object.keys(response.html).map((selector) => {
                 var el = DOM.find(selector),
@@ -19,19 +19,21 @@
 
                 // store reference to node in the state object
                 currentState.html[selector] = el;
-                // hide old content and remove when it's done
-                el.hide(() => { el.remove() });
 
                 if (content != null) {
                     if (typeof content === "string") {
                         // clone el that is already in the hidden state
-                        content = el.clone(false).set(content);
+                        content = el.clone(false).set(content).hide();
                     }
                     // insert new response content
                     el[response.ts > currentState.ts ? "before" : "after"](content);
                     // show current content
                     content.show();
                 }
+
+                // Hide old content and remove when it's done. Use
+                // nextFrame to postpone layout triggered by remove
+                el.hide(() => DOM.nextFrame(() => el.remove()));
 
                 return el;
             });
@@ -103,7 +105,7 @@
                     var eventType = success ? "ajaxify:load" : "ajaxify:error";
 
                     return (response) => {
-                        submits.forEach((el) => { el.set("disabled", false) });
+                        submits.forEach((el) => el.set("disabled", false));
 
                         if (target.fire("ajaxify:loadend", response) && target.fire(eventType, response)) {
                             switchContent(response);
@@ -112,7 +114,7 @@
                 };
 
             if (target.fire("ajaxify:loadstart", config)) {
-                submits.forEach((el) => { el.set("disabled", true) });
+                submits.forEach((el) => el.set("disabled", true));
 
                 let xhr = createXHR(target, method, url, config);
 
