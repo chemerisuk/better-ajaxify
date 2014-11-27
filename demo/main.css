@@ -30,6 +30,9 @@ nav {
     position: absolute;
     z-index: 1;
 
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+
     width: 15em;
     padding: 1.5em;
 }
