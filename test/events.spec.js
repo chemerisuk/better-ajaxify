@@ -27,7 +27,7 @@ describe("event", function() {
             form.on("ajaxify:loadstart", spy);
             form.fire("submit");
 
-            expect(spy).toHaveBeenCalledWith({data: {a: "b"}});
+            expect(spy).toHaveBeenCalledWith({data: {a: "b"}, cacheBurst: false});
         });
 
         it("allows to prevent starting of AJAX request", function() {

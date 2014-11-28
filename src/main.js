@@ -59,8 +59,6 @@
 
                 url = url.replace("#/", ""); // fix hanschange urls
 
-                var cacheBurst = config.cacheBurst || XHR.defaults.cacheBurst;
-
                 var complete = (success) => (response) => {
                     // cleanup outer variables
                     if (target !== DOM) lockedEl = null;
@@ -72,8 +70,6 @@
 
                     // populate local values
                     response.url = response.url || url;
-                    // remove cache bursting parameter
-                    response.url = response.url.replace(cacheBurst + "=", "").replace(/[&?]\d+/, "");
 
                     response.title = response.title || DOM.get("title");
                     // add internal property
@@ -99,7 +95,8 @@
 
     ["get", "post"].forEach((method) => {
         DOM.on("ajaxify:" + method, [1, 2, "target"], (url, data, target) => {
-            var config = {data: data},
+            // disable cacheBurst that is not required for IE10+
+            var config = {data: data, cacheBurst: false},
                 submits = target.matches("form") ? target.findAll("[type=submit]") : [],
                 complete = (success) => {
                     var eventType = success ? "ajaxify:load" : "ajaxify:error";
