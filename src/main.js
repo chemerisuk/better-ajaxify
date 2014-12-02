@@ -33,7 +33,7 @@
 
                 // Hide old content and remove when it's done. Use
                 // nextFrame to postpone layout triggered by remove
-                el.hide(() => DOM.nextFrame(() => el.remove()));
+                el.hide(() => DOM.requestFrame(() => el.remove()));
 
                 return el;
             });
@@ -93,7 +93,7 @@
             }
         };
 
-    ["get", "post"].forEach((method) => {
+    ["get", "post", "put", "delete", "patch"].forEach((method) => {
         DOM.on("ajaxify:" + method, [1, 2, "target"], (url, data, target) => {
             // disable cacheBurst that is not required for IE10+
             var config = {data: data, cacheBurst: false},
@@ -140,7 +140,7 @@
         if (!method || method === "get") {
             return !form.fire("ajaxify:get", url, query);
         } else {
-            return !form.fire("ajaxify:post", url, query);
+            return !form.fire("ajaxify:" + method, url, query);
         }
     });
 
