@@ -31,8 +31,8 @@
                     content.show();
                 }
 
-                // Hide old content and remove when it's done. Use
-                // nextFrame to postpone layout triggered by remove
+                // Hide old content and remove when it's done. Use requestFrame
+                // to postpone layout triggered by the remove method call
                 el.hide(() => DOM.requestFrame(() => el.remove()));
 
                 return el;
@@ -70,7 +70,6 @@
 
                     // populate local values
                     response.url = response.url || url;
-
                     response.title = response.title || DOM.get("title");
                     // add internal property
                     response.ts = Date.now();
@@ -99,7 +98,7 @@
             var config = {data: data, cacheBurst: false},
                 submits = target.matches("form") ? target.findAll("[type=submit]") : [],
                 complete = (success) => {
-                    var eventType = success ? "ajaxify:load" : "ajaxify:error";
+                    var eventType = "ajaxify:" + (success ? "load" : "error");
 
                     return (response) => {
                         submits.forEach((el) => el.set("disabled", false));
