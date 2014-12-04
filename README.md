@@ -38,7 +38,7 @@ The library exposes several custom events for advanced interaction.
 | Event name | Arguments | Description |
 | ---------- | --------- | ----------- |
 | `ajaxify:get` | `url` | Event is trigerred for each `GET` request. |
-| `ajaxify:post` | `url`, `data` | Event is trigerred for each `POST` request. Argument `data` can be either `String` or `Object`, later it will be passed as a request data. |
+| `ajaxify:post`<br>`ajaxify:put`<br>`ajaxify:delete`<br>`ajaxify:patch` | `url`, `data` | Event is trigerred for each request other than `GET`. Argument `data` can be either `String` or `Object`, later it will be passed as a request data. |
 | `ajaxify:loadstart` | `config` | Triggered before doing an ajax call. `config` of this event will be passed into `XHR` object instance. is particular instance of the `XMLHttpRequest` object. See [details](https://github.com/chemerisuk/better-xhr#configuration) about possible configuration. If any handler prevents default behavior then no request will be sent. |
 | `ajaxify:loadend` | `response` | Triggered when an ajaxify request is completed (successfully or not). |
 | `ajaxify:load` | `response` | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `response` of this event may be a javascript object of raw response string. |
