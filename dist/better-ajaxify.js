@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 1.7.0 Tue, 04 Nov 2014 21:33:39 GMT
+ * @version 1.7.1 Thu, 04 Dec 2014 05:57:38 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2014 Maksim Chemerisuk
  * @license MIT
@@ -18,7 +18,7 @@
             currentState.title = DOM.get("title");
             // always make sure that previous state was completed
             // it can be in-progress on very fast history navigation
-            previousEls.forEach(function(el)  { el.remove() });
+            previousEls.forEach(function(el)  {return el.remove()});
 
             previousEls = Object.keys(response.html).map(function(selector)  {
                 var el = DOM.find(selector),
@@ -26,19 +26,21 @@
 
                 // store reference to node in the state object
                 currentState.html[selector] = el;
-                // hide old content and remove when it's done
-                el.hide(function()  { el.remove() });
 
                 if (content != null) {
                     if (typeof content === "string") {
                         // clone el that is already in the hidden state
-                        content = el.clone(false).set(content);
+                        content = el.clone(false).set(content).hide();
                     }
                     // insert new response content
                     el[response.ts > currentState.ts ? "before" : "after"](content);
                     // show current content
                     content.show();
                 }
+
+                // Hide old content and remove when it's done. Use requestFrame
+                // to postpone layout triggered by the remove method call
+                el.hide(function()  {return DOM.requestFrame(function()  {return el.remove()})});
 
                 return el;
             });
@@ -64,8 +66,6 @@
 
                 url = url.replace("#/", ""); // fix hanschange urls
 
-                var cacheBurst = config.cacheBurst || XHR.defaults.cacheBurst;
-
                 var complete = function(success)  {return function(response)  {
                     // cleanup outer variables
                     if (target !== DOM) lockedEl = null;
@@ -77,9 +77,6 @@
 
                     // populate local values
                     response.url = response.url || url;
-                    // remove cache bursting parameter
-                    response.url = response.url.replace(cacheBurst + "=", "").replace(/[&?]\d+/, "");
-
                     response.title = response.title || DOM.get("title");
                     // add internal property
                     response.ts = Date.now();
@@ -102,15 +99,16 @@
             }
         };
 
-    ["get", "post"].forEach(function(method)  {
+    ["get", "post", "put", "delete", "patch"].forEach(function(method)  {
         DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, data, target)  {
-            var config = {data: data},
+            // disable cacheBurst that is not required for IE10+
+            var config = {data: data, cacheBurst: false},
                 submits = target.matches("form") ? target.findAll("[type=submit]") : [],
                 complete = function(success)  {
-                    var eventType = success ? "ajaxify:load" : "ajaxify:error";
+                    var eventType = "ajaxify:" + (success ? "load" : "error");
 
                     return function(response)  {
-                        submits.forEach(function(el)  { el.set("disabled", false) });
+                        submits.forEach(function(el)  {return el.set("disabled", false)});
 
                         if (target.fire("ajaxify:loadend", response) && target.fire(eventType, response)) {
                             switchContent(response);
@@ -119,7 +117,7 @@
                 };
 
             if (target.fire("ajaxify:loadstart", config)) {
-                submits.forEach(function(el)  { el.set("disabled", true) });
+                submits.forEach(function(el)  {return el.set("disabled", true)});
 
                 var xhr = createXHR(target, method, url, config);
 
@@ -148,7 +146,7 @@
         if (!method || method === "get") {
             return !form.fire("ajaxify:get", url, query);
         } else {
-            return !form.fire("ajaxify:post", url, query);
+            return !form.fire("ajaxify:" + method, url, query);
         }
     });
 
