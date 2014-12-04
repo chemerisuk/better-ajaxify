@@ -1,10 +1,9 @@
 {
   "name": "better-dom",
-  "version": "2.1.0-rc.1",
+  "version": "2.0.0-rc.7",
   "main": [
     "dist/better-dom.js",
-    "dist/better-dom-legacy.js",
-    "dist/better-dom-legacy.htc"
+    "dist/better-dom.htc"
   ],
   "ignore": [
     ".*",
@@ -12,11 +11,15 @@
     "src",
     "conf",
     "task",
-    "gulpfile.js",
-    "package.json"
+    "Gruntfile.js",
+    "package.json",
+    "bower.json"
   ],
   "devDependencies": {
     "jquery": "latest",
+    "jasmine": "~2.0.0"
+  },
+  "dependencies": {
     "html5shiv": "latest",
     "es5-shim": "latest"
   }

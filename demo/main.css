@@ -1,0 +1,64 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+html {
+    background: #CCC;
+}
+
+body {
+    font-family: "Open Sans", sans-serif;
+    color: #393838;
+    width: 55em;
+}
+
+nav, main {
+    height: 100%;
+
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+nav {
+    background: #578cdb;
+    color: #FFF;
+
+    position: absolute;
+    z-index: 1;
+
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+
+    width: 15em;
+    padding: 1.5em;
+}
+
+nav > .logo {
+    font-size: 150%;
+}
+
+nav a {
+    color: inherit;
+    font-size: larger;
+    text-decoration: none;
+}
+
+main {
+    margin-left: 15em;
+    background: #FFF;
+
+    padding: 1.5em;
+    width: 40em;
+
+    border: 1px solid;
+    border-top: 0;
+    border-bottom: 0;
+}
+
+main a:link {
+    color: #578cdb;
+}
