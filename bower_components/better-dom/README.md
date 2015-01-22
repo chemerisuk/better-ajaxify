@@ -1,32 +1,37 @@
-# [better-dom](https://github.com/chemerisuk/better-dom): Live extension playground<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][fury-image]][fury-url]
-
-_**NOTE:** documentation is currently updating to reflect changes in version 2. If you need the 1st version please use [v1.7.7 tag](https://github.com/chemerisuk/better-dom/tree/v1.7.7)._
-
-This library is about __ideas__. After some time of using jQuery I found that it's just too big, has lack of [features](#features) I need and some desicions of the API design is debatable. In particular [live extensions](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) was one of the main ideas that encoraged me to build a new library from scratch.
+# [better-dom](https://github.com/chemerisuk/better-dom): Live extension playground<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 
 [API DOCUMENTATION](http://chemerisuk.github.io/better-dom/)
+
+This library is about __ideas__. After some time of using jQuery I found that it's just too big, has lack of [features](#features) I need and the API design is debatable. In particular [live extensions](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) was one of the main ideas that encouraged me to build a new library from scratch.
+
+Vanilla DOM also has a lot of bad parts, that I'm trying to fix by providing a JavaScript wrapper for each DOM element you use in code. This extra layer allows to abstract from legacy interfaces and to add new methods on __the top of particular elements__ without touching vanilla DOM prototypes. So the object model used is very different from what jQuery does.
+
+Note, that the better-dom project is only about the DOM. It does not contain any AJAX or BOM helper.
 
 [![Sauce Test Status](https://saucelabs.com/browser-matrix/chemerisuk.svg)](https://saucelabs.com/u/chemerisuk)
 
 ## Features
-* lightweight: ~22 kB minified and ~5 kB gzipped version
-* clear, minimalistic and standards-based (where possible) APIs
+* lightweight: ~5 kB gzipped
 * [live extensions](https://github.com/chemerisuk/better-dom/wiki/Live-extensions)
-* [animations via CSS3](http://jsfiddle.net/C3WeM/5/)
+* [getter and setter](https://github.com/chemerisuk/better-dom/wiki/Getter-and-setter)
+* [declarative animations](https://github.com/chemerisuk/better-dom/wiki/Declarative-animations)
 * [microtemplating using the Emmet syntax](https://github.com/chemerisuk/better-dom/wiki/Microtemplating)
 * [improved event handling](https://github.com/chemerisuk/better-dom/wiki/Event-handling)
-* [getter and setter](https://github.com/chemerisuk/better-dom/wiki/Getter-and-setter)
 
 ## Installation
 The simplest way is to use [bower](http://bower.io/):
 
-    bower install better-dom
+```sh
+$ bower install better-dom
+```
 
 This will clone the latest version of the __better-dom__ with dependencies into the `bower_components` directory at the root of your project. Then just include the script below on your web page:
 
 ```html
 <script src="bower_components/better-dom/dist/better-dom.js"></script>
 ```
+
+If you need to support IE8-9 please read [the section below](#notes-about-old-ies).
 
 ## Documentation
 * Read the [FAQ](https://github.com/chemerisuk/better-dom/wiki/FAQ)
@@ -35,45 +40,53 @@ This will clone the latest version of the __better-dom__ with dependencies into 
 * Walk through the sorce code of existing [projects that use better-dom](http://bower.io/search/?q=better-dom).
 
 ## Contributing
-In order to modify the source and submit a patch or improvement, you have to have [gulp](http://gulpjs.com) installed globally:
+In order to modify the source code you have to have [gulp](http://gulpjs.com) installed globally:
 
-    npm install -g gulp
+```sh
+$ npm install -g gulp
+```
 
-The project uses set of ES6 transpilers to compile a file that works in current browsers. The command below starts watching for changes you are making, recompiles `build/better-dom.js` and runs unit tests after it: 
+The project uses set of ES6 transpilers to compile an output file. You can use the command below to start development: 
 
-    npm start
+```sh
+$ npm start
+```
 
-Of course any pull request should pass all tests. Code style guide is not formalized yet, but I'll look at it manully.
-
-## Performance
-* [DOM.create vs jquery](http://jsperf.com/dom-create-vs-jquery/26)
-* [DOM.find[All] vs jQuery.find](http://jsperf.com/dom-find-all-vs-jquery-find/10)
-* [DOM getter/setter vs jQuery.attr/prop](http://jsperf.com/dom-getter-setter-vs-jquery-attr-prop/5)
-* [better-dom vs jquery: classes manipulation](http://jsperf.com/better-dom-vs-jquery-classes-manipulation/6)
-* [better-dom vs jquery: array methods](http://jsperf.com/better-dom-vs-jquery-array-methods/4)
+After any change it recompiles `build/better-dom.js` and runs unit tests automatically.
 
 ## Notes about old IEs
-For IE8-9 support you have to incude extra files via the conditional comment below into `<head>` on your page:
+For IE8-9 support you have to incude an extra file via the conditional comment below __before end of the `<head>`__ on your page:
 
-```
+```html
+<html>
+<head>
+...
 <!--[if IE]>
-    <link href="bower_components/better-dom/dist/better-dom.htc" rel="htc"/>
-    <script src="bower_components/es5-shim/es5-shim.js"></script>
-    <script src="bower_components/html5shiv/dist/html5shiv.js"></script>
+    <script src="bower_components/better-dom/dist/better-dom-legacy.js"></script>
 <![endif]-->
+</head>
+<body>
+    ...
+    <script src="bower_components/better-dom/dist/better-dom.js"></script>
+</body>
+</html>
 ```
 
-The **better-dom.htc** file helps to implement [live extensions](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) support. This fact applies several important limitations that you must know in case when legacy browser support is required:
+This file contains several important addons for IE8-9:
 
-1) HTC behaviors have to serve up with a `content-type` header of `“text/x-component”`, otherwise IE will simply ignore the file. Many web servers are preconfigured with the correct `content-type`, but others are not:
+1. [es5-shim](https://github.com/kriskowal/es5-shim) is used to polyfill/fix missed standards-based functions
+2. [html5shiv](https://github.com/aFarkas/html5shiv) solves issue with HTML5 tags in IE8
+3. polyfill/fix for the `input` event in IE8-9
+4. `change` event fix for checkboxes and radio buttons in IE8
+5. fix for bubbling of the `submit` and `reset` events in IE8
+
+Later the library downloads `better-dom-legacy.htc` file. This file helps to implement [live extensions](https://github.com/chemerisuk/better-dom/wiki/Live-extensions) support and should be in the same folder with `better-dom-legacy.js`. And that fact applies several important limitations which you should be aware of in case when IE8-9 support is needed:
+
+1) [HTC behaviors](http://msdn.microsoft.com/en-us/library/ms531079(v=vs.85).aspx) have to serve up with a `content-type` header of “text/x-component”, otherwise IE will simply ignore the file. Many web servers are preconfigured with the correct `content-type`, but others are not:
 
     AddType text/x-component .htc
 
 2) IE requires that the HTC file must be in the same domain with as the HTML page which uses it. If you try to load the behavior from a different domain, you will get an “Access Denied” error.
-
-[html5shiv](https://github.com/aFarkas/html5shiv) provides a fix for HTML5 tags in IE8.
-
-[es5-shim](https://github.com/kriskowal/es5-shim) is used to polyfill/fix missed standards-based functions for `Array`, `Object`, `Function`, `Date` classes.
 
 ## Browser support
 #### Desktop
@@ -96,6 +109,6 @@ Opera Mini is out of the scope because of lack of support for CSS3 Animations.
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-dom
 [coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-dom/master.svg
 
-[fury-url]: http://badge.fury.io/bo/better-dom
-[fury-image]: https://badge.fury.io/bo/better-dom.svg
+[bower-url]: https://github.com/chemerisuk/better-dom
+[bower-image]: http://img.shields.io/bower/v/better-dom.svg
 

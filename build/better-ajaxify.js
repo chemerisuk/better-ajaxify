@@ -1,11 +1,11 @@
 (function(DOM, XHR, location) {
     "use strict";
 
-    var stateHistory = {}, // in-memory storage for states
-        currentState = {ts: Date.now(), url: location.href.split("#")[0]},
+    var stateData = [], // in-memory storage for states
+        currentState = {url: location.href.split("#")[0]},
         previousEls = [],
-        switchContent = function(response)  {
-            if (typeof response !== "object" || typeof response.html !== "object") return;
+        switchContent = function(state, stateIndex)  {
+            if (typeof state !== "object" || typeof state.html !== "object") return;
 
             currentState.html = {};
             currentState.title = DOM.get("title");
@@ -13,9 +13,16 @@
             // it can be in-progress on very fast history navigation
             previousEls.forEach(function(el)  {return el.remove()});
 
-            previousEls = Object.keys(response.html).map(function(selector)  {
+            var currentStateIndex = stateData.indexOf(currentState);
+
+            if (currentStateIndex < 0) {
+                // store the current state in memory
+                currentStateIndex = stateData.push(currentState) - 1;
+            }
+
+            previousEls = Object.keys(state.html).map(function(selector)  {
                 var el = DOM.find(selector),
-                    content = response.html[selector];
+                    content = state.html[selector];
 
                 // store reference to node in the state object
                 currentState.html[selector] = el;
@@ -25,8 +32,8 @@
                         // clone el that is already in the hidden state
                         content = el.clone(false).set(content).hide();
                     }
-                    // insert new response content
-                    el[response.ts > currentState.ts ? "before" : "after"](content);
+                    // insert new state content
+                    el[currentStateIndex > stateIndex ? "before" : "after"](content);
                     // show current content
                     content.show();
                 }
@@ -37,15 +44,13 @@
 
                 return el;
             });
-            // store previous state difference
-            stateHistory[currentState.url] = currentState;
-            // update current state with the latest
-            currentState = response;
+            // update current state to the latest
+            currentState = state;
             // update page title
-            DOM.set("title", response.title);
+            DOM.set("title", state.title);
             // update url in address bar
-            if (response.url !== location.href) {
-                history.pushState(true, response.title, response.url);
+            if (state.url !== location.href && stateIndex == null) {
+                history.pushState(stateData.length, state.title, state.url);
             }
         },
         createXHR = (function() {
@@ -57,27 +62,24 @@
 
                 if (target !== DOM) lockedEl = target;
 
-                url = url.replace("#/", ""); // fix hanschange urls
-
-                var complete = function(success)  {return function(response)  {
+                var complete = function(defaultErrors)  {return function(state)  {
                     // cleanup outer variables
                     if (target !== DOM) lockedEl = null;
 
-                    if (typeof response === "string") {
-                        // response is a text content
-                        response = {html: response};
+                    if (typeof state === "string") {
+                        // state is a text content
+                        state = {html: state};
                     }
 
                     // populate local values
-                    response.url = response.url || url;
-                    response.title = response.title || DOM.get("title");
-                    // add internal property
-                    response.ts = Date.now();
+                    state.url = state.url || url;
+                    state.title = state.title || DOM.get("title");
+                    state.errors = state.errors || defaultErrors;
 
-                    return Promise[success ? "resolve" : "reject"](response);
+                    return Promise[defaultErrors ? "reject" : "resolve"](state);
                 }};
 
-                return XHR(method, url, config).then(complete(true), complete(false));
+                return XHR(method, url, config).then(complete(false), complete(true));
             };
         }()),
         appendParam = function(memo, name, value)  {
@@ -94,19 +96,14 @@
 
     ["get", "post", "put", "delete", "patch"].forEach(function(method)  {
         DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, data, target)  {
+            if (typeof url !== "string") return;
             // disable cacheBurst that is not required for IE10+
             var config = {data: data, cacheBurst: false},
                 submits = target.matches("form") ? target.findAll("[type=submit]") : [],
-                complete = function(success)  {
-                    var eventType = "ajaxify:" + (success ? "load" : "error");
+                complete = function(response)  {
+                    submits.forEach(function(el)  {return el.set("disabled", false)});
 
-                    return function(response)  {
-                        submits.forEach(function(el)  {return el.set("disabled", false)});
-
-                        if (target.fire("ajaxify:loadend", response) && target.fire(eventType, response)) {
-                            switchContent(response);
-                        }
-                    };
+                    target.fire("ajaxify:loadend", response);
                 };
 
             if (target.fire("ajaxify:loadstart", config)) {
@@ -114,7 +111,7 @@
 
                 var xhr = createXHR(target, method, url, config);
 
-                if (xhr) xhr.then(complete(true), complete(false));
+                if (xhr) xhr.then(complete, complete);
             }
         });
     });
@@ -122,9 +119,9 @@
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel)  {
         if (cancel || link.get("target")) return;
 
-        var url = link.get("href");
-
-        if (!url.indexOf("http")) {
+        var url = link.get("href").split("#")[0];
+        // skip anchors and non-http(s) links
+        if (!url.indexOf("http") && currentState.url.split("#")[0] !== url) {
             return !link.fire("ajaxify:get", url);
         }
     });
@@ -143,12 +140,33 @@
         }
     });
 
-    DOM.on("ajaxify:history", [1, "defaultPrevented"], function(url, cancel)  {
-        if (!url || cancel) return;
+    DOM.on("ajaxify:loadend", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
+        var eventType = "ajaxify:" + (state.errors ? "error" : "load");
 
-        if (url in stateHistory) {
-            switchContent(stateHistory[url]);
+        cancel = cancel || !el.fire(eventType, state);
+
+        if (!cancel) switchContent(state);
+    });
+
+    DOM.on("ajaxify:history", [1, "defaultPrevented"], function(url, cancel)  {
+        if (cancel) return;
+
+        var stateIndex = +url,
+            state = stateData[stateIndex];
+
+        if (!state) {
+            // traverse states in reverse order to access the newest first
+            for (stateIndex = stateData.length; --stateIndex >= 0;) {
+                state = stateData[stateIndex];
+
+                if (state.url === url) break;
+            }
+        }
+
+        if (stateIndex >= 0) {
+            switchContent(state, stateIndex);
         } else {
+            // if the state hasn't been found - fetch it manually
             DOM.fire("ajaxify:get", url);
         }
     });
@@ -156,15 +174,17 @@
     /* istanbul ignore else */
     if (history.pushState) {
         window.addEventListener("popstate", function(e)  {
-            if (e.state) {
-                DOM.fire("ajaxify:history", location.href);
+            var stateIndex = e.state;
+
+            if (typeof stateIndex === "number") {
+                DOM.fire("ajaxify:history", stateIndex);
             }
         });
         // update initial state address url
-        history.replaceState(true, DOM.get("title"));
+        history.replaceState(0, DOM.get("title"));
         // fix bug with external pages
         window.addEventListener("beforeunload", function()  {
-            history.replaceState(null, DOM.get("title"));
+            history.replaceState(0, DOM.get("title"));
         });
     } else {
         // when url should be changed don't start request in old browsers
