@@ -18,7 +18,7 @@ describe("state", function() {
     });
 
     it("should be changed on ajaxify response with success status", function(done) {
-        var link = DOM.mock("a[href=test]"),
+        var link = DOM.mock("a[href=testsuccess]"),
             main = DOM.mock("main"),
             spy = spyOn(main, "remove");
 
@@ -43,7 +43,7 @@ describe("state", function() {
     });
 
     it("should be changed on ajaxify response with error status", function(done) {
-        var link = DOM.mock("a[href=test]"),
+        var link = DOM.mock("a[href=testerror]"),
             main = DOM.mock("main"),
             spy = spyOn(main, "remove");
 

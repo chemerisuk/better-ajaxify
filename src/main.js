@@ -119,9 +119,9 @@
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], (link, cancel) => {
         if (cancel || link.get("target")) return;
 
-        var url = link.get("href");
-
-        if (!url.indexOf("http")) {
+        var url = link.get("href").split("#")[0];
+        // skip anchors and non-http(s) links
+        if (!url.indexOf("http") && currentState.url.split("#")[0] !== url) {
             return !link.fire("ajaxify:get", url);
         }
     });
@@ -176,7 +176,7 @@
         window.addEventListener("popstate", (e) => {
             var stateIndex = e.state;
 
-            if (stateIndex >= 0) {
+            if (typeof stateIndex === "number") {
                 DOM.fire("ajaxify:history", stateIndex);
             }
         });
