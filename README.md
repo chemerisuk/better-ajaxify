@@ -49,11 +49,23 @@ Below is an example how you can setup Google Analytics using `ajaxify:load` even
 
 ```js
 // Google Analytics setup
-DOM.on("ajaxify:load", function(response) {
+DOM.on("ajaxify:load", function(state) {
     window.ga("send", "pageview", {
-        title: response.title,
-        page: response.url
+        title: state.title,
+        page: state.url
     });
+});
+```
+
+### Changing state on client side
+Sometimes it's useful to change browser state on client side without requesting external resources. For instance when you already have cached/prefetched state in memory. To achieve that goal with ajaxify use custom event `ajaxify:loadend`.
+
+This event is fired automatically for any new state fetched from a server. The first agrument for the event is the state object itself. Therefore to if you trigger it manually with appropriate object, result will be the same as for regular case:
+
+```js
+DOM.fire("ajaxify:loadend", {
+    title: "foo",
+    url: "/foo"
 });
 ```
 

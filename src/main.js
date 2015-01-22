@@ -72,8 +72,6 @@
                     state.url = state.url || url;
                     state.title = state.title || DOM.get("title");
                     state.errors = state.errors || defaultErrors;
-                    // add internal property
-                    state.ts = Date.now();
 
                     return Promise[defaultErrors ? "reject" : "resolve"](state);
                 };
@@ -143,7 +141,12 @@
 
         cancel = cancel || !el.fire(eventType, state);
 
-        if (!cancel) switchContent(state);
+        if (!cancel) {
+            // add internal property
+            state.ts = Date.now();
+
+            switchContent(state);
+        }
     });
 
     DOM.on("ajaxify:history", [1, "defaultPrevented"], (url, cancel) => {

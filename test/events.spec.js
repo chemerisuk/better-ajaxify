@@ -131,8 +131,6 @@ describe("event", function() {
             });
 
             spy.and.callFake(function() {
-                response.ts = spy.calls.argsFor(0)[0].ts;
-
                 expect(spy).toHaveBeenCalledWith(response);
 
                 done();
