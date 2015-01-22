@@ -15,6 +15,11 @@
 
             var currentStateIndex = stateData.indexOf(currentState);
 
+            if (currentStateIndex < 0) {
+                // store the current state in memory
+                currentStateIndex = stateData.push(currentState) - 1;
+            }
+
             previousEls = Object.keys(state.html).map((selector) => {
                 var el = DOM.find(selector),
                     content = state.html[selector];
@@ -28,7 +33,7 @@
                         content = el.clone(false).set(content).hide();
                     }
                     // insert new state content
-                    el[stateIndex > currentStateIndex ? "before" : "after"](content);
+                    el[currentStateIndex > stateIndex ? "before" : "after"](content);
                     // show current content
                     content.show();
                 }
@@ -39,17 +44,13 @@
 
                 return el;
             });
-            // store current state in memory
-            if (currentStateIndex < 0) {
-                stateData.push(currentState);
-            }
             // update current state to the latest
             currentState = state;
             // update page title
             DOM.set("title", state.title);
             // update url in address bar
-            if (state.url !== location.href) {
-                history.pushState(stateIndex, state.title, state.url);
+            if (state.url !== location.href && stateIndex == null) {
+                history.pushState(stateData.length, state.title, state.url);
             }
         },
         createXHR = (function() {
@@ -144,28 +145,30 @@
 
         cancel = cancel || !el.fire(eventType, state);
 
-        if (!cancel) switchContent(state, stateData.length);
+        if (!cancel) switchContent(state);
     });
 
     DOM.on("ajaxify:history", [1, "defaultPrevented"], (url, cancel) => {
         if (cancel) return;
 
-        var state = stateData[url], index = url;
+        var stateIndex = +url,
+            state = stateData[stateIndex];
 
-        if (state) {
-            return switchContent(state, index);
-        } else {
-            for (index = stateData.length; --index >= 0;) {
-                state = stateData[index];
+        if (!state) {
+            // traverse states in reverse order to access the newest first
+            for (stateIndex = stateData.length; --stateIndex >= 0;) {
+                state = stateData[stateIndex];
 
-                if (state.url === url) {
-                    return switchContent(state, index);
-                }
+                if (state.url === url) break;
             }
         }
 
-        // if the state hasn't been found - fetch it manually
-        DOM.fire("ajaxify:get", url);
+        if (stateIndex >= 0) {
+            switchContent(state, stateIndex);
+        } else {
+            // if the state hasn't been found - fetch it manually
+            DOM.fire("ajaxify:get", url);
+        }
     });
 
     /* istanbul ignore else */
