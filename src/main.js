@@ -1,10 +1,10 @@
 (function(DOM, XHR, location) {
     "use strict";
 
-    var stateHistory = {}, // in-memory storage for states
-        currentState = {ts: Date.now(), url: location.href.split("#")[0]},
+    var stateData = [], // in-memory storage for states
+        currentState = {url: location.href.split("#")[0]},
         previousEls = [],
-        switchContent = (state) => {
+        switchContent = (state, stateIndex) => {
             if (typeof state !== "object" || typeof state.html !== "object") return;
 
             currentState.html = {};
@@ -12,6 +12,8 @@
             // always make sure that previous state was completed
             // it can be in-progress on very fast history navigation
             previousEls.forEach((el) => el.remove());
+
+            var currentStateIndex = stateData.indexOf(currentState);
 
             previousEls = Object.keys(state.html).map((selector) => {
                 var el = DOM.find(selector),
@@ -26,7 +28,7 @@
                         content = el.clone(false).set(content).hide();
                     }
                     // insert new state content
-                    el[state.ts > currentState.ts ? "before" : "after"](content);
+                    el[stateIndex > currentStateIndex ? "before" : "after"](content);
                     // show current content
                     content.show();
                 }
@@ -37,15 +39,17 @@
 
                 return el;
             });
-            // store previous state difference
-            stateHistory[currentState.url] = currentState;
-            // update current state with the latest
+            // store current state in memory
+            if (currentStateIndex < 0) {
+                stateData.push(currentState);
+            }
+            // update current state to the latest
             currentState = state;
             // update page title
             DOM.set("title", state.title);
             // update url in address bar
             if (state.url !== location.href) {
-                history.pushState(true, state.title, state.url);
+                history.pushState(stateIndex, state.title, state.url);
             }
         },
         createXHR = (function() {
@@ -56,8 +60,6 @@
                 if (lockedEl === target) return null;
 
                 if (target !== DOM) lockedEl = target;
-
-                url = url.replace("#/", ""); // fix hanschange urls
 
                 var complete = (defaultErrors) => (state) => {
                     // cleanup outer variables
@@ -93,6 +95,7 @@
 
     ["get", "post", "put", "delete", "patch"].forEach((method) => {
         DOM.on("ajaxify:" + method, [1, 2, "target"], (url, data, target) => {
+            if (typeof url !== "string") return;
             // disable cacheBurst that is not required for IE10+
             var config = {data: data, cacheBurst: false},
                 submits = target.matches("form") ? target.findAll("[type=submit]") : [],
@@ -141,36 +144,44 @@
 
         cancel = cancel || !el.fire(eventType, state);
 
-        if (!cancel) {
-            // add internal property
-            state.ts = Date.now();
-
-            switchContent(state);
-        }
+        if (!cancel) switchContent(state, stateData.length);
     });
 
     DOM.on("ajaxify:history", [1, "defaultPrevented"], (url, cancel) => {
-        if (!url || cancel) return;
+        if (cancel) return;
 
-        if (url in stateHistory) {
-            switchContent(stateHistory[url]);
+        var state = stateData[url], index = url;
+
+        if (state) {
+            return switchContent(state, index);
         } else {
-            DOM.fire("ajaxify:get", url);
+            for (index = stateData.length; --index >= 0;) {
+                state = stateData[index];
+
+                if (state.url === url) {
+                    return switchContent(state, index);
+                }
+            }
         }
+
+        // if the state hasn't been found - fetch it manually
+        DOM.fire("ajaxify:get", url);
     });
 
     /* istanbul ignore else */
     if (history.pushState) {
         window.addEventListener("popstate", (e) => {
-            if (e.state) {
-                DOM.fire("ajaxify:history", location.href);
+            var stateIndex = e.state;
+
+            if (stateIndex >= 0) {
+                DOM.fire("ajaxify:history", stateIndex);
             }
         });
         // update initial state address url
-        history.replaceState(true, DOM.get("title"));
+        history.replaceState(0, DOM.get("title"));
         // fix bug with external pages
         window.addEventListener("beforeunload", () => {
-            history.replaceState(null, DOM.get("title"));
+            history.replaceState(0, DOM.get("title"));
         });
     } else {
         // when url should be changed don't start request in old browsers
