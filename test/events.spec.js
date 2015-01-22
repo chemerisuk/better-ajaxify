@@ -115,7 +115,8 @@ describe("event", function() {
                 spy = jasmine.createSpy("loadend"),
                 response = {
                     url: link.get("href"),
-                    title: "title"
+                    title: "title",
+                    errors: false
                 };
 
             this.sandbox.append(link);
