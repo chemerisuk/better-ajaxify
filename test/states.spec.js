@@ -36,7 +36,7 @@ describe("state", function() {
             var sandbox = DOM.find("#sandbox");
 
             expect(sandbox.children("main").length).toBe(2);
-            expect(sandbox.child(-1).get()).toBe("new content");
+            expect(sandbox.child(0).get()).toBe("new content");
 
             done();
         });
@@ -61,7 +61,7 @@ describe("state", function() {
             var sandbox = DOM.find("#sandbox");
 
             expect(sandbox.children("main").length).toBe(2);
-            expect(sandbox.child(-1).get()).toBe("error page");
+            expect(sandbox.child(0).get()).toBe("error page");
 
             done();
         });
