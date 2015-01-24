@@ -164,4 +164,10 @@ describe("event", function() {
             expect(this.xhr).not.toBeDefined();
         });
     });
+
+    it("skips events with null url", function() {
+        DOM.fire("ajaxify:get", null);
+
+        expect(jasmine.Ajax.requests.count()).toBe(0);
+    });
 });
