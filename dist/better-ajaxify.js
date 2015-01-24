@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 1.7.2 Thu, 22 Jan 2015 15:31:29 GMT
+ * @version 1.7.3 Sat, 24 Jan 2015 10:33:20 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2014 Maksim Chemerisuk
  * @license MIT
@@ -40,7 +40,7 @@
                         content = el.clone(false).set(content).hide();
                     }
                     // insert new state content
-                    el[currentStateIndex > stateIndex ? "before" : "after"](content);
+                    el[currentStateIndex > stateIndex ? "after" : "before"](content);
                     // show current content
                     content.show();
                 }
