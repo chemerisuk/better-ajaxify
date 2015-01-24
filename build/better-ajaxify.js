@@ -33,7 +33,7 @@
                         content = el.clone(false).set(content).hide();
                     }
                     // insert new state content
-                    el[currentStateIndex > stateIndex ? "before" : "after"](content);
+                    el[currentStateIndex > stateIndex ? "after" : "before"](content);
                     // show current content
                     content.show();
                 }
