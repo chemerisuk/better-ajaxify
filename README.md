@@ -1,7 +1,7 @@
 # better-ajaxify<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 > Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
-The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.
+The library helps to solve the performance problem for HTML pages and also improves user experience. There is a term called "Full AJAX website" that defines a web site that instead of regular links or forms uses AJAX requests. After including an extra library on your page and simple adaptation on backend each navigation change triggers a **partial reload** instead of full refetching and rerendering of the whole page. That experience is always faster and nicer: user doesn't see white flashes, moreover you can show cool animations instead.
 
 [LIVE DEMO](http://chemerisuk.github.io/better-ajaxify/)
 
@@ -67,6 +67,13 @@ DOM.fire("ajaxify:loadend", {
     title: "foo",
     url: "/foo"
 });
+```
+
+### Preventing default behavior
+Links or forms that have the [`target` attribute](http://www.w3schools.com/tags/att_a_target.asp) are not AJAXified. Therefore you can use that allribute to avoid default behavior when necessary:
+
+```html
+<a href="/signin" target="_self">Signin without AJAX</a>
 ```
 
 ### Method `serialize`
