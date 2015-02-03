@@ -117,26 +117,21 @@
     });
 
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], (link, cancel) => {
-        if (cancel || link.get("target")) return;
-
-        var url = link.get("href").split("#")[0];
-        // skip anchors and non-http(s) links
-        if (!url.indexOf("http") && currentState.url.split("#")[0] !== url) {
-            return !link.fire("ajaxify:get", url);
+        if (!cancel && !link.get("target")) {
+            var url = link.get("href").split("#")[0];
+            // skip anchors and non-http(s) links
+            if (!url.indexOf("http") && currentState.url.split("#")[0] !== url) {
+                return !link.fire("ajaxify:get", url);
+            }
         }
     });
 
     DOM.on("submit", ["target", "defaultPrevented"], (form, cancel) => {
-        if (cancel || form.get("target")) return;
+        if (!cancel && !form.get("target")) {
+            var url = form.get("action"),
+                method = form.get("method") || "get";
 
-        var url = form.get("action"),
-            method = form.get("method"),
-            query = form.serialize();
-
-        if (!method || method === "get") {
-            return !form.fire("ajaxify:get", url, query);
-        } else {
-            return !form.fire("ajaxify:" + method, url, query);
+            return !form.fire("ajaxify:" + method.toLowerCase(), url, form.serialize());
         }
     });
 

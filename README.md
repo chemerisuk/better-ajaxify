@@ -76,6 +76,20 @@ Links or forms that have the [`target` attribute](http://www.w3schools.com/tags/
 <a href="/signin" target="_self">Signin without AJAX</a>
 ```
 
+In case when changing markup is problematic, you can skip AJAXify behavior via cancelling appropriate `ajaxify:*` event. For links it's `ajaxify:get`, but the event name for forms corresponds to the value of the `method` attribute: 
+
+```js
+DOM.find("[href=/signin]").on("ajaxify:get", function() {
+    // has the same effect as the target attribute
+    return false;
+});
+
+DOM.find("[action=/register]").on("ajaxify:post", function() {
+    // cancels a post form
+    return false;
+});
+```
+
 ### Method `serialize`
 The plugin extends `form` element wrappers with a new method `serialize`. This method is used internally to collect a form data for AJAX requests, but you can use it too.
 
