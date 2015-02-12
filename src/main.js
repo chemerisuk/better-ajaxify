@@ -184,26 +184,25 @@
     } else {
         // when url should be changed don't start request in old browsers
         DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], (sender, canceled) => {
-            if (canceled) return;
-            // load a new page in legacy browsers
-            if (sender.matches("form")) {
-                sender.fire("submit");
-            } else if (sender.matches("a")) {
-                location.href = sender.get("href");
+            if (!canceled) {
+                // trigger native element behavior in legacy browsers
+                if (sender.matches("form")) {
+                    sender[0].submit();
+                } else if (sender.matches("a")) {
+                    sender[0].click();
+                }
             }
         });
     }
 
     DOM.extend("form", {
         serialize(...names) {
-            if (!names.length) names = false;
-
             return this.findAll("[name]").reduce((memo, el) => {
                 var name = el.get("name");
                 // don't include disabled form fields or without names
                 if (name && !el.get("disabled")) {
                     // skip filtered names
-                    if (names && names.indexOf(name) < 0) return memo;
+                    if (names.length && names.indexOf(name) < 0) return memo;
                     // skip inner form elements of a disabled fieldset
                     if (el.closest("fieldset").get("disabled")) return memo;
 

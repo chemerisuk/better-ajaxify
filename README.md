@@ -70,7 +70,7 @@ DOM.fire("ajaxify:loadend", {
 ```
 
 ### Preventing default behavior
-Links or forms that have the [`target` attribute](http://www.w3schools.com/tags/att_a_target.asp) are not AJAXified. Therefore you can use that allribute to avoid default behavior when necessary:
+Links or forms that have the [`target` attribute](http://www.w3schools.com/tags/att_a_target.asp) are not AJAXified. Therefore you can use that attribute to avoid default behavior when necessary:
 
 ```html
 <a href="/signin" target="_self">Signin without AJAX</a>
