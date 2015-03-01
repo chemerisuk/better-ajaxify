@@ -1,7 +1,7 @@
 # better-ajaxify<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 > Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
-The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.
+The library helps to solve the performance problem for HTML pages and also improves user experience. There is a term called "Full AJAX website" that defines a web site that instead of regular links or forms uses AJAX requests. After including an extra library on your page and simple adaptation on backend each navigation change triggers a **partial reload** instead of full refetching and rerendering of the whole page. That experience is always faster and nicer: user doesn't see white flashes, moreover you can show cool animations instead.
 
 [LIVE DEMO](http://chemerisuk.github.io/better-ajaxify/)
 
@@ -12,6 +12,7 @@ The library helps to solve one of the most important problem for a typical websi
 * [page transition animations](#animate-page-transitions-in-css) support via CSS3
 * prevents [multiple form submits](#style-disabled-submit-buttons) until the request is completed
 * for browsers that [don't support HTML5 History API](http://caniuse.com/#search=history) standard fetch is used.
+* `autofocus` attribute support
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
@@ -66,6 +67,27 @@ This event is fired automatically for any new state fetched from a server. The f
 DOM.fire("ajaxify:loadend", {
     title: "foo",
     url: "/foo"
+});
+```
+
+### Preventing default behavior
+Links or forms that have the [`target` attribute](http://www.w3schools.com/tags/att_a_target.asp) are not AJAXified. Therefore you can use that attribute to avoid default behavior when necessary:
+
+```html
+<a href="/signin" target="_self">Signin without AJAX</a>
+```
+
+In case when changing markup is problematic, you can skip AJAXify behavior via cancelling appropriate `ajaxify:*` event. For links it's `ajaxify:get`, but the event name for forms corresponds to the value of the `method` attribute: 
+
+```js
+DOM.find("[href=/signin]").on("ajaxify:get", function() {
+    // has the same effect as the target attribute
+    return false;
+});
+
+DOM.find("[action=/register]").on("ajaxify:post", function() {
+    // cancels a post form
+    return false;
 });
 ```
 
@@ -188,10 +210,10 @@ Now the trick. Add extra middleware to use appropriate layout based on `X-Http-R
 app.use(function(req, res, next) {
     if (req.xhr) {
         app.set("view options", {layout: "layout.json"});
-        res.set("Content-Type", "application/json");
+        res.set("Content-Type", "application/json; charset=utf-8");
     } else {
         app.set("view options", {layout: "layout.hbs"});
-        res.set("Content-Type", "text/html");
+        res.set("Content-Type", "text/html; charset=utf-8");
     }
 
     next();
