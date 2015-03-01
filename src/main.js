@@ -119,8 +119,12 @@
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], (link, cancel) => {
         if (!cancel && !link.get("target")) {
             var url = link.get("href").split("#")[0];
-            // skip anchors and non-http(s) links
-            if (!url.indexOf("http") && currentState.url.split("#")[0] !== url) {
+
+            if (currentState.url.split("#")[0] === url) {
+                // prevent default for links with the current url
+                return false;
+            } else if (!url.indexOf("http")) {
+                // skip anchors and non-http(s) links
                 return !link.fire("ajaxify:get", url);
             }
         }

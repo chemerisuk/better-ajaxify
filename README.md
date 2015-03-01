@@ -209,10 +209,10 @@ Now the trick. Add extra middleware to use appropriate layout based on `X-Http-R
 app.use(function(req, res, next) {
     if (req.xhr) {
         app.set("view options", {layout: "layout.json"});
-        res.set("Content-Type", "application/json");
+        res.set("Content-Type", "application/json; charset=utf-8");
     } else {
         app.set("view options", {layout: "layout.hbs"});
-        res.set("Content-Type", "text/html");
+        res.set("Content-Type", "text/html; charset=utf-8");
     }
 
     next();
