@@ -59,7 +59,7 @@ describe("event", function() {
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
-            this.xhr.response({ status: 200 });
+            this.xhr.respondWith({ status: 200 });
 
             spy.and.callFake(function() {
                 expect(nextSpy).not.toHaveBeenCalled();
@@ -80,7 +80,7 @@ describe("event", function() {
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
-            this.xhr.response({ status: 400 });
+            this.xhr.respondWith({ status: 400 });
 
             spy.and.callFake(function() {
                 expect(nextSpy).not.toHaveBeenCalled();
@@ -101,7 +101,7 @@ describe("event", function() {
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
-            this.xhr.response({ status: 200 });
+            this.xhr.respondWith({ status: 200 });
 
             spy.and.callFake(function() {
                 expect(nextSpy).not.toHaveBeenCalled();
@@ -125,7 +125,7 @@ describe("event", function() {
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
-            this.xhr.response({
+            this.xhr.respondWith({
                 status: 200,
                 responseText: JSON.stringify(response)
             });

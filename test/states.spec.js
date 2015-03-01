@@ -27,7 +27,7 @@ describe("state", function() {
         link.fire("click");
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
-        this.xhr.response({
+        this.xhr.respondWith({
             status: 200,
             responseText: JSON.stringify({html: {main: "new content"}})
         });
@@ -52,7 +52,7 @@ describe("state", function() {
         link.fire("click");
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
-        this.xhr.response({
+        this.xhr.respondWith({
             status: 500,
             responseText: JSON.stringify({html: {main: "error page"}})
         });
@@ -77,7 +77,7 @@ describe("state", function() {
         DOM.fire("ajaxify:get", "changestate");
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
-        this.xhr.response({
+        this.xhr.respondWith({
             status: 200,
             responseText: JSON.stringify({html: {main: "changestate"}})
         });

@@ -87,7 +87,7 @@ describe("form", function() {
             expect(submit.get("disabled")).toBeTruthy();
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
-            this.xhr.response({status: 200});
+            this.xhr.respondWith({status: 200});
 
             spy.and.callFake(function() {
                 expect(submit.get("disabled")).toBeFalsy();
