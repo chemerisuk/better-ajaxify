@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 1.7.3 Sat, 24 Jan 2015 10:33:20 GMT
+ * @version 1.7.4 Sun, 01 Mar 2015 10:35:25 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2014 Maksim Chemerisuk
  * @license MIT
@@ -12,7 +12,7 @@
         currentState = {url: location.href.split("#")[0]},
         previousEls = [],
         switchContent = function(state, stateIndex)  {
-            if (typeof state !== "object" || typeof state.html !== "object") return;
+            if (typeof state !== "object" || typeof state.html !== "object" || state === currentState) return;
 
             currentState.html = {};
             currentState.title = DOM.get("title");
@@ -42,7 +42,10 @@
                     // insert new state content
                     el[currentStateIndex > stateIndex ? "after" : "before"](content);
                     // show current content
-                    content.show();
+                    content.show(function()  {
+                        // autofocus attribute support
+                        content.find("[autofocus]").fire("focus");
+                    });
                 }
 
                 // Hide old content and remove when it's done. Use requestFrame
@@ -124,26 +127,28 @@
     });
 
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel)  {
-        if (cancel || link.get("target")) return;
+        if (!cancel && !link.get("target")) {
+            var url = link.get("href").split("#")[0];
 
-        var url = link.get("href").split("#")[0];
-        // skip anchors and non-http(s) links
-        if (!url.indexOf("http") && currentState.url.split("#")[0] !== url) {
-            return !link.fire("ajaxify:get", url);
+            if (currentState.url.split("#")[0] === url) {
+                setTimeout(function()  {
+                    link.fire("ajaxify:loadend", currentState);
+                }, 0);
+                // prevent default for links with the current url
+                return false;
+            } else if (!url.indexOf("http")) {
+                // skip anchors and non-http(s) links
+                return !link.fire("ajaxify:get", url);
+            }
         }
     });
 
     DOM.on("submit", ["target", "defaultPrevented"], function(form, cancel)  {
-        if (cancel || form.get("target")) return;
+        if (!cancel && !form.get("target")) {
+            var url = form.get("action"),
+                method = form.get("method") || "get";
 
-        var url = form.get("action"),
-            method = form.get("method"),
-            query = form.serialize();
-
-        if (!method || method === "get") {
-            return !form.fire("ajaxify:get", url, query);
-        } else {
-            return !form.fire("ajaxify:" + method, url, query);
+            return !form.fire("ajaxify:" + method.toLowerCase(), url, form.serialize());
         }
     });
 
@@ -196,26 +201,25 @@
     } else {
         // when url should be changed don't start request in old browsers
         DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], function(sender, canceled)  {
-            if (canceled) return;
-            // load a new page in legacy browsers
-            if (sender.matches("form")) {
-                sender.fire("submit");
-            } else if (sender.matches("a")) {
-                location.href = sender.get("href");
+            if (!canceled) {
+                // trigger native element behavior in legacy browsers
+                if (sender.matches("form")) {
+                    sender[0].submit();
+                } else if (sender.matches("a")) {
+                    sender[0].click();
+                }
             }
         });
     }
 
     DOM.extend("form", {
         serialize: function() {var SLICE$0 = Array.prototype.slice;var names = SLICE$0.call(arguments, 0);
-            if (!names.length) names = false;
-
             return this.findAll("[name]").reduce(function(memo, el)  {
                 var name = el.get("name");
                 // don't include disabled form fields or without names
                 if (name && !el.get("disabled")) {
                     // skip filtered names
-                    if (names && names.indexOf(name) < 0) return memo;
+                    if (names.length && names.indexOf(name) < 0) return memo;
                     // skip inner form elements of a disabled fieldset
                     if (el.closest("fieldset").get("disabled")) return memo;
 
