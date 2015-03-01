@@ -5,7 +5,7 @@
         currentState = {url: location.href.split("#")[0]},
         previousEls = [],
         switchContent = (state, stateIndex) => {
-            if (typeof state !== "object" || typeof state.html !== "object") return;
+            if (typeof state !== "object" || typeof state.html !== "object" || state === currentState) return;
 
             currentState.html = {};
             currentState.title = DOM.get("title");
@@ -124,6 +124,9 @@
             var url = link.get("href").split("#")[0];
 
             if (currentState.url.split("#")[0] === url) {
+                setTimeout(() => {
+                    link.fire("ajaxify:loadend", currentState);
+                }, 0);
                 // prevent default for links with the current url
                 return false;
             } else if (!url.indexOf("http")) {

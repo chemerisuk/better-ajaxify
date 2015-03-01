@@ -122,7 +122,7 @@ describe("links", function() {
         expect(jasmine.Ajax.requests.count()).toBe(1);
     });
 
-    it("skips links with the current url", function() {
+    it("skips links with the current url", function(done) {
         var link = DOM.create("a");
 
         link.set("href", location.href);
@@ -130,5 +130,6 @@ describe("links", function() {
         this.sandbox.append(link);
 
         expect(link.fire("click")).toBe(false);
+        link.on("ajaxify:loadend", done);
     });
 });
