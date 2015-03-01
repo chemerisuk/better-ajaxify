@@ -35,7 +35,10 @@
                     // insert new state content
                     el[currentStateIndex > stateIndex ? "after" : "before"](content);
                     // show current content
-                    content.show();
+                    content.show(() => {
+                        // autofocus attribute support
+                        content.find("[autofocus]").fire("focus");
+                    });
                 }
 
                 // Hide old content and remove when it's done. Use requestFrame

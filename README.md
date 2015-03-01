@@ -12,6 +12,7 @@ The library helps to solve the performance problem for HTML pages and also impro
 * [page transition animations](#animate-page-transitions-in-css) support via CSS3
 * prevents [multiple form submits](#style-disabled-submit-buttons) until the request is completed
 * for browsers that [don't support HTML5 History API](http://caniuse.com/#search=history) standard fetch is used.
+* `autofocus` attribute support
 
 ## Installing
 Use [bower](http://bower.io/) to download this extension with all required dependencies.
