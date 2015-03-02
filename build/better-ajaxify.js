@@ -121,17 +121,21 @@
 
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel)  {
         if (!cancel && !link.get("target")) {
-            var url = link.get("href").split("#")[0];
+            var url = link.get("href");
 
-            if (currentState.url.split("#")[0] === url) {
+            if (url === currentState.url) {
                 setTimeout(function()  {
                     link.fire("ajaxify:loadend", currentState);
                 }, 0);
                 // prevent default for links with the current url
                 return false;
             } else if (!url.indexOf("http")) {
-                // skip anchors and non-http(s) links
-                return !link.fire("ajaxify:get", url);
+                var path = url.split("#")[0];
+
+                if (path !== currentState.url.split("#")[0]) {
+                    // skip anchors and non-http(s) links
+                    return !link.fire("ajaxify:get", path);
+                }
             }
         }
     });
