@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 1.7.4 Sun, 01 Mar 2015 10:35:25 GMT
+ * @version 1.7.5 Mon, 02 Mar 2015 18:28:51 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2014 Maksim Chemerisuk
  * @license MIT
@@ -128,17 +128,21 @@
 
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel)  {
         if (!cancel && !link.get("target")) {
-            var url = link.get("href").split("#")[0];
+            var url = link.get("href");
 
-            if (currentState.url.split("#")[0] === url) {
+            if (url === currentState.url) {
                 setTimeout(function()  {
                     link.fire("ajaxify:loadend", currentState);
                 }, 0);
                 // prevent default for links with the current url
                 return false;
             } else if (!url.indexOf("http")) {
-                // skip anchors and non-http(s) links
-                return !link.fire("ajaxify:get", url);
+                var path = url.split("#")[0];
+
+                if (path !== currentState.url.split("#")[0]) {
+                    // skip anchors and non-http(s) links
+                    return !link.fire("ajaxify:get", path);
+                }
             }
         }
     });
