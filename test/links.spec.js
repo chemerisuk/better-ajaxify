@@ -91,7 +91,7 @@ describe("links", function() {
 
         this.sandbox.append(link);
 
-        link.fire("click");
+        expect(link.fire("click")).toBe(true);
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
         expect(this.xhr).not.toBeDefined();
@@ -125,7 +125,7 @@ describe("links", function() {
     it("skips links with the current url", function(done) {
         var link = DOM.create("a");
 
-        link.set("href", location.href);
+        link.set("href", location.href.split("#")[0]);
 
         this.sandbox.append(link);
 
