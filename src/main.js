@@ -70,22 +70,22 @@
                     // cleanup outer variables
                     if (target !== DOM) lockedEl = null;
 
+                    if (state instanceof Error) {
+                        // do nothing when request was failed
+                        return Promise.reject(state);
+                    }
+
                     if (typeof state === "string") {
                         // state is a text content
                         state = {html: {body: state}};
                     }
 
-                    if (typeof state !== "object") {
-                        // do nothing when request was failed
-                        return Promise.reject(state);
-                    } else {
-                        // populate default state values
-                        state.url = state.url || url;
-                        state.title = state.title || DOM.get("title");
-                        state.status = xhr[0].status;
+                    // populate default state values
+                    state.url = state.url || url;
+                    state.title = state.title || DOM.get("title");
+                    state.status = xhr[0].status;
 
-                        return Promise.resolve(state);
-                    }
+                    return Promise.resolve(state);
                 };
                 // handle success and error responses both
                 return xhr.then(complete, complete);

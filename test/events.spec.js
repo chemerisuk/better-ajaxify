@@ -47,8 +47,10 @@ describe("event", function() {
     });
 
     describe("ajaxify:loadend", function() {
+        var dummyResponse = JSON.stringify({foo: "bar"});
+
         it("should be fired on success", function(done) {
-            var link = DOM.mock("a[href=test]"),
+            var link = DOM.mock("a[href=test444]"),
                 spy = jasmine.createSpy("loadend"),
                 nextSpy = jasmine.createSpy("load");
 
@@ -61,6 +63,7 @@ describe("event", function() {
             this.xhr = jasmine.Ajax.requests.mostRecent();
             this.xhr.respondWith({
                 status: 200,
+                responseText: JSON.stringify({foo: "bar"}),
                 contentType: "application/json"
             });
 
@@ -85,6 +88,7 @@ describe("event", function() {
             this.xhr = jasmine.Ajax.requests.mostRecent();
             this.xhr.respondWith({
                 status: 400,
+                responseText: dummyResponse,
                 contentType: "application/json"
             });
 
@@ -109,6 +113,7 @@ describe("event", function() {
             this.xhr = jasmine.Ajax.requests.mostRecent();
             this.xhr.respondWith({
                 status: 200,
+                responseText: dummyResponse,
                 contentType: "application/json"
             });
 
@@ -117,6 +122,30 @@ describe("event", function() {
 
                 done();
             });
+        });
+
+        it("does nothing when response was failed with an error", function(done) {
+            var link = DOM.mock("a[href=nope]"),
+                spy = jasmine.createSpy("loadend"),
+                nextSpy = jasmine.createSpy("load");
+
+            this.sandbox.append(link);
+
+            link.on("ajaxify:loadend", spy);
+            link.fire("click");
+
+            this.xhr = jasmine.Ajax.requests.mostRecent();
+            this.xhr.respondWith({
+                status: 200,
+                responseText: "{1:1}",
+                contentType: "application/json"
+            });
+
+            setTimeout(function() {
+                expect(spy).not.toHaveBeenCalled();
+
+                done();
+            }, 50);
         });
 
         it("should accept response object", function(done) {
@@ -135,8 +164,8 @@ describe("event", function() {
             this.xhr = jasmine.Ajax.requests.mostRecent();
             this.xhr.respondWith({
                 status: 200,
-                contentType: "application/json",
-                responseText: JSON.stringify(response)
+                responseText: JSON.stringify(response),
+                contentType: "application/json"
             });
 
             spy.and.callFake(function() {
