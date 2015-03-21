@@ -143,11 +143,17 @@
     });
 
     DOM.on("ajaxify:loadend", [1, "target", "defaultPrevented"], (state, el, cancel) => {
-        var eventType = "ajaxify:" + (state.errors ? "error" : "load");
+        var responseStatus = state.status, eventType;
 
-        cancel = cancel || !el.fire(eventType, state);
+        if (responseStatus >= 200 && responseStatus < 300 || responseStatus === 304) {
+            eventType = "ajaxify:load";
+        } else {
+            eventType = "ajaxify:error";
+        }
 
-        if (!cancel) switchContent(state);
+        if (!cancel && el.fire(eventType, state)) {
+            switchContent(state);
+        }
     });
 
     DOM.on("ajaxify:history", [1, "defaultPrevented"], (state, cancel) => {

@@ -126,8 +126,7 @@ describe("event", function() {
 
         it("does nothing when response was failed with an error", function(done) {
             var link = DOM.mock("a[href=nope]"),
-                spy = jasmine.createSpy("loadend"),
-                nextSpy = jasmine.createSpy("load");
+                spy = jasmine.createSpy("loadend");
 
             this.sandbox.append(link);
 
