@@ -149,16 +149,16 @@ describe("event", function() {
     });
 
     describe("ajaxify:history", function() {
-        it("should trigger fetching of non-stored states", function() {
-            DOM.fire("ajaxify:history", "some-url");
+        // it("should trigger fetching of non-stored states", function() {
+        //     DOM.fire("ajaxify:history", "some-url");
 
-            this.xhr = jasmine.Ajax.requests.mostRecent();
+        //     this.xhr = jasmine.Ajax.requests.mostRecent();
 
-            expect(this.xhr).toBeDefined();
-            expect(this.xhr.readyState).toBe(2);
-            expect(this.xhr.method).toBe("GET");
-            expect(this.xhr.url.indexOf("some-url")).toBe(0);
-        });
+        //     expect(this.xhr).toBeDefined();
+        //     expect(this.xhr.readyState).toBe(2);
+        //     expect(this.xhr.method).toBe("GET");
+        //     expect(this.xhr.url.indexOf("some-url")).toBe(0);
+        // });
 
         it("should respect defaultPrevented", function() {
             var spy = jasmine.createSpy("history").and.returnValue(false),

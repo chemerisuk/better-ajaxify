@@ -69,33 +69,33 @@ describe("state", function() {
         });
     });
 
-    it("should switch to stored state if it exists", function(done) {
-        var currentUrl = location.href,
-            main = DOM.mock("main"),
-            spy = spyOn(main, "remove");
+    // it("should switch to stored state if it exists", function(done) {
+    //     var currentUrl = location.href,
+    //         main = DOM.mock("main"),
+    //         spy = spyOn(main, "remove");
 
-        this.sandbox.append(main);
+    //     this.sandbox.append(main);
 
-        DOM.fire("ajaxify:get", "changestate");
+    //     DOM.fire("ajaxify:get", "changestate");
 
-        this.xhr = jasmine.Ajax.requests.mostRecent();
-        this.xhr.respondWith({
-            status: 200,
-            contentType: "application/json",
-            responseText: JSON.stringify({html: {main: "changestate"}})
-        });
+    //     this.xhr = jasmine.Ajax.requests.mostRecent();
+    //     this.xhr.respondWith({
+    //         status: 200,
+    //         contentType: "application/json",
+    //         responseText: JSON.stringify({html: {main: "changestate"}})
+    //     });
 
-        spy.and.callFake(function() {
-            // have to use setTimeout because of stack overflow
-            setTimeout(function() {
-                DOM.fire("ajaxify:history", currentUrl);
+    //     spy.and.callFake(function() {
+    //         // have to use setTimeout because of stack overflow
+    //         setTimeout(function() {
+    //             DOM.fire("ajaxify:history", currentUrl);
 
-                expect(jasmine.Ajax.requests.count()).toBe(1);
+    //             expect(jasmine.Ajax.requests.count()).toBe(1);
 
-                done();
-            }, 50);
-        });
-    });
+    //             done();
+    //         }, 50);
+    //     });
+    // });
 
     it("should allow multiple requests for DOM", function() {
         DOM.fire("ajaxify:get", "url1", null);

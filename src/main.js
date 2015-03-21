@@ -147,26 +147,15 @@
         if (!cancel) switchContent(state);
     });
 
-    DOM.on("ajaxify:history", [1, "defaultPrevented"], (url, cancel) => {
+    DOM.on("ajaxify:history", [1, "defaultPrevented"], (state, cancel) => {
         if (cancel) return;
 
-        var stateIndex = +url,
-            state = stateData[stateIndex];
+        var stateIndex = stateData.lastIndexOf(state);
 
-        if (!state) {
-            // traverse states in reverse order to access the newest first
-            for (stateIndex = stateData.length; --stateIndex >= 0;) {
-                state = stateData[stateIndex];
-
-                if (state.url === url) break;
-            }
-        }
-
-        if (stateIndex >= 0) {
+        if (state && stateIndex >= 0) {
             switchContent(state, stateIndex);
         } else {
-            // if the state hasn't been found - fetch it manually
-            DOM.fire("ajaxify:get", url);
+            DOM.fire("ajaxify:get", location.href);
         }
     });
 
@@ -176,7 +165,7 @@
             var stateIndex = e.state;
 
             if (typeof stateIndex === "number") {
-                DOM.fire("ajaxify:history", stateIndex);
+                DOM.fire("ajaxify:history", stateData[stateIndex]);
             }
         });
         // update initial state address url
