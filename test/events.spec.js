@@ -124,8 +124,7 @@ describe("event", function() {
                 spy = jasmine.createSpy("loadend"),
                 response = {
                     url: link.get("href"),
-                    title: "title",
-                    errors: false
+                    title: "title"
                 };
 
             this.sandbox.append(link);
@@ -141,7 +140,11 @@ describe("event", function() {
             });
 
             spy.and.callFake(function() {
-                expect(spy).toHaveBeenCalledWith(response);
+                expect(spy).toHaveBeenCalledWith({
+                    url: link.get("href"),
+                    title: "title",
+                    status: 200
+                });
 
                 done();
             });

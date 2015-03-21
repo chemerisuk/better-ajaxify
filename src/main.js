@@ -56,16 +56,17 @@
                 history.pushState(stateData.length, state.title, state.url);
             }
         },
-        createXHR = (function() {
+        promiseXHR = (function() {
             // lock element to prevent double clicks
             var lockedEl;
 
             return (target, method, url, config) => {
-                if (lockedEl === target) return null;
+                if (lockedEl === target) return Promise.reject();
 
                 if (target !== DOM) lockedEl = target;
 
-                var complete = (defaultErrors) => (state) => {
+                var xhr = XHR(method, url, config);
+                var complete = (state) => {
                     // cleanup outer variables
                     if (target !== DOM) lockedEl = null;
 
@@ -74,15 +75,20 @@
                         state = {html: {body: state}};
                     }
 
-                    // populate local values
-                    state.url = state.url || url;
-                    state.title = state.title || DOM.get("title");
-                    state.errors = state.errors || defaultErrors;
+                    if (typeof state !== "object") {
+                        // do nothing when request was failed
+                        return Promise.reject(state);
+                    } else {
+                        // populate default state values
+                        state.url = state.url || url;
+                        state.title = state.title || DOM.get("title");
+                        state.status = xhr[0].status;
 
-                    return Promise[defaultErrors ? "reject" : "resolve"](state);
+                        return Promise.resolve(state);
+                    }
                 };
-
-                return XHR(method, url, config).then(complete(false), complete(true));
+                // handle success and error responses both
+                return xhr.then(complete, complete);
             };
         }());
 
@@ -91,19 +97,16 @@
             if (typeof url !== "string") return;
             // disable cacheBurst that is not required for IE10+
             var config = {data: data, cacheBurst: false},
-                submits = target.matches("form") ? target.findAll("[type=submit]") : [],
-                complete = (response) => {
-                    submits.forEach((el) => el.set("disabled", false));
-
-                    target.fire("ajaxify:loadend", response);
-                };
+                submits = target.matches("form") ? target.findAll("[type=submit]") : [];
 
             if (target.fire("ajaxify:loadstart", config)) {
                 submits.forEach((el) => el.set("disabled", true));
 
-                let xhr = createXHR(target, method, url, config);
+                promiseXHR(target, method, url, config).then((response) => {
+                    submits.forEach((el) => el.set("disabled", false));
 
-                if (xhr) xhr.then(complete, complete);
+                    target.fire("ajaxify:loadend", response);
+                });
             }
         });
     });
@@ -163,7 +166,7 @@
     if (history.pushState) {
         window.addEventListener("popstate", (e) => {
             var stateIndex = e.state;
-
+            // numeric value indicates better-ajaxify state
             if (typeof stateIndex === "number") {
                 DOM.fire("ajaxify:history", stateData[stateIndex]);
             }
