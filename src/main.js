@@ -84,18 +84,7 @@
 
                 return XHR(method, url, config).then(complete(false), complete(true));
             };
-        }()),
-        appendParam = (memo, name, value) => {
-            if (name in memo) {
-                if (Array.isArray(memo[name])) {
-                    memo[name].push(value);
-                } else {
-                    memo[name] = [ memo[name], value ];
-                }
-            } else {
-                memo[name] = value;
-            }
-        };
+        }());
 
     ["get", "post", "put", "delete", "patch"].forEach((method) => {
         DOM.on("ajaxify:" + method, [1, 2, "target"], (url, data, target) => {
@@ -143,9 +132,10 @@
     DOM.on("submit", ["target", "defaultPrevented"], (form, cancel) => {
         if (!cancel && !form.get("target")) {
             var url = form.get("action"),
-                method = form.get("method") || "get";
+                method = form.get("method") || "get",
+                data = XHR.serialize(form[0]);
 
-            return !form.fire("ajaxify:" + method.toLowerCase(), url, form.serialize());
+            return !form.fire("ajaxify:" + method.toLowerCase(), url, data);
         }
     });
 
@@ -208,47 +198,4 @@
             }
         });
     }
-
-    DOM.extend("form", {
-        serialize(...names) {
-            return this.findAll("[name]").reduce((memo, el) => {
-                var name = el.get("name");
-                // don't include disabled form fields or without names
-                if (name && !el.get("disabled")) {
-                    // skip filtered names
-                    if (names.length && names.indexOf(name) < 0) return memo;
-                    // skip inner form elements of a disabled fieldset
-                    if (el.closest("fieldset").get("disabled")) return memo;
-
-                    switch(el.get("type")) {
-                    case "select-one":
-                    case "select-multiple":
-                        el.children().forEach((option) => {
-                            if (option.get("selected")) {
-                                appendParam(memo, name, option.get());
-                            }
-                        });
-                        break;
-
-                    case undefined:
-                    case "fieldset": // fieldset
-                    case "file": // file input
-                    case "submit": // submit button
-                    case "reset": // reset button
-                    case "button": // custom button
-                        break;
-
-                    case "radio": // radio button
-                    case "checkbox": // checkbox
-                        if (!el.get("checked")) break;
-                        /* falls through */
-                    default:
-                        appendParam(memo, name, el.get());
-                    }
-                }
-
-                return memo;
-            }, {});
-        }
-    });
 }(window.DOM, window.XHR, window.location));

@@ -59,7 +59,10 @@ describe("event", function() {
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
-            this.xhr.respondWith({ status: 200 });
+            this.xhr.respondWith({
+                status: 200,
+                contentType: "application/json"
+            });
 
             spy.and.callFake(function() {
                 expect(nextSpy).not.toHaveBeenCalled();
@@ -80,7 +83,10 @@ describe("event", function() {
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
-            this.xhr.respondWith({ status: 400 });
+            this.xhr.respondWith({
+                status: 400,
+                contentType: "application/json"
+            });
 
             spy.and.callFake(function() {
                 expect(nextSpy).not.toHaveBeenCalled();
@@ -101,7 +107,10 @@ describe("event", function() {
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
-            this.xhr.respondWith({ status: 200 });
+            this.xhr.respondWith({
+                status: 200,
+                contentType: "application/json"
+            });
 
             spy.and.callFake(function() {
                 expect(nextSpy).not.toHaveBeenCalled();
@@ -127,6 +136,7 @@ describe("event", function() {
             this.xhr = jasmine.Ajax.requests.mostRecent();
             this.xhr.respondWith({
                 status: 200,
+                contentType: "application/json",
                 responseText: JSON.stringify(response)
             });
 

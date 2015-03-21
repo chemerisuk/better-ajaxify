@@ -91,27 +91,6 @@ DOM.find("[action=/register]").on("ajaxify:post", function() {
 });
 ```
 
-### Method `serialize`
-The plugin extends `form` element wrappers with a new method `serialize`. This method is used internally to collect a form data for AJAX requests, but you can use it too.
-
-Returned object is a key/value map of form elements. For instance
-
-```html
-<form id="myform" action="/some-url">
-    <input type="text" name="user" value="user1">
-    <select name="gender">
-        <option value="m" selected>Male</option>
-        <option value="f">Female</option>
-    </select>
-</form>
-```
-
-can be serialized like below:
-
-```js
-DOM.find("#myform").serialize(); // => {user: "user1", "gender": "m"}
-```
-
 ### Animating page transitions
 Each content transition can be animated:
 

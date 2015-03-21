@@ -74,25 +74,26 @@ describe("form", function() {
     });
 
     describe("submit buttons", function() {
-        it("should be disabled until request is completed", function(done) {
-            var form = DOM.mock("form[action=test]>button[type=submit]"),
+        it("disabled until request is completed", function(done) {
+            var form = DOM.mock("form[action=yo]>button[type=submit]"),
                 submit = form.child(0),
-                spy = jasmine.createSpy("load");
+                spy = jasmine.createSpy("load").and.callFake(function() {
+                    expect(submit.get("disabled")).toBeFalsy();
+
+                    done();
+                });
 
             this.sandbox.append(form);
 
-            form.on("ajaxify:load", spy);
-            form.fire("submit");
+            form.on("ajaxify:load", spy).fire("submit");
 
             expect(submit.get("disabled")).toBeTruthy();
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
-            this.xhr.respondWith({status: 200});
-
-            spy.and.callFake(function() {
-                expect(submit.get("disabled")).toBeFalsy();
-
-                done();
+            this.xhr.respondWith({
+                status: 200,
+                contentType: "application/json",
+                responseText: JSON.stringify({html: {main: "success"}})
             });
         });
 

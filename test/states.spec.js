@@ -29,6 +29,7 @@ describe("state", function() {
         this.xhr = jasmine.Ajax.requests.mostRecent();
         this.xhr.respondWith({
             status: 200,
+            contentType: "application/json",
             responseText: JSON.stringify({html: {main: "new content"}})
         });
 
@@ -54,6 +55,7 @@ describe("state", function() {
         this.xhr = jasmine.Ajax.requests.mostRecent();
         this.xhr.respondWith({
             status: 500,
+            contentType: "application/json",
             responseText: JSON.stringify({html: {main: "error page"}})
         });
 
@@ -79,6 +81,7 @@ describe("state", function() {
         this.xhr = jasmine.Ajax.requests.mostRecent();
         this.xhr.respondWith({
             status: 200,
+            contentType: "application/json",
             responseText: JSON.stringify({html: {main: "changestate"}})
         });
 
