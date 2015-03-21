@@ -71,7 +71,7 @@
 
                     if (typeof state === "string") {
                         // state is a text content
-                        state = {html: state};
+                        state = {html: {body: state}};
                     }
 
                     // populate local values

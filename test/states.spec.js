@@ -43,6 +43,30 @@ describe("state", function() {
         });
     });
 
+    it("updates body for text responses", function(done) {
+        var link = DOM.mock("a[href=testbody]");
+
+        this.sandbox.append(link);
+
+        link.fire("click");
+        link.on("ajaxify:loadend", function(state) {
+            expect(state).toEqual(jasmine.objectContaining({
+                html: {body: "foo"}
+            }));
+
+            done();
+
+            return false;
+        });
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        this.xhr.respondWith({
+            status: 200,
+            contentType: "text/plain",
+            responseText: "foo"
+        });
+    });
+
     it("should be changed on ajaxify response with error status", function(done) {
         var link = DOM.mock("a[href=testerror]"),
             main = DOM.mock("main"),
