@@ -56,65 +56,63 @@
                 history.pushState(stateData.length, state.title, state.url);
             }
         },
-        createXHR = (function() {
+        promiseXHR = (function() {
             // lock element to prevent double clicks
             var lockedEl;
 
             return function(target, method, url, config)  {
-                if (lockedEl === target) return null;
+                if (lockedEl === target) {
+                    return Promise.reject(null);
+                }
+
+                if (url === currentState.url) {
+                    return Promise.resolve(currentState);
+                }
 
                 if (target !== DOM) lockedEl = target;
 
-                var complete = function(defaultErrors)  {return function(state)  {
+                var xhr = XHR(method, url, config);
+                var complete = function(state)  {
                     // cleanup outer variables
                     if (target !== DOM) lockedEl = null;
 
-                    if (typeof state === "string") {
-                        // state is a text content
-                        state = {html: state};
+                    if (state instanceof Error) {
+                        // do nothing when request was failed
+                        return Promise.reject(state);
                     }
 
-                    // populate local values
+                    if (typeof state === "string") {
+                        // state is a text content
+                        state = {html: {body: state}};
+                    }
+
+                    // populate default state values
                     state.url = state.url || url;
                     state.title = state.title || DOM.get("title");
-                    state.errors = state.errors || defaultErrors;
+                    state.status = xhr[0].status;
 
-                    return Promise[defaultErrors ? "reject" : "resolve"](state);
-                }};
-
-                return XHR(method, url, config).then(complete(false), complete(true));
+                    return Promise.resolve(state);
+                };
+                // handle success and error responses both
+                return xhr.then(complete, complete);
             };
-        }()),
-        appendParam = function(memo, name, value)  {
-            if (name in memo) {
-                if (Array.isArray(memo[name])) {
-                    memo[name].push(value);
-                } else {
-                    memo[name] = [ memo[name], value ];
-                }
-            } else {
-                memo[name] = value;
-            }
-        };
+        }());
 
     ["get", "post", "put", "delete", "patch"].forEach(function(method)  {
         DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, data, target)  {
             if (typeof url !== "string") return;
             // disable cacheBurst that is not required for IE10+
             var config = {data: data, cacheBurst: false},
-                submits = target.matches("form") ? target.findAll("[type=submit]") : [],
-                complete = function(response)  {
-                    submits.forEach(function(el)  {return el.set("disabled", false)});
+                submits = target.matches("form") ? target.findAll("[type=submit]") : [];
 
-                    target.fire("ajaxify:loadend", response);
-                };
-
-            if (target.fire("ajaxify:loadstart", config)) {
+            if (target.fire("ajaxify:send", config)) {
                 submits.forEach(function(el)  {return el.set("disabled", true)});
 
-                var xhr = createXHR(target, method, url, config);
+                promiseXHR(target, method, url, config).then(function(response)  {
+                    submits.forEach(function(el)  {return el.set("disabled", false)});
 
-                if (xhr) xhr.then(complete, complete);
+                    target.fire("ajaxify:complete", response);
+                });
             }
         });
     });
@@ -122,20 +120,11 @@
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel)  {
         if (!cancel && !link.get("target")) {
             var url = link.get("href");
-
-            if (url === currentState.url) {
-                setTimeout(function()  {
-                    link.fire("ajaxify:loadend", currentState);
-                }, 0);
-                // prevent default for links with the current url
-                return false;
-            } else if (!url.indexOf("http")) {
-                var path = url.split("#")[0];
-
-                if (path !== currentState.url.split("#")[0]) {
-                    // skip anchors and non-http(s) links
-                    return !link.fire("ajaxify:get", path);
-                }
+            var path = url.split("#")[0];
+            // skip anchors and non-http(s) links
+            if (url === currentState.url || !url.indexOf("http") &&
+                path !== currentState.url.split("#")[0]) {
+                return !link.fire("ajaxify:get", path);
             }
         }
     });
@@ -143,40 +132,36 @@
     DOM.on("submit", ["target", "defaultPrevented"], function(form, cancel)  {
         if (!cancel && !form.get("target")) {
             var url = form.get("action"),
-                method = form.get("method") || "get";
+                method = form.get("method") || "get",
+                data = XHR.serialize(form[0]);
 
-            return !form.fire("ajaxify:" + method.toLowerCase(), url, form.serialize());
+            return !form.fire("ajaxify:" + method.toLowerCase(), url, data);
         }
     });
 
-    DOM.on("ajaxify:loadend", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
-        var eventType = "ajaxify:" + (state.errors ? "error" : "load");
+    DOM.on("ajaxify:complete", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
+        var responseStatus = state.status, eventType;
 
-        cancel = cancel || !el.fire(eventType, state);
+        if (responseStatus >= 200 && responseStatus < 300 || responseStatus === 304) {
+            eventType = "ajaxify:success";
+        } else {
+            eventType = "ajaxify:error";
+        }
 
-        if (!cancel) switchContent(state);
+        if (!cancel && el.fire(eventType, state)) {
+            switchContent(state);
+        }
     });
 
-    DOM.on("ajaxify:history", [1, "defaultPrevented"], function(url, cancel)  {
+    DOM.on("ajaxify:history", [1, "defaultPrevented"], function(state, cancel)  {
         if (cancel) return;
 
-        var stateIndex = +url,
-            state = stateData[stateIndex];
+        var stateIndex = stateData.lastIndexOf(state);
 
-        if (!state) {
-            // traverse states in reverse order to access the newest first
-            for (stateIndex = stateData.length; --stateIndex >= 0;) {
-                state = stateData[stateIndex];
-
-                if (state.url === url) break;
-            }
-        }
-
-        if (stateIndex >= 0) {
+        if (state && stateIndex >= 0) {
             switchContent(state, stateIndex);
         } else {
-            // if the state hasn't been found - fetch it manually
-            DOM.fire("ajaxify:get", url);
+            DOM.fire("ajaxify:get", location.href);
         }
     });
 
@@ -184,9 +169,9 @@
     if (history.pushState) {
         window.addEventListener("popstate", function(e)  {
             var stateIndex = e.state;
-
+            // numeric value indicates better-ajaxify state
             if (typeof stateIndex === "number") {
-                DOM.fire("ajaxify:history", stateIndex);
+                DOM.fire("ajaxify:history", stateData[stateIndex]);
             }
         });
         // update initial state address url
@@ -197,7 +182,7 @@
         });
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], function(sender, canceled)  {
+        DOM.on("ajaxify:start", ["target", "defaultPrevented"], function(sender, canceled)  {
             if (!canceled) {
                 // trigger native element behavior in legacy browsers
                 if (sender.matches("form")) {
@@ -208,47 +193,4 @@
             }
         });
     }
-
-    DOM.extend("form", {
-        serialize: function() {var SLICE$0 = Array.prototype.slice;var names = SLICE$0.call(arguments, 0);
-            return this.findAll("[name]").reduce(function(memo, el)  {
-                var name = el.get("name");
-                // don't include disabled form fields or without names
-                if (name && !el.get("disabled")) {
-                    // skip filtered names
-                    if (names.length && names.indexOf(name) < 0) return memo;
-                    // skip inner form elements of a disabled fieldset
-                    if (el.closest("fieldset").get("disabled")) return memo;
-
-                    switch(el.get("type")) {
-                    case "select-one":
-                    case "select-multiple":
-                        el.children().forEach(function(option)  {
-                            if (option.get("selected")) {
-                                appendParam(memo, name, option.get());
-                            }
-                        });
-                        break;
-
-                    case undefined:
-                    case "fieldset": // fieldset
-                    case "file": // file input
-                    case "submit": // submit button
-                    case "reset": // reset button
-                    case "button": // custom button
-                        break;
-
-                    case "radio": // radio button
-                    case "checkbox": // checkbox
-                        if (!el.get("checked")) break;
-                        /* falls through */
-                    default:
-                        appendParam(memo, name, el.get());
-                    }
-                }
-
-                return memo;
-            }, {});
-        }
-    });
 }(window.DOM, window.XHR, window.location));
