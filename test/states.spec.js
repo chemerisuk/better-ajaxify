@@ -49,7 +49,7 @@ describe("state", function() {
         this.sandbox.append(link);
 
         link.fire("click");
-        link.on("ajaxify:complete", function(state) {
+        link.on("ajaxify:change", function(state) {
             expect(state).toEqual(jasmine.objectContaining({
                 html: {body: "foo"}
             }));

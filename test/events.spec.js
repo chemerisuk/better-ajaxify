@@ -46,7 +46,7 @@ describe("event", function() {
         });
     });
 
-    describe("ajaxify:complete", function() {
+    describe("ajaxify:change", function() {
         var dummyResponse = JSON.stringify({foo: "bar"});
 
         it("should be fired on success", function(done) {
@@ -56,7 +56,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:complete", spy.and.callThrough());
+            link.on("ajaxify:change", spy.and.callThrough());
             link.on("ajaxify:success", nextSpy);
             link.fire("click");
 
@@ -81,7 +81,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:complete", spy.and.callThrough());
+            link.on("ajaxify:change", spy.and.callThrough());
             link.on("ajaxify:error", nextSpy);
             link.fire("click");
 
@@ -106,7 +106,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:complete", spy.and.returnValue(false));
+            link.on("ajaxify:change", spy.and.returnValue(false));
             link.on("ajaxify:success", nextSpy);
             link.fire("click");
 
@@ -130,7 +130,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:complete", spy);
+            link.on("ajaxify:change", spy);
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
@@ -157,7 +157,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:complete", spy);
+            link.on("ajaxify:change", spy);
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
@@ -176,33 +176,6 @@ describe("event", function() {
 
                 done();
             });
-        });
-    });
-
-    describe("ajaxify:history", function() {
-        // it("should trigger fetching of non-stored states", function() {
-        //     DOM.fire("ajaxify:history", "some-url");
-
-        //     this.xhr = jasmine.Ajax.requests.mostRecent();
-
-        //     expect(this.xhr).toBeDefined();
-        //     expect(this.xhr.readyState).toBe(2);
-        //     expect(this.xhr.method).toBe("GET");
-        //     expect(this.xhr.url.indexOf("some-url")).toBe(0);
-        // });
-
-        it("should respect defaultPrevented", function() {
-            var spy = jasmine.createSpy("history").and.returnValue(false),
-                body = DOM.find("body");
-
-            body.once("ajaxify:history", spy);
-            body.fire("ajaxify:history", "some-url");
-
-            expect(spy).toHaveBeenCalled();
-
-            this.xhr = jasmine.Ajax.requests.mostRecent();
-
-            expect(this.xhr).not.toBeDefined();
         });
     });
 

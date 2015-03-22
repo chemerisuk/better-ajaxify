@@ -111,7 +111,7 @@
                 promiseXHR(target, method, url, config).then((response) => {
                     submits.forEach((el) => el.set("disabled", false));
 
-                    target.fire("ajaxify:complete", response);
+                    target.fire("ajaxify:change", response);
                 });
             }
         });
@@ -139,29 +139,27 @@
         }
     });
 
-    DOM.on("ajaxify:complete", [1, "target", "defaultPrevented"], (state, el, cancel) => {
-        var responseStatus = state.status, eventType;
-
-        if (responseStatus >= 200 && responseStatus < 300 || responseStatus === 304) {
-            eventType = "ajaxify:success";
-        } else {
-            eventType = "ajaxify:error";
-        }
-
-        if (!cancel && el.fire(eventType, state)) {
-            switchContent(state);
-        }
-    });
-
-    DOM.on("ajaxify:history", [1, "defaultPrevented"], (state, cancel) => {
-        if (cancel) return;
+    DOM.on("ajaxify:change", [1, "target", "defaultPrevented"], (state, el, cancel) => {
+        if (cancel || !state) return;
 
         var stateIndex = stateData.lastIndexOf(state);
 
-        if (state && stateIndex >= 0) {
+        if (stateIndex >= 0) {
             switchContent(state, stateIndex);
         } else {
-            DOM.fire("ajaxify:get", location.href);
+            setTimeout(() => {
+                var responseStatus = state.status, eventType;
+
+                if (responseStatus >= 200 && responseStatus < 300 || responseStatus === 304) {
+                    eventType = "ajaxify:success";
+                } else {
+                    eventType = "ajaxify:error";
+                }
+
+                if (el.fire(eventType, state)) {
+                    switchContent(state);
+                }
+            }, 0);
         }
     });
 
@@ -171,7 +169,7 @@
             var stateIndex = e.state;
             // numeric value indicates better-ajaxify state
             if (typeof stateIndex === "number") {
-                DOM.fire("ajaxify:history", stateData[stateIndex]);
+                DOM.fire("ajaxify:change", stateData[stateIndex]);
             }
         });
         // update initial state address url

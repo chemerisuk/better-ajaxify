@@ -5,6 +5,7 @@ describe("form", function() {
         jasmine.Ajax.install();
 
         this.sandbox = DOM.create("div");
+        this.randomUrl = String(Date.now());
 
         DOM.find("body").append(this.sandbox);
     });
@@ -18,7 +19,7 @@ describe("form", function() {
     });
 
     it("should send AJAX request for GET method", function() {
-        var form = DOM.mock("form[action=test]");
+        var form = DOM.mock("form[action=`{0}`]", [this.randomUrl]);
 
         this.sandbox.append(form);
 
@@ -48,7 +49,7 @@ describe("form", function() {
     });
 
     it("should skip canceled events", function() {
-        var form = DOM.mock("form[action=test]"),
+        var form = DOM.mock("form[action=`{0}`]", [this.randomUrl]),
             spy = jasmine.createSpy("click");
 
         this.sandbox.append(form);
@@ -62,20 +63,26 @@ describe("form", function() {
         expect(this.xhr).not.toBeDefined();
     });
 
-    it("should skip elements with target", function() {
-        var form = DOM.mock("form[action=test target=_blank]");
+    it("should skip elements with target", function(done) {
+        var form = DOM.mock("form[action=`{0}` target=`_blank`]", [this.randomUrl]);
+
+        document.onsubmit = function(e) {
+            expect(e.defaultPrevented).toBe(false);
+            e.preventDefault();
+            // cleanup
+            document.onsubmit = null;
+
+            done();
+        };
 
         this.sandbox.append(form);
 
         form.fire("submit");
-
-        this.xhr = jasmine.Ajax.requests.mostRecent();
-        expect(this.xhr).not.toBeDefined();
     });
 
     describe("submit buttons", function() {
         it("disabled until request is completed", function(done) {
-            var form = DOM.mock("form[action=yo]>button[type=submit]"),
+            var form = DOM.mock("form[action=`{0}`]>button[type=submit]", [this.randomUrl]),
                 submit = form.child(0),
                 spy = jasmine.createSpy("load").and.callFake(function() {
                     expect(submit.get("disabled")).toBeFalsy();
@@ -98,7 +105,7 @@ describe("form", function() {
         });
 
         it("disabled only when ajaxify:send succeed", function() {
-            var form = DOM.mock("form[action=test]>button[type=submit]"),
+            var form = DOM.mock("form[action=`{0}`]>button[type=submit]", [this.randomUrl]),
                 submit = form.child(0),
                 spy = jasmine.createSpy("start").and.returnValue(false);
 
@@ -110,6 +117,4 @@ describe("form", function() {
             expect(submit.get("disabled")).toBeFalsy();
         });
     });
-
-
 });

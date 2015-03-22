@@ -5,6 +5,7 @@ describe("links", function() {
         jasmine.Ajax.install();
 
         this.sandbox = DOM.create("div");
+        this.randomUrl = String(Date.now());
 
         DOM.find("body").append(this.sandbox);
     });
@@ -140,6 +141,6 @@ describe("links", function() {
         this.sandbox.append(link);
 
         expect(link.fire("click")).toBe(false);
-        link.on("ajaxify:complete", done);
+        link.on("ajaxify:change", done);
     });
 });
