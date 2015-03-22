@@ -65,7 +65,7 @@
                     return Promise.reject(null);
                 }
 
-                if (url === currentState.url) {
+                if (url === currentState.url && method === "get") {
                     return Promise.resolve(currentState);
                 }
 

@@ -33,11 +33,11 @@ describe("form", function() {
     });
 
     it("should send AJAX request for POST method", function() {
-        var form = DOM.mock("form[action=test method=post]");
+        var form = DOM.mock("form[method=post]");
 
         this.sandbox.append(form);
 
-        form.fire("submit");
+        form.set("action", location.href).fire("submit");
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
 
