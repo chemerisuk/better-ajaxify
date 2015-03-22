@@ -61,7 +61,13 @@
             var lockedEl;
 
             return (target, method, url, config) => {
-                if (lockedEl === target) return Promise.reject();
+                if (lockedEl === target) {
+                    return Promise.reject(null);
+                }
+
+                if (url === currentState.url) {
+                    return Promise.resolve(currentState);
+                }
 
                 if (target !== DOM) lockedEl = target;
 
@@ -114,20 +120,11 @@
     DOM.on("click", "a", ["currentTarget", "defaultPrevented"], (link, cancel) => {
         if (!cancel && !link.get("target")) {
             var url = link.get("href");
-
-            if (url === currentState.url) {
-                setTimeout(() => {
-                    link.fire("ajaxify:loadend", currentState);
-                }, 0);
-                // prevent default for links with the current url
-                return false;
-            } else if (!url.indexOf("http")) {
-                var path = url.split("#")[0];
-
-                if (path !== currentState.url.split("#")[0]) {
-                    // skip anchors and non-http(s) links
-                    return !link.fire("ajaxify:get", path);
-                }
+            var path = url.split("#")[0];
+            // skip anchors and non-http(s) links
+            if (url === currentState.url || !url.indexOf("http") &&
+                path !== currentState.url.split("#")[0]) {
+                return !link.fire("ajaxify:get", path);
             }
         }
     });
