@@ -47,29 +47,39 @@ describe("links", function() {
         expect(this.xhr).not.toBeDefined();
     });
 
-    it("should skip elements with target", function() {
+    it("should skip elements with target", function(done) {
         var link = DOM.create("a[href=test target=_blank]");
 
-        this.sandbox.append(link);
+        document.onclick = function(e) {
+            expect(e.defaultPrevented).toBe(false);
+            e.preventDefault();
+            // cleanup
+            document.onclick = null;
 
+            done();
+        };
+
+        this.sandbox.append(link);
         link.fire("click");
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
         expect(this.xhr).not.toBeDefined();
     });
 
-    it("should skip non-http", function() {
-        var link = DOM.create("a[href=`mailto:support@google.com`]"),
-            spy = jasmine.createSpy("unload"),
-            onunload = window.onbeforeunload;
+    it("should skip non-http", function(done) {
+        var link = DOM.create("a[href=`mailto:support@google.com`]");
+
+        document.onclick = function(e) {
+            expect(e.defaultPrevented).toBe(false);
+            e.preventDefault();
+            // cleanup
+            document.onclick = null;
+
+            done();
+        };
 
         this.sandbox.append(link);
-
-        window.onbeforeunload = spy;
         link.fire("click");
-        window.onbeforeunload = onunload;
-
-        expect(spy).toHaveBeenCalled();
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
         expect(this.xhr).not.toBeDefined();
