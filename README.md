@@ -40,11 +40,11 @@ The library exposes several custom events for advanced interaction.
 | ---------- | --------- | ----------- |
 | `ajaxify:get` | `url` | Event is trigerred for each `GET` request. |
 | `ajaxify:post`<br>`ajaxify:put`<br>`ajaxify:delete`<br>`ajaxify:patch` | `url`, `data` | Event is trigerred for each request other than `GET`. Argument `data` can be either `String` or `Object`, later it will be passed as a request data. |
-| `ajaxify:send` | `config` | Triggered before doing an ajax call. `config` of this event will be passed into `XHR` object instance. is particular instance of the `XMLHttpRequest` object. See [details](https://github.com/chemerisuk/better-xhr#configuration) about possible configuration. If any handler prevents default behavior then no request will be sent. |
-| `ajaxify:complete` | `response` | Triggered when an ajaxify request is completed (successfully or not). |
-| `ajaxify:success` | `response` | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `response` of this event may be a javascript object of raw response string. |
-| `ajaxify:error` | `response` | Triggered if server returned unsuccesfull response code or there was other cause of failing. |
-| `ajaxify:history` | `url` | Triggered when a user navigates through history in browser. |
+| `ajaxify:send` | `config` | Triggered before any ajaxify request. The `config` argument will be passed to appropriate `XHR` object. Check [possible configuration options](https://github.com/chemerisuk/better-xhr#configuration).<br>If you prevent default behavior of this event - no AJAX request will be sent. |
+| `ajaxify:complete` | `state` | Triggered when an ajaxify request is completed (successfully or not). |
+| `ajaxify:success` | `state` | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `state` of this event may be a javascript object of raw response string. |
+| `ajaxify:error` | `state` | Triggered if server returned unsuccesfull response code or there was other cause of failing. |
+| `ajaxify:history` | `state` | Triggered when a user navigates through history in browser. |
 
 Below is an example how you can setup Google Analytics using `ajaxify:success` event:
 
@@ -57,6 +57,16 @@ DOM.on("ajaxify:success", function(state) {
     });
 });
 ```
+
+### State objects
+The library uses state objects to store deltas of changes on a web page. Those object typically has fields below, but you can add any additional data:
+
+| Field name | Type | Description |
+| ---------- | ---- | ----------- |
+| `url` | `String` | The URL of the state. Browser address bar with be updated with it. By default equals to the request URL. |
+| `title` | `String` | Document title. By default previous `document.title` is used. |
+| `status` | `Number` | Response status code from server. |
+| `html` | `Object` | Key-value map of HTML fragments to update. Key of the map is target CSS selector, value is HTML to replace existing content with. |
 
 ### Changing state on client side
 Sometimes it's useful to change browser state on client side without requesting external resources. For instance when you already have cached/prefetched state in memory. To achieve that goal with ajaxify use custom event `ajaxify:complete`.
