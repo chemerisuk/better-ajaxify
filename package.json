@@ -14,17 +14,21 @@
     "es6-promise-polyfill": "^1.0.0"
   },
   "config": {
-    "gulp": "--gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd ."
+    "gulp": "--gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd .",
+    "karma": {
+      "files": [
+        "bower_components/better-dom/dist/better-dom.js",
+        "node_modules/es6-promise-polyfill/promise.js",
+        "bower_components/better-xhr/dist/better-xhr.js",
+        "build/*.js",
+        "test/*.spec.js"
+      ]
+    }
   },
   "scripts": {
     "test": "gulp test $npm_package_config_gulp",
     "start": "gulp dev $npm_package_config_gulp",
     "release": "gulp release $npm_package_config_gulp",
     "postrelease": "gulp gh-pages $npm_package_config_gulp"
-  },
-  "karmaFiles": [
-    "bower_components/better-dom/dist/better-dom.js",
-    "node_modules/es6-promise-polyfill/promise.js",
-    "bower_components/better-xhr/dist/better-xhr.js"
-  ]
+  }
 }
