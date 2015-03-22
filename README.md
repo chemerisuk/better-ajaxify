@@ -41,11 +41,11 @@ The library exposes several custom events for advanced interaction.
 | `ajaxify:get` | `url` | Event is trigerred for each `GET` request. |
 | `ajaxify:post`<br>`ajaxify:put`<br>`ajaxify:delete`<br>`ajaxify:patch` | `url`, `data` | Event is trigerred for each request other than `GET`. Argument `data` can be either `String` or `Object`, later it will be passed as a request data. |
 | `ajaxify:send` | `config` | Triggered before any ajaxify request. The `config` argument will be passed to appropriate `XHR` object. Check [possible configuration options](https://github.com/chemerisuk/better-xhr#configuration).<br>If you prevent default behavior of this event - no AJAX request will be sent. |
-| `ajaxify:change` | `state` | Triggered when an ajaxify request is completed (successfully or not). |
-| `ajaxify:success` | `state` | Triggered only if server responsed with succesfull status code. In this case library tries to parse `responseText` via `JSON.parse` if possible so `state` of this event may be a javascript object of raw response string. |
+| `ajaxify:change` | `state` | Triggered when an page state is going to be changed. This may happen when an AJAX request was completed (successfully or not), or user navigates thought browser history. |
+| `ajaxify:success` | `state` | Triggered only if server responded with a succesfull status code. |
 | `ajaxify:error` | `state` | Triggered if server returned unsuccesfull response code or there was other cause of failing. |
 
-Below is an example how you can setup Google Analytics using `ajaxify:success` event:
+Below is an example how you can use custom events to setup Google Analytics using `ajaxify:success` event:
 
 ```js
 // Google Analytics setup
@@ -68,12 +68,12 @@ The library uses state objects to store deltas of changes on a web page. Those o
 | `html` | `Object` | Key-value map of HTML fragments to update. Key of the map is target CSS selector, value is HTML to replace existing content with. |
 
 ### Changing state on client side
-Sometimes it's useful to change browser state on client side without requesting external resources. For instance when you already have cached/prefetched state in memory. To achieve that goal with ajaxify use custom event `ajaxify:complete`.
+Sometimes it's useful to change browser state on client side without requesting external resources. For instance when you already have cached/prefetched state in memory. To achieve that goal with ajaxify use custom event `ajaxify:change`.
 
 This event is fired automatically for any new state fetched from a server. The first agrument for the event is the state object itself. Therefore to if you trigger it manually with appropriate object, result will be the same as for regular case:
 
 ```js
-DOM.fire("ajaxify:complete", {
+DOM.fire("ajaxify:change", {
     title: "foo",
     url: "/foo"
 });
