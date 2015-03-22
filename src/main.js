@@ -105,13 +105,13 @@
             var config = {data: data, cacheBurst: false},
                 submits = target.matches("form") ? target.findAll("[type=submit]") : [];
 
-            if (target.fire("ajaxify:loadstart", config)) {
+            if (target.fire("ajaxify:send", config)) {
                 submits.forEach((el) => el.set("disabled", true));
 
                 promiseXHR(target, method, url, config).then((response) => {
                     submits.forEach((el) => el.set("disabled", false));
 
-                    target.fire("ajaxify:loadend", response);
+                    target.fire("ajaxify:complete", response);
                 });
             }
         });
@@ -139,11 +139,11 @@
         }
     });
 
-    DOM.on("ajaxify:loadend", [1, "target", "defaultPrevented"], (state, el, cancel) => {
+    DOM.on("ajaxify:complete", [1, "target", "defaultPrevented"], (state, el, cancel) => {
         var responseStatus = state.status, eventType;
 
         if (responseStatus >= 200 && responseStatus < 300 || responseStatus === 304) {
-            eventType = "ajaxify:load";
+            eventType = "ajaxify:success";
         } else {
             eventType = "ajaxify:error";
         }
@@ -182,7 +182,7 @@
         });
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:loadstart", ["target", "defaultPrevented"], (sender, canceled) => {
+        DOM.on("ajaxify:start", ["target", "defaultPrevented"], (sender, canceled) => {
             if (!canceled) {
                 // trigger native element behavior in legacy browsers
                 if (sender.matches("form")) {

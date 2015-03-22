@@ -17,14 +17,14 @@ describe("event", function() {
         this.xhr = null;
     });
 
-    describe("ajaxify:loadstart", function() {
+    describe("ajaxify:send", function() {
         it("accepts config object for XHR", function() {
             var form = DOM.mock("form[action=test method=post]>input[name=a value=b]"),
                 spy = jasmine.createSpy("loadstart");
 
             this.sandbox.append(form);
 
-            form.on("ajaxify:loadstart", spy);
+            form.on("ajaxify:send", spy);
             form.fire("submit");
 
             expect(spy).toHaveBeenCalledWith({data: {a: "b"}, cacheBurst: false});
@@ -36,7 +36,7 @@ describe("event", function() {
 
             this.sandbox.append(form);
 
-            form.on("ajaxify:loadstart", spy.and.returnValue(false));
+            form.on("ajaxify:send", spy.and.returnValue(false));
             form.fire("submit");
 
             expect(spy).toHaveBeenCalled();
@@ -46,18 +46,18 @@ describe("event", function() {
         });
     });
 
-    describe("ajaxify:loadend", function() {
+    describe("ajaxify:complete", function() {
         var dummyResponse = JSON.stringify({foo: "bar"});
 
         it("should be fired on success", function(done) {
             var link = DOM.mock("a[href=test444]"),
-                spy = jasmine.createSpy("loadend"),
+                spy = jasmine.createSpy("done"),
                 nextSpy = jasmine.createSpy("load");
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:loadend", spy.and.callThrough());
-            link.on("ajaxify:load", nextSpy);
+            link.on("ajaxify:complete", spy.and.callThrough());
+            link.on("ajaxify:success", nextSpy);
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
@@ -76,12 +76,12 @@ describe("event", function() {
 
         it("should be fired on error", function(done) {
             var link = DOM.mock("a[href=test]"),
-                spy = jasmine.createSpy("loadend"),
+                spy = jasmine.createSpy("done"),
                 nextSpy = jasmine.createSpy("error");
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:loadend", spy.and.callThrough());
+            link.on("ajaxify:complete", spy.and.callThrough());
             link.on("ajaxify:error", nextSpy);
             link.fire("click");
 
@@ -101,13 +101,13 @@ describe("event", function() {
 
         it("should allow to prevent next steps", function(done) {
             var link = DOM.mock("a[href=test]"),
-                spy = jasmine.createSpy("loadend"),
+                spy = jasmine.createSpy("done"),
                 nextSpy = jasmine.createSpy("load");
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:loadend", spy.and.returnValue(false));
-            link.on("ajaxify:load", nextSpy);
+            link.on("ajaxify:complete", spy.and.returnValue(false));
+            link.on("ajaxify:success", nextSpy);
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
@@ -126,11 +126,11 @@ describe("event", function() {
 
         it("does nothing when response was failed with an error", function(done) {
             var link = DOM.mock("a[href=nope]"),
-                spy = jasmine.createSpy("loadend");
+                spy = jasmine.createSpy("done");
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:loadend", spy);
+            link.on("ajaxify:complete", spy);
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
@@ -149,7 +149,7 @@ describe("event", function() {
 
         it("should accept response object", function(done) {
             var link = DOM.mock("a[href=test]"),
-                spy = jasmine.createSpy("loadend"),
+                spy = jasmine.createSpy("done"),
                 response = {
                     url: link.get("href"),
                     title: "title"
@@ -157,7 +157,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:loadend", spy);
+            link.on("ajaxify:complete", spy);
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();

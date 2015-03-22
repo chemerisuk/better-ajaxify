@@ -85,7 +85,7 @@ describe("form", function() {
 
             this.sandbox.append(form);
 
-            form.on("ajaxify:load", spy).fire("submit");
+            form.on("ajaxify:success", spy).fire("submit");
 
             expect(submit.get("disabled")).toBeTruthy();
 
@@ -97,14 +97,14 @@ describe("form", function() {
             });
         });
 
-        it("disabled only when ajaxify:loadstart succeed", function() {
+        it("disabled only when ajaxify:send succeed", function() {
             var form = DOM.mock("form[action=test]>button[type=submit]"),
                 submit = form.child(0),
-                spy = jasmine.createSpy("loadstart").and.returnValue(false);
+                spy = jasmine.createSpy("start").and.returnValue(false);
 
             this.sandbox.append(form);
 
-            form.on("ajaxify:loadstart", spy);
+            form.on("ajaxify:send", spy);
             form.fire("submit");
 
             expect(submit.get("disabled")).toBeFalsy();

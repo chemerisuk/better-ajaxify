@@ -130,6 +130,6 @@ describe("links", function() {
         this.sandbox.append(link);
 
         expect(link.fire("click")).toBe(false);
-        link.on("ajaxify:loadend", done);
+        link.on("ajaxify:complete", done);
     });
 });
