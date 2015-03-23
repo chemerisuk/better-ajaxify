@@ -65,7 +65,7 @@
                     return Promise.reject(null);
                 }
 
-                if (url === currentState.url) {
+                if (url === currentState.url && method === "get") {
                     return Promise.resolve(currentState);
                 }
 
@@ -106,12 +106,12 @@
                 submits = target.matches("form") ? target.findAll("[type=submit]") : [];
 
             if (target.fire("ajaxify:send", config)) {
-                submits.forEach(function(el)  {return el.set("disabled", true)});
+                submits.forEach(function(el)  { el.set("disabled", true) });
 
                 promiseXHR(target, method, url, config).then(function(response)  {
-                    submits.forEach(function(el)  {return el.set("disabled", false)});
+                    submits.forEach(function(el)  { el.set("disabled", false) });
 
-                    target.fire("ajaxify:complete", response);
+                    target.fire("ajaxify:change", response);
                 });
             }
         });
@@ -139,29 +139,27 @@
         }
     });
 
-    DOM.on("ajaxify:complete", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
-        var responseStatus = state.status, eventType;
-
-        if (responseStatus >= 200 && responseStatus < 300 || responseStatus === 304) {
-            eventType = "ajaxify:success";
-        } else {
-            eventType = "ajaxify:error";
-        }
-
-        if (!cancel && el.fire(eventType, state)) {
-            switchContent(state);
-        }
-    });
-
-    DOM.on("ajaxify:history", [1, "defaultPrevented"], function(state, cancel)  {
-        if (cancel) return;
+    DOM.on("ajaxify:change", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
+        if (cancel || !state) return;
 
         var stateIndex = stateData.lastIndexOf(state);
 
-        if (state && stateIndex >= 0) {
+        if (stateIndex >= 0) {
             switchContent(state, stateIndex);
         } else {
-            DOM.fire("ajaxify:get", location.href);
+            setTimeout(function()  {
+                var responseStatus = state.status, eventType;
+
+                if (responseStatus >= 200 && responseStatus < 300 || responseStatus === 304) {
+                    eventType = "ajaxify:success";
+                } else {
+                    eventType = "ajaxify:error";
+                }
+
+                if (el.fire(eventType, state)) {
+                    switchContent(state);
+                }
+            }, 0);
         }
     });
 
@@ -171,18 +169,14 @@
             var stateIndex = e.state;
             // numeric value indicates better-ajaxify state
             if (typeof stateIndex === "number") {
-                DOM.fire("ajaxify:history", stateData[stateIndex]);
+                DOM.fire("ajaxify:change", stateData[stateIndex]);
             }
         });
         // update initial state address url
         history.replaceState(0, DOM.get("title"));
-        // fix bug with external pages
-        window.addEventListener("beforeunload", function()  {
-            history.replaceState(0, DOM.get("title"));
-        });
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:start", ["target", "defaultPrevented"], function(sender, canceled)  {
+        DOM.on("ajaxify:send", ["target", "defaultPrevented"], function(sender, canceled)  {
             if (!canceled) {
                 // trigger native element behavior in legacy browsers
                 if (sender.matches("form")) {
