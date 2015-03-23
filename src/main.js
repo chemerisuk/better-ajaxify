@@ -176,7 +176,7 @@
         history.replaceState(0, DOM.get("title"));
     } else {
         // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:start", ["target", "defaultPrevented"], (sender, canceled) => {
+        DOM.on("ajaxify:send", ["target", "defaultPrevented"], (sender, canceled) => {
             if (!canceled) {
                 // trigger native element behavior in legacy browsers
                 if (sender.matches("form")) {

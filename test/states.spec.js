@@ -5,6 +5,7 @@ describe("state", function() {
         jasmine.Ajax.install();
 
         this.sandbox = DOM.create("div#sandbox");
+        this.randomUrl = String(Date.now());
 
         DOM.find("body").append(this.sandbox);
     });
@@ -93,33 +94,32 @@ describe("state", function() {
         });
     });
 
-    // it("should switch to stored state if it exists", function(done) {
-    //     var currentUrl = location.href,
-    //         main = DOM.mock("main"),
-    //         spy = spyOn(main, "remove");
+    it("listens to browser history changes", function(done) {
+        var sandbox = this.sandbox;
 
-    //     this.sandbox.append(main);
+        sandbox.append(DOM.mock("main"));
 
-    //     DOM.fire("ajaxify:get", "changestate");
+        DOM.fire("ajaxify:get", this.randomUrl);
 
-    //     this.xhr = jasmine.Ajax.requests.mostRecent();
-    //     this.xhr.respondWith({
-    //         status: 200,
-    //         contentType: "application/json",
-    //         responseText: JSON.stringify({html: {main: "changestate"}})
-    //     });
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        this.xhr.respondWith({
+            status: 200,
+            contentType: "application/json",
+            responseText: JSON.stringify({html: {main: "foo"}})
+        });
 
-    //     spy.and.callFake(function() {
-    //         // have to use setTimeout because of stack overflow
-    //         setTimeout(function() {
-    //             DOM.fire("ajaxify:history", currentUrl);
+        setTimeout(function() {
+            expect(sandbox.find("main").value()).toBe("foo");
 
-    //             expect(jasmine.Ajax.requests.count()).toBe(1);
+            history.back();
 
-    //             done();
-    //         }, 50);
-    //     });
-    // });
+            setTimeout(function() {
+                expect(sandbox.find("main").value()).not.toBe("foo");
+
+                done();
+            }, 60);
+        }, 30);
+    });
 
     it("should allow multiple requests for DOM", function() {
         DOM.fire("ajaxify:get", "url1", null);
