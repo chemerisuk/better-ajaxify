@@ -106,10 +106,10 @@
                 submits = target.matches("form") ? target.findAll("[type=submit]") : [];
 
             if (target.fire("ajaxify:send", config)) {
-                submits.forEach((el) => el.set("disabled", true));
+                submits.forEach((el) => { el.set("disabled", true) });
 
                 promiseXHR(target, method, url, config).then((response) => {
-                    submits.forEach((el) => el.set("disabled", false));
+                    submits.forEach((el) => { el.set("disabled", false) });
 
                     target.fire("ajaxify:change", response);
                 });
@@ -174,10 +174,6 @@
         });
         // update initial state address url
         history.replaceState(0, DOM.get("title"));
-        // fix bug with external pages
-        window.addEventListener("beforeunload", () => {
-            history.replaceState(0, DOM.get("title"));
-        });
     } else {
         // when url should be changed don't start request in old browsers
         DOM.on("ajaxify:start", ["target", "defaultPrevented"], (sender, canceled) => {

@@ -40,10 +40,10 @@ The library exposes several custom events for advanced interaction.
 | ---------- | --------- | ----------- |
 | `ajaxify:get` | `url` | Event is trigerred for each `GET` request. |
 | `ajaxify:post`<br>`ajaxify:put`<br>`ajaxify:delete`<br>`ajaxify:patch` | `url`, `data` | Event is trigerred for each request other than `GET`. Argument `data` can be either `String` or `Object`, later it will be passed as a request data. |
-| `ajaxify:send` | `config` | Triggered before any ajaxify request. The `config` argument will be passed to appropriate `XHR` object. Check [possible configuration options](https://github.com/chemerisuk/better-xhr#configuration).<br>If you prevent default behavior of this event - no AJAX request will be sent. |
+| `ajaxify:send` | `config` | Triggered before any ajaxify request. The `config` argument will be passed to appropriate `XHR` object. Check [possible configuration options](https://github.com/chemerisuk/better-xhr#configuration). If default behavior was prevented - no AJAX request will be sent. |
 | `ajaxify:change` | `state` | Triggered when an page state is going to be changed. This may happen when an AJAX request was completed (successfully or not), or user navigates thought browser history. |
 | `ajaxify:success` | `state` | Triggered only if server responded with a succesfull status code. |
-| `ajaxify:error` | `state` | Triggered if server returned unsuccesfull response code or there was other cause of failing. |
+| `ajaxify:error` | `state` | Triggered if server returned an unsuccesfull response code. |
 
 Below is an example how you can use custom events to setup Google Analytics using `ajaxify:success` event:
 
