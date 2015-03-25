@@ -131,6 +131,13 @@ describe("event", function() {
             this.sandbox.append(link);
 
             link.on("ajaxify:change", spy);
+            link.on("ajaxify:error", function(err) {
+                expect(err instanceof Error).toBe(true);
+                expect(spy).not.toHaveBeenCalled();
+
+                done();
+            });
+
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();
@@ -139,12 +146,6 @@ describe("event", function() {
                 responseText: "{1:1}",
                 contentType: "application/json"
             });
-
-            setTimeout(function() {
-                expect(spy).not.toHaveBeenCalled();
-
-                done();
-            }, 50);
         });
 
         it("should accept response object", function(done) {
