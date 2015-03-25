@@ -66,6 +66,7 @@ The library uses state objects to store deltas of changes on a web page. Those o
 | `title` | `String` | Document title. By default previous `document.title` is used. |
 | `status` | `Number` | Response status code from server. |
 | `html` | `Object` | Key-value map of HTML fragments to update. Key of the map is target CSS selector, value is HTML to replace existing content with. |
+| `timestamp` | `Number` | State creation timestamp |
 
 ### Changing state on client side
 Sometimes it's useful to change browser state on client side without requesting external resources. For instance when you already have cached/prefetched state in memory. To achieve that goal with ajaxify use custom event `ajaxify:change`.
