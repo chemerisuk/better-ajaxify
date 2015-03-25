@@ -56,25 +56,27 @@
                 history.pushState(stateData.length, state.title, state.url);
             }
         },
-        promiseXHR = (function() {
-            // lock element to prevent double clicks
-            var lockedEl;
-
+        promiseXHR = (function(lockedUrl) {
             return (target, method, url, config) => {
-                if (lockedEl === target) {
-                    return Promise.reject(null);
+                if (method === "get") {
+                    if (url === currentState.url) {
+                        // if target url is the same as the current one
+                        // then trigger success early
+                        return Promise.resolve(currentState);
+                    } else if (url === lockedUrl) {
+                        // don't start a new request if request with
+                        // the same URL is already in progress
+                        return Promise.reject();
+                    } else {
+                        // remember target URL to prevent double requests
+                        lockedUrl = url;
+                    }
                 }
-
-                if (url === currentState.url && method === "get") {
-                    return Promise.resolve(currentState);
-                }
-
-                if (target !== DOM) lockedEl = target;
 
                 var xhr = XHR(method, url, config);
                 var complete = (state) => {
                     // cleanup outer variables
-                    if (target !== DOM) lockedEl = null;
+                    lockedUrl = null;
 
                     if (state instanceof Error) {
                         // do nothing when request was failed

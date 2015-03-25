@@ -5,7 +5,7 @@ describe("links", function() {
         jasmine.Ajax.install();
 
         this.sandbox = DOM.create("div");
-        this.randomUrl = String(Date.now());
+        this.randomUrl = Math.random().toString(32).slice(2);
 
         DOM.find("body").append(this.sandbox);
     });
@@ -109,7 +109,7 @@ describe("links", function() {
     });
 
     it("should handle click on elements with internal tree", function() {
-        var link = DOM.create("a[href=test]>i>`icon`");
+        var link = DOM.create("a[href=`{0}`]>i>`icon`", [this.randomUrl]);
 
         this.sandbox.append(link);
 
@@ -123,7 +123,7 @@ describe("links", function() {
     });
 
     it("should not allow to send the same request twice", function() {
-        var link = DOM.create("a[href=test]");
+        var link = DOM.create("a[href=`{0}`]", [this.randomUrl]);
 
         this.sandbox.append(link);
 

@@ -185,4 +185,11 @@ describe("event", function() {
 
         expect(jasmine.Ajax.requests.count()).toBe(0);
     });
+
+    it("doesn't allow double get requests with the same URL", function() {
+        DOM.fire("ajaxify:get", "123");
+        DOM.fire("ajaxify:get", "123");
+
+        expect(jasmine.Ajax.requests.count()).toBe(1);
+    });
 });
