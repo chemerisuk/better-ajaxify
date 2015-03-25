@@ -90,6 +90,7 @@
                     state.url = state.url || url;
                     state.title = state.title || DOM.get("title");
                     state.status = xhr[0].status;
+                    state.timestamp = Date.now();
 
                     return Promise.resolve(state);
                 };

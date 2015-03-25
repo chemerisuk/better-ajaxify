@@ -169,11 +169,11 @@ describe("event", function() {
             });
 
             spy.and.callFake(function() {
-                expect(spy).toHaveBeenCalledWith({
+                expect(spy).toHaveBeenCalledWith(jasmine.objectContaining({
                     url: link.get("href"),
                     title: "title",
                     status: 200
-                });
+                }));
 
                 done();
             });
