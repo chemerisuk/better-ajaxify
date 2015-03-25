@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 1.8.0-beta.2 Mon, 23 Mar 2015 16:21:00 GMT
+ * @version 1.8.0-beta.3 Wed, 25 Mar 2015 09:05:01 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2015 Maksim Chemerisuk
  * @license MIT
@@ -63,25 +63,27 @@
                 history.pushState(stateData.length, state.title, state.url);
             }
         },
-        promiseXHR = (function() {
-            // lock element to prevent double clicks
-            var lockedEl;
-
+        promiseXHR = (function(lockedUrl) {
             return function(target, method, url, config)  {
-                if (lockedEl === target) {
-                    return Promise.reject(null);
+                if (method === "get") {
+                    if (url === currentState.url) {
+                        // if target url is the same as the current one
+                        // then trigger success early
+                        return Promise.resolve(currentState);
+                    } else if (url === lockedUrl) {
+                        // don't start a new request if request with
+                        // the same URL is already in progress
+                        return Promise.reject();
+                    } else {
+                        // remember target URL to prevent double requests
+                        lockedUrl = url;
+                    }
                 }
-
-                if (url === currentState.url && method === "get") {
-                    return Promise.resolve(currentState);
-                }
-
-                if (target !== DOM) lockedEl = target;
 
                 var xhr = XHR(method, url, config);
                 var complete = function(state)  {
                     // cleanup outer variables
-                    if (target !== DOM) lockedEl = null;
+                    lockedUrl = null;
 
                     if (state instanceof Error) {
                         // do nothing when request was failed
@@ -97,6 +99,7 @@
                     state.url = state.url || url;
                     state.title = state.title || DOM.get("title");
                     state.status = xhr[0].status;
+                    state.timestamp = Date.now();
 
                     return Promise.resolve(state);
                 };
@@ -119,6 +122,8 @@
                     submits.forEach(function(el)  { el.set("disabled", false) });
 
                     target.fire("ajaxify:change", response);
+                }, function(err)  {
+                    target.fire("ajaxify:error", err);
                 });
             }
         });
