@@ -2,7 +2,7 @@
     "use strict";
 
     var stateData = [], // in-memory storage for states
-        currentState = {url: location.href.split("#")[0]},
+        currentState = {url: location.href.split("#")[0], status: 200},
         previousEls = [],
         switchContent = (state, stateIndex) => {
             if (typeof state !== "object" || typeof state.html !== "object" || state === currentState) return;
