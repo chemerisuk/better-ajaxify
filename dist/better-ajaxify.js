@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 1.8.0-beta.3 Wed, 25 Mar 2015 09:05:01 GMT
+ * @version 1.8.0 Thu, 02 Apr 2015 19:12:19 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2015 Maksim Chemerisuk
  * @license MIT
@@ -9,7 +9,7 @@
     "use strict";
 
     var stateData = [], // in-memory storage for states
-        currentState = {url: location.href.split("#")[0]},
+        currentState = {url: location.href.split("#")[0], status: 200},
         previousEls = [],
         switchContent = function(state, stateIndex)  {
             if (typeof state !== "object" || typeof state.html !== "object" || state === currentState) return;
@@ -133,10 +133,17 @@
         if (!cancel && !link.get("target")) {
             var url = link.get("href");
             var path = url.split("#")[0];
-            // skip anchors and non-http(s) links
-            if (url === currentState.url || !url.indexOf("http") &&
-                path !== currentState.url.split("#")[0]) {
-                return !link.fire("ajaxify:get", path);
+            // skip non-http(s) links
+            if (url.indexOf("http") === 0) {
+                if (url === currentState.url || path !== currentState.url.split("#")[0]) {
+                    // override default bahavior for links
+                    return !link.fire("ajaxify:get", path);
+                } else {
+                    // override default bahavior for anchors
+                    location.hash = link.get("hash");
+                    // and prevent default one
+                    return false;
+                }
             }
         }
     });
