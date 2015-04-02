@@ -97,12 +97,12 @@ describe("links", function() {
         expect(this.xhr).not.toBeDefined();
     });
 
-    it("skips anchors", function() {
+    it("overrides default behavior for anchors", function() {
         var link = DOM.create("a[href=#foo]");
 
         this.sandbox.append(link);
 
-        expect(link.fire("click")).toBe(true);
+        expect(link.fire("click")).toBe(false);
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
         expect(this.xhr).not.toBeDefined();
