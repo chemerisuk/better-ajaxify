@@ -50,7 +50,7 @@ describe("state", function() {
         this.sandbox.append(link);
 
         link.fire("click");
-        link.on("ajaxify:change", function(state) {
+        link.on("ajaxify:load", function(state) {
             expect(state).toEqual(jasmine.objectContaining({
                 html: {body: "foo"}
             }));
@@ -124,11 +124,11 @@ describe("state", function() {
     it("triggers error event for timed responses", function(done) {
         var changeSpy = jasmine.createSpy("change");
 
-        DOM.once("ajaxify:change", changeSpy);
+        DOM.once("ajaxify:load", changeSpy);
         DOM.once("ajaxify:error", function() {
             expect(changeSpy).not.toHaveBeenCalled();
 
-            DOM.off("ajaxify:change", changeSpy);
+            DOM.off("ajaxify:load", changeSpy);
 
             done();
         });

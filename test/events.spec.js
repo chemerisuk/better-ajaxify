@@ -46,7 +46,7 @@ describe("event", function() {
         });
     });
 
-    describe("ajaxify:change", function() {
+    describe("ajaxify:load", function() {
         var dummyResponse = JSON.stringify({foo: "bar"});
 
         it("should be fired on success", function(done) {
@@ -56,7 +56,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:change", spy.and.callThrough());
+            link.on("ajaxify:load", spy.and.callThrough());
             link.on("ajaxify:success", nextSpy);
             link.fire("click");
 
@@ -81,7 +81,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:change", spy.and.callThrough());
+            link.on("ajaxify:load", spy.and.callThrough());
             link.on("ajaxify:error", nextSpy);
             link.fire("click");
 
@@ -106,7 +106,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:change", spy.and.returnValue(false));
+            link.on("ajaxify:load", spy.and.returnValue(false));
             link.on("ajaxify:success", nextSpy);
             link.fire("click");
 
@@ -130,7 +130,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:change", spy);
+            link.on("ajaxify:load", spy);
             link.on("ajaxify:error", function(err) {
                 expect(err instanceof Error).toBe(true);
                 expect(spy).not.toHaveBeenCalled();
@@ -158,7 +158,7 @@ describe("event", function() {
 
             this.sandbox.append(link);
 
-            link.on("ajaxify:change", spy);
+            link.on("ajaxify:load", spy);
             link.fire("click");
 
             this.xhr = jasmine.Ajax.requests.mostRecent();

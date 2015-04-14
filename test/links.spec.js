@@ -141,6 +141,6 @@ describe("links", function() {
         this.sandbox.append(link);
 
         expect(link.fire("click")).toBe(false);
-        link.on("ajaxify:change", done);
+        link.on("ajaxify:load", done);
     });
 });
