@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 1.8.0 Thu, 02 Apr 2015 19:12:19 GMT
+ * @version 1.8.1 Tue, 14 Apr 2015 16:44:20 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2015 Maksim Chemerisuk
  * @license MIT
@@ -85,7 +85,7 @@
                     // cleanup outer variables
                     lockedUrl = null;
 
-                    if (state instanceof Error) {
+                    if (!state || state instanceof Error) {
                         // do nothing when request was failed
                         return Promise.reject(state);
                     }
@@ -121,8 +121,10 @@
                 promiseXHR(target, method, url, config).then(function(response)  {
                     submits.forEach(function(el)  { el.set("disabled", false) });
 
-                    target.fire("ajaxify:change", response);
+                    target.fire("ajaxify:load", response);
                 }, function(err)  {
+                    submits.forEach(function(el)  { el.set("disabled", false) });
+
                     target.fire("ajaxify:error", err);
                 });
             }
@@ -158,7 +160,7 @@
         }
     });
 
-    DOM.on("ajaxify:change", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
+    DOM.on("ajaxify:load", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
         if (cancel || !state) return;
 
         var stateIndex = stateData.lastIndexOf(state);
@@ -188,7 +190,7 @@
             var stateIndex = e.state;
             // numeric value indicates better-ajaxify state
             if (typeof stateIndex === "number") {
-                DOM.fire("ajaxify:change", stateData[stateIndex]);
+                DOM.fire("ajaxify:load", stateData[stateIndex]);
             }
         });
         // update initial state address url
