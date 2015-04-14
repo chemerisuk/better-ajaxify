@@ -116,6 +116,8 @@
 
                     target.fire("ajaxify:load", response);
                 }, function(err)  {
+                    submits.forEach(function(el)  { el.set("disabled", false) });
+
                     target.fire("ajaxify:error", err);
                 });
             }
