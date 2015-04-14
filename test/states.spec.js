@@ -121,6 +121,28 @@ describe("state", function() {
         }, 30);
     });
 
+    it("triggers error event for timed responses", function(done) {
+        var changeSpy = jasmine.createSpy("change");
+
+        DOM.once("ajaxify:change", changeSpy);
+        DOM.once("ajaxify:error", function() {
+            expect(changeSpy).not.toHaveBeenCalled();
+
+            DOM.off("ajaxify:change", changeSpy);
+
+            done();
+        });
+
+        DOM.fire("ajaxify:get", this.randomUrl);
+
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        this.xhr.respondWith({
+            status: 0,
+            contentType: "text/plain",
+            responseText: ""
+        });
+    });
+
     it("should allow multiple requests for DOM", function() {
         DOM.fire("ajaxify:get", "url1", null);
         DOM.fire("ajaxify:get", "url2");

@@ -78,7 +78,7 @@
                     // cleanup outer variables
                     lockedUrl = null;
 
-                    if (state instanceof Error) {
+                    if (!state || state instanceof Error) {
                         // do nothing when request was failed
                         return Promise.reject(state);
                     }
