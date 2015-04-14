@@ -78,7 +78,7 @@
                     // cleanup outer variables
                     lockedUrl = null;
 
-                    if (state instanceof Error) {
+                    if (!state || state instanceof Error) {
                         // do nothing when request was failed
                         return Promise.reject(state);
                     }
@@ -114,7 +114,7 @@
                 promiseXHR(target, method, url, config).then(function(response)  {
                     submits.forEach(function(el)  { el.set("disabled", false) });
 
-                    target.fire("ajaxify:change", response);
+                    target.fire("ajaxify:load", response);
                 }, function(err)  {
                     target.fire("ajaxify:error", err);
                 });
@@ -151,7 +151,7 @@
         }
     });
 
-    DOM.on("ajaxify:change", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
+    DOM.on("ajaxify:load", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
         if (cancel || !state) return;
 
         var stateIndex = stateData.lastIndexOf(state);
@@ -181,7 +181,7 @@
             var stateIndex = e.state;
             // numeric value indicates better-ajaxify state
             if (typeof stateIndex === "number") {
-                DOM.fire("ajaxify:change", stateData[stateIndex]);
+                DOM.fire("ajaxify:load", stateData[stateIndex]);
             }
         });
         // update initial state address url

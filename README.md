@@ -41,7 +41,7 @@ The library exposes several custom events for advanced interaction.
 | `ajaxify:get` | `url` | Event is trigerred for each `GET` request. |
 | `ajaxify:post`<br>`ajaxify:put`<br>`ajaxify:delete`<br>`ajaxify:patch` | `url`, `data` | Event is trigerred for each request other than `GET`. Argument `data` can be either `String` or `Object`, later it will be passed as a request data. |
 | `ajaxify:send` | `config` | Triggered before any ajaxify request. The `config` argument will be passed to appropriate `XHR` object. Check [possible configuration options](https://github.com/chemerisuk/better-xhr#configuration). If default behavior was prevented - no AJAX request will be sent. |
-| `ajaxify:change` | `state` | Triggered when an page state is going to be changed. This may happen when an AJAX request was completed (successfully or not), or user navigates thought browser history. |
+| `ajaxify:load` | `state` | Triggered when an page state is going to be changed. This may happen when an AJAX request was completed (successfully or not), or user navigates thought browser history. |
 | `ajaxify:success` | `state` | Triggered only if server responded with a succesfull status code. |
 | `ajaxify:error` | `state` | Triggered if server returned an unsuccesfull response code. |
 
@@ -69,12 +69,12 @@ The library uses state objects to store deltas of changes on a web page. Those o
 | `timestamp` | `Number` | State creation timestamp |
 
 ### Changing state on client side
-Sometimes it's useful to change browser state on client side without requesting external resources. For instance when you already have cached/prefetched state in memory. To achieve that goal with ajaxify use custom event `ajaxify:change`.
+Sometimes it's useful to change browser state on client side without requesting external resources. For instance when you already have cached/prefetched state in memory. To achieve that goal with ajaxify use custom event `ajaxify:load`.
 
 This event is fired automatically for any new state fetched from a server. The first agrument for the event is the state object itself. Therefore to if you trigger it manually with appropriate object, result will be the same as for regular case:
 
 ```js
-DOM.fire("ajaxify:change", {
+DOM.fire("ajaxify:load", {
     title: "foo",
     url: "/foo"
 });
