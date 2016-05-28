@@ -188,6 +188,10 @@
         });
         // update initial state address url
         history.replaceState(0, DOM.get("title"));
+        // destroy current url state when user leaves
+        window.addEventListener("beforeunload", () => {
+            history.replaceState(null, document.title, currentState.url);
+        }, false);
     } else {
         // when url should be changed don't start request in old browsers
         DOM.on("ajaxify:send", ["target", "defaultPrevented"], (sender, canceled) => {
