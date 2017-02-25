@@ -29,6 +29,19 @@
         }
     }
 
+    function updateCurrentState(target, selector, title) {
+        currentState.title = document.title;
+        currentState.target = target;
+        currentState.selector = selector;
+
+        if (states.indexOf(currentState) < 0) {
+            // if state does not exist - store it in memory
+            states.push(currentState);
+        }
+
+        document.title = title;
+    }
+
     document.addEventListener("click", function(e) {
         const el = e.target;
 
@@ -71,59 +84,43 @@
                 const url = xhr.getResponseHeader("X-Ajaxify-Url") || xhr.responseURL;
                 const title = xhr.getResponseHeader("X-Ajaxify-Title") || document.title;
 
-                currentState.title = document.title;
-                currentState.target = target;
-                currentState.selector = selector;
-
-                var currentStateIndex = states.indexOf(currentState);
-                if (currentStateIndex < 0) {
-                    // if state does not exist - store it in memory
-                    currentStateIndex = states.push(currentState) - 1;
-                }
-
-                currentState = {}; // create a new state
+                updateCurrentState(target, selector, title);
 
                 if (url !== location.href) {
-                    document.title = currentState.title;
-
-                    history.pushState(1 + states.length, title, url);
+                    history.pushState(states.length, title, url);
                 }
+
+                currentState = {}; // create a new state object
             }
+        }
+    }, false);
+
+    // default behavior for a content replacement
+    document.addEventListener("ajaxify:replace", function(e) {
+        if (!e.defaultPrevented) {
+            const target = e.target;
+
+            target.parentNode.replaceChild(e.detail, target);
         }
     }, false);
 
     window.addEventListener("popstate", function(e) {
         var stateIndex = e.state;
         // numeric value indicates better-ajaxify state
-        if (stateIndex > 0) {
-            const state = states[stateIndex - 1];
-            const target = document.querySelector(state.selector);
+        if (stateIndex >= 0) {
+            const state = states[stateIndex];
+            const selector = state.selector;
+            const target = document.querySelector(selector);
 
             if (target && dispatchAjaxifyEvent(target, "replace", state.target)) {
-                currentState.title = document.title;
-                currentState.target = target;
-                currentState.selector = state.selector;
-
-                var currentStateIndex = states.indexOf(currentState);
-                if (currentStateIndex < 0) {
-                    // if state does not exist - store it in memory
-                    currentStateIndex = states.push(currentState) - 1;
-                }
+                updateCurrentState(target, selector, state.title);
 
                 currentState = state;
-
-                document.title = currentState.title;
             }
         }
     });
 
     // update initial state address url
-    history.replaceState(1, document.title);
+    history.replaceState(0, document.title);
 
-    // default behavior for content replacement
-    document.addEventListener("ajaxify:replace", function(e) {
-        const target = e.target;
-
-        target.parentNode.replaceChild(e.detail, target);
-    }, false);
 }(window.document, window.location, window.history));
