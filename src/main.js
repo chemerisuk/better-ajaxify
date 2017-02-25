@@ -81,30 +81,21 @@
     document.addEventListener("ajaxify:fetch", function(e) {
         if (!e.defaultPrevented) {
             const el = e.target;
+            const xhr = new XMLHttpRequest();
+            const method = (el.method || "get").toUpperCase();
 
-            var url = e.detail;
-            var method = "get";
-            var data = null;
+            ["abort", "error", "load", "timeout"].forEach((type) => {
+                xhr["on" + type] = () => {
+                    dispatchAjaxifyEvent(el, type, xhr);
+                };
+            });
 
-            if (el.nodeName.toLowerCase() === "form") {
-                method = el.method || method;
-                // TODO: serialize form data
-            }
+            xhr.open(method, e.detail, true);
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            xhr.data = null;
 
-            if (typeof url === "string") {
-                const xhr = new XMLHttpRequest();
-
-                xhr.onabort = () => dispatchAjaxifyEvent(el, "abort", xhr);
-                xhr.onerror = () => dispatchAjaxifyEvent(el, "error", xhr);
-                xhr.onload = () => dispatchAjaxifyEvent(el, "load", xhr);
-
-                xhr.open(method, url, true);
-                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-                xhr.data = data;
-
-                if (dispatchAjaxifyEvent(el, "send", xhr)) {
-                    xhr.send(xhr.data);
-                }
+            if (dispatchAjaxifyEvent(el, "send", xhr)) {
+                xhr.send(xhr.data);
             }
         }
     }, false);
