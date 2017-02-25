@@ -46,18 +46,30 @@
         const el = e.target;
 
         if (!e.defaultPrevented) {
-            const tagName = el.nodeName.toLowerCase();
+            var targetLink;
 
-            if (tagName === "a" && !el.target) {
-                // skip non-http(s) links
-                if (el.protocol.indexOf("http") === 0) {
-                    if (dispatchAjaxifyEvent(el, "fetch")) {
-                        e.preventDefault();
+            if (el.tagName.toLowerCase() === "a") {
+                // detected click on a link
+                targetLink = el;
+            } else {
+                const focusedElement = document.activeElement;
+
+                if (focusedElement.tagName.toLowerCase() === "a") {
+                    if (focusedElement.contains(el)) {
+                        // detected click on a link inner element
+                        targetLink = focusedElement;
                     }
                 }
             }
 
-            // TODO: handle HTML elements inside of a link
+            if (targetLink && !targetLink.target) {
+                // skip non-http(s) links
+                if (targetLink.protocol.indexOf("http") === 0) {
+                    if (dispatchAjaxifyEvent(targetLink, "fetch")) {
+                        e.preventDefault();
+                    }
+                }
+            }
         }
     }, false);
 
