@@ -48,9 +48,19 @@
             }
 
             if (targetLink && !targetLink.target) {
-                // skip non-http(s) links
-                if (targetLink.protocol.indexOf("http") === 0) {
-                    if (dispatchAjaxifyEvent(targetLink, "fetch", targetLink.href)) {
+                // handle only http(s) links
+                if (targetLink.protocol.slice(0, 4) === "http") {
+                    const targetUrl = targetLink.href;
+                    const currentUrl = location.href;
+
+                    if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
+                        if (dispatchAjaxifyEvent(targetLink, "fetch", targetLink.href)) {
+                            // override default bahavior for links
+                            e.preventDefault();
+                        }
+                    } else {
+                        location.hash = targetLink.hash;
+                        // override default bahavior for anchors
                         e.preventDefault();
                     }
                 }
