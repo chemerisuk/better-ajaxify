@@ -6,17 +6,17 @@
     const states = []; // in-memory storage for states
     var currentState = {};
 
-    function dispatchAjaxifyEvent(target, eventType, eventDetail) {
+    function dispatchAjaxifyEvent(el, eventType, eventDetail) {
         const e = document.createEvent("CustomEvent");
 
         e.initCustomEvent("ajaxify:" + eventType, true, true, eventDetail || null);
 
-        return target.dispatchEvent(e);
+        return el.dispatchEvent(e);
     }
 
-    function updateCurrentState(target, title) {
+    function updateCurrentState(el, title) {
+        currentState.el = el;
         currentState.title = document.title;
-        currentState.target = target;
 
         if (states.indexOf(currentState) < 0) {
             // if state does not exist - store it in memory
@@ -27,38 +27,38 @@
     }
 
     document.addEventListener("click", function(e) {
-        const el = e.target;
-
         if (!e.defaultPrevented) {
-            var targetLink;
+            const el = e.target;
+
+            var link;
 
             if (el.nodeName.toLowerCase() === "a") {
                 // detected click on a link
-                targetLink = el;
+                link = el;
             } else {
                 const focusedElement = document.activeElement;
 
                 if (focusedElement.nodeName.toLowerCase() === "a") {
                     if (focusedElement.contains(el)) {
                         // detected click on a link inner element
-                        targetLink = focusedElement;
+                        link = focusedElement;
                     }
                 }
             }
 
-            if (targetLink && !targetLink.target) {
+            if (link && !link.target) {
                 // handle only http(s) links
-                if (targetLink.protocol.slice(0, 4) === "http") {
-                    const targetUrl = targetLink.href;
+                if (link.protocol.slice(0, 4) === "http") {
+                    const targetUrl = link.href;
                     const currentUrl = location.href;
 
                     if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
-                        if (dispatchAjaxifyEvent(targetLink, "fetch", targetLink.href)) {
+                        if (dispatchAjaxifyEvent(link, "fetch", link.href)) {
                             // override default bahavior for links
                             e.preventDefault();
                         }
                     } else {
-                        location.hash = targetLink.hash;
+                        location.hash = link.hash;
                         // override default bahavior for anchors
                         e.preventDefault();
                     }
@@ -68,10 +68,10 @@
     }, false);
 
     document.addEventListener("submit", function(e) {
-        const el = e.target;
+        if (!e.defaultPrevented) {
+            const el = e.target;
 
-        if (!e.defaultPrevented && !el.target) {
-            if (dispatchAjaxifyEvent(el, "fetch", el.action)) {
+            if (!el.target && dispatchAjaxifyEvent(el, "fetch", el.action)) {
                 e.preventDefault();
             }
         }
@@ -81,7 +81,6 @@
         if (!e.defaultPrevented) {
             const el = e.target;
             const xhr = new XMLHttpRequest();
-            const method = (el.method || "get").toUpperCase();
 
             ["abort", "error", "load", "timeout"].forEach((type) => {
                 xhr["on" + type] = () => {
@@ -89,7 +88,7 @@
                 };
             });
 
-            xhr.open(method, e.detail, true);
+            xhr.open((el.method || "get").toUpperCase(), e.detail, true);
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
             xhr.responseType = "document";
             xhr.data = null;
@@ -105,23 +104,23 @@
         const res = xhr.response;
         const resBody = res.body;
 
-        var target = document.body;
+        var el = document.body;
         var replacement = resBody;
 
         if (resBody.id) {
-            target = document.getElementById(resBody.id);
-            replacement = target.cloneNode(false);
+            el = document.getElementById(resBody.id);
+            replacement = el.cloneNode(false);
             // move all elements to replacement
-            for (var it; it = resBody.firstChild; ) {
-                replacement.appendChild(it);
+            for (var node; node = resBody.firstChild; ) {
+                replacement.appendChild(node);
             }
         }
 
-        if (dispatchAjaxifyEvent(target, "replace", replacement)) {
+        if (dispatchAjaxifyEvent(el, "replace", replacement)) {
             const url = res.URL || xhr.responseURL;
             const title = res.title || document.title;
 
-            updateCurrentState(target, title);
+            updateCurrentState(el, title);
 
             if (url !== location.href) {
                 history.pushState(states.length, title, url);
@@ -134,9 +133,9 @@
     // default behavior for a content replacement
     document.addEventListener("ajaxify:replace", function(e) {
         if (!e.defaultPrevented) {
-            const target = e.target;
+            const el = e.target;
 
-            target.parentNode.replaceChild(e.detail, target);
+            el.parentNode.replaceChild(e.detail, el);
         }
     }, false);
 
@@ -145,11 +144,11 @@
         // numeric value indicates better-ajaxify state
         if (stateIndex >= 0) {
             const state = states[stateIndex];
-            const id = state.target.id;
-            const target = id ? document.getElementById(id) : document.body;
+            const id = state.el.id;
+            const el = id ? document.getElementById(id) : document.body;
 
-            if (target && dispatchAjaxifyEvent(target, "replace", state.target)) {
-                updateCurrentState(target, state.title);
+            if (el && dispatchAjaxifyEvent(el, "replace", state.el)) {
+                updateCurrentState(el, state.title);
 
                 currentState = state;
             }
