@@ -14,21 +14,6 @@
         return target.dispatchEvent(e);
     }
 
-    function sendAjaxRequest(target, method, url, data) {
-        var xhr = new XMLHttpRequest();
-
-        xhr.onabort = () => dispatchAjaxifyEvent(target, "abort", xhr);
-        xhr.onerror = () => dispatchAjaxifyEvent(target, "error", xhr);
-        xhr.onload = () => dispatchAjaxifyEvent(target, "load", xhr);
-
-        xhr.open(method, url, true);
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-        if (dispatchAjaxifyEvent(target, "send", data)) {
-            xhr.send(data);
-        }
-    }
-
     function updateCurrentState(target, selector, title) {
         currentState.title = document.title;
         currentState.target = target;
@@ -48,13 +33,13 @@
         if (!e.defaultPrevented) {
             var targetLink;
 
-            if (el.tagName.toLowerCase() === "a") {
+            if (el.nodeName.toLowerCase() === "a") {
                 // detected click on a link
                 targetLink = el;
             } else {
                 const focusedElement = document.activeElement;
 
-                if (focusedElement.tagName.toLowerCase() === "a") {
+                if (focusedElement.nodeName.toLowerCase() === "a") {
                     if (focusedElement.contains(el)) {
                         // detected click on a link inner element
                         targetLink = focusedElement;
@@ -65,7 +50,7 @@
             if (targetLink && !targetLink.target) {
                 // skip non-http(s) links
                 if (targetLink.protocol.indexOf("http") === 0) {
-                    if (dispatchAjaxifyEvent(targetLink, "fetch")) {
+                    if (dispatchAjaxifyEvent(targetLink, "fetch", targetLink.href)) {
                         e.preventDefault();
                     }
                 }
@@ -73,12 +58,44 @@
         }
     }, false);
 
-    document.addEventListener("ajaxify:fetch", function(e) {
+    document.addEventListener("submit", function(e) {
         const el = e.target;
-        const tagName = el.nodeName.toLowerCase();
 
-        if (tagName === "a") {
-            sendAjaxRequest(el, "get", el.href);
+        if (!e.defaultPrevented && !el.target) {
+            if (dispatchAjaxifyEvent(el, "fetch", el.action)) {
+                e.preventDefault();
+            }
+        }
+    }, false);
+
+    document.addEventListener("ajaxify:fetch", function(e) {
+        if (!e.defaultPrevented) {
+            const el = e.target;
+
+            var url = e.detail;
+            var method = "get";
+            var data = null;
+
+            if (el.nodeName.toLowerCase() === "form") {
+                method = el.method || method;
+                // TODO: serialize form data
+            }
+
+            if (typeof url === "string") {
+                const xhr = new XMLHttpRequest();
+
+                xhr.onabort = () => dispatchAjaxifyEvent(el, "abort", xhr);
+                xhr.onerror = () => dispatchAjaxifyEvent(el, "error", xhr);
+                xhr.onload = () => dispatchAjaxifyEvent(el, "load", xhr);
+
+                xhr.open(method, url, true);
+                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+                xhr.data = data;
+
+                if (dispatchAjaxifyEvent(el, "send", xhr)) {
+                    xhr.send(xhr.data);
+                }
+            }
         }
     }, false);
 
