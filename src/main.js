@@ -1,208 +1,129 @@
-(function(DOM, XHR, location) {
+(function(document, location, history) {
     "use strict";
 
-    var stateData = [], // in-memory storage for states
-        currentState = {url: location.href.split("#")[0], status: 200},
-        previousEls = [],
-        switchContent = (state, stateIndex) => {
-            if (typeof state !== "object" || typeof state.html !== "object" || state === currentState) return;
+    if (!history.pushState) return; // skip unsupported browsers
 
-            currentState.html = {};
-            currentState.title = DOM.get("title");
-            // always make sure that previous state was completed
-            // it can be in-progress on very fast history navigation
-            previousEls.forEach((el) => el.remove());
+    const states = []; // in-memory storage for states
+    var currentState = {};
 
-            var currentStateIndex = stateData.indexOf(currentState);
+    function dispatchAjaxifyEvent(target, eventType, eventDetail) {
+        const e = document.createEvent("CustomEvent");
 
-            if (currentStateIndex < 0) {
-                // store the current state in memory
-                currentStateIndex = stateData.push(currentState) - 1;
-            }
+        e.initCustomEvent("ajaxify:" + eventType, true, true, eventDetail || null);
 
-            previousEls = Object.keys(state.html).map((selector) => {
-                var el = DOM.find(selector),
-                    content = state.html[selector];
-
-                // store reference to node in the state object
-                currentState.html[selector] = el;
-
-                if (content != null) {
-                    if (typeof content === "string") {
-                        // clone el that is already in the hidden state
-                        content = el.clone(false).set(content).hide();
-                    }
-                    // insert new state content
-                    el[currentStateIndex > stateIndex ? "after" : "before"](content);
-                    // show current content
-                    content.show(() => {
-                        // autofocus attribute support
-                        content.find("[autofocus]").fire("focus");
-                    });
-                }
-
-                // Hide old content and remove when it's done. Use requestFrame
-                // to postpone layout triggered by the remove method call
-                el.hide(() => DOM.requestFrame(() => el.remove()));
-
-                return el;
-            });
-            // update current state to the latest
-            currentState = state;
-            // update page title
-            DOM.set("title", state.title);
-            // update url in address bar
-            if (state.url !== location.href && stateIndex == null) {
-                history.pushState(stateData.length, state.title, state.url);
-            }
-        },
-        promiseXHR = (function(lockedUrl) {
-            return (target, method, url, config) => {
-                if (method === "get") {
-                    if (url === currentState.url) {
-                        // if target url is the same as the current one
-                        // then trigger success early
-                        return Promise.resolve(currentState);
-                    } else if (url === lockedUrl) {
-                        // don't start a new request if request with
-                        // the same URL is already in progress
-                        return Promise.reject();
-                    } else {
-                        // remember target URL to prevent double requests
-                        lockedUrl = url;
-                    }
-                }
-
-                var xhr = XHR(method, url, config);
-                var complete = (state) => {
-                    // cleanup outer variables
-                    lockedUrl = null;
-
-                    if (!state || state instanceof Error) {
-                        // do nothing when request was failed
-                        return Promise.reject(state);
-                    }
-
-                    if (typeof state === "string") {
-                        // state is a text content
-                        state = {html: {body: state}};
-                    }
-
-                    // populate default state values
-                    state.url = state.url || url;
-                    state.title = state.title || DOM.get("title");
-                    state.status = xhr[0].status;
-                    state.timestamp = Date.now();
-
-                    return Promise.resolve(state);
-                };
-                // handle success and error responses both
-                return xhr.then(complete, complete);
-            };
-        }());
-
-    ["get", "post", "put", "delete", "patch"].forEach((method) => {
-        DOM.on("ajaxify:" + method, [1, 2, "target"], (url, data, target) => {
-            if (typeof url !== "string") return;
-            // disable cacheBurst that is not required for IE10+
-            var config = {data: data, cacheBurst: false},
-                submits = target.matches("form") ? target.findAll("[type=submit]") : [];
-
-            if (target.fire("ajaxify:send", config)) {
-                submits.forEach((el) => { el.set("disabled", true) });
-
-                promiseXHR(target, method, url, config).then((response) => {
-                    submits.forEach((el) => { el.set("disabled", false) });
-
-                    target.fire("ajaxify:load", response);
-                }, (err) => {
-                    submits.forEach((el) => { el.set("disabled", false) });
-
-                    target.fire("ajaxify:error", err);
-                });
-            }
-        });
-    });
-
-    DOM.on("click", "a", ["currentTarget", "defaultPrevented"], (link, cancel) => {
-        if (!cancel && !link.get("target")) {
-            var url = link.get("href");
-            var path = url.split("#")[0];
-            // skip non-http(s) links
-            if (url.indexOf("http") === 0) {
-                if (url === currentState.url || path !== currentState.url.split("#")[0]) {
-                    // override default bahavior for links
-                    return !link.fire("ajaxify:get", path);
-                } else {
-                    // override default bahavior for anchors
-                    location.hash = link.get("hash");
-                    // and prevent default one
-                    return false;
-                }
-            }
-        }
-    });
-
-    DOM.on("submit", ["target", "defaultPrevented"], (form, cancel) => {
-        if (!cancel && !form.get("target")) {
-            var url = form.get("action"),
-                method = form.get("method") || "get",
-                data = XHR.serialize(form[0]);
-
-            return !form.fire("ajaxify:" + method.toLowerCase(), url, data);
-        }
-    });
-
-    DOM.on("ajaxify:load", [1, "target", "defaultPrevented"], (state, el, cancel) => {
-        if (cancel || !state) return;
-
-        var stateIndex = stateData.lastIndexOf(state);
-
-        if (stateIndex >= 0) {
-            switchContent(state, stateIndex);
-        } else {
-            setTimeout(() => {
-                var responseStatus = state.status, eventType;
-
-                if (responseStatus >= 200 && responseStatus < 300 || responseStatus === 304) {
-                    eventType = "ajaxify:success";
-                } else {
-                    eventType = "ajaxify:error";
-                }
-
-                if (el.fire(eventType, state)) {
-                    switchContent(state);
-                }
-            }, 0);
-        }
-    });
-
-    /* istanbul ignore else */
-    if (history.pushState) {
-        window.addEventListener("popstate", (e) => {
-            var stateIndex = e.state;
-            // numeric value indicates better-ajaxify state
-            if (typeof stateIndex === "number") {
-                DOM.fire("ajaxify:load", stateData[stateIndex]);
-            }
-        });
-        // update initial state address url
-        history.replaceState(0, DOM.get("title"));
-        // destroy current url state when user leaves
-        window.addEventListener("beforeunload", () => {
-            history.replaceState(null, document.title, currentState.url);
-        }, false);
-    } else {
-        // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:send", ["target", "defaultPrevented"], (sender, canceled) => {
-            if (!canceled) {
-                // trigger native element behavior in legacy browsers
-                if (sender.matches("form")) {
-                    sender[0].submit();
-                } else if (sender.matches("a")) {
-                    sender[0].click();
-                }
-            }
-        });
+        return target.dispatchEvent(e);
     }
-}(window.DOM, window.XHR, window.location));
+
+    function sendAjaxRequest(target, method, url, data) {
+        var xhr = new XMLHttpRequest();
+
+        xhr.onabort = () => dispatchAjaxifyEvent(target, "abort", xhr);
+        xhr.onerror = () => dispatchAjaxifyEvent(target, "error", xhr);
+        xhr.onload = () => dispatchAjaxifyEvent(target, "load", xhr);
+
+        xhr.open(method, url, true);
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+        if (dispatchAjaxifyEvent(target, "send", data)) {
+            xhr.send(data);
+        }
+    }
+
+    document.addEventListener("click", function(e) {
+        const el = e.target;
+
+        if (!e.defaultPrevented) {
+            const tagName = el.nodeName.toLowerCase();
+
+            if (tagName === "a" && !el.target) {
+                // skip non-http(s) links
+                if (el.protocol.indexOf("http") === 0) {
+                    if (dispatchAjaxifyEvent(el, "fetch")) {
+                        e.preventDefault();
+                    }
+                }
+            }
+
+            // TODO: handle HTML elements inside of a link
+        }
+    }, false);
+
+    document.addEventListener("ajaxify:fetch", function(e) {
+        const el = e.target;
+        const tagName = el.nodeName.toLowerCase();
+
+        if (tagName === "a") {
+            sendAjaxRequest(el, "get", el.href);
+        }
+    }, false);
+
+    document.addEventListener("ajaxify:load", function(e) {
+        const xhr = e.detail;
+        const selector = xhr.getResponseHeader("X-Ajaxify-Selector") || "main";
+        const target = document.querySelector(selector);
+
+        if (target) {
+            const targetClone = target.cloneNode(false);
+
+            targetClone.innerHTML = xhr.responseText;
+
+            if (dispatchAjaxifyEvent(target, "replace", targetClone)) {
+                const url = xhr.getResponseHeader("X-Ajaxify-Url") || xhr.responseURL;
+                const title = xhr.getResponseHeader("X-Ajaxify-Title") || document.title;
+
+                currentState.title = document.title;
+                currentState.target = target;
+                currentState.selector = selector;
+
+                var currentStateIndex = states.indexOf(currentState);
+                if (currentStateIndex < 0) {
+                    // if state does not exist - store it in memory
+                    currentStateIndex = states.push(currentState) - 1;
+                }
+
+                currentState = {}; // create a new state
+
+                if (url !== location.href) {
+                    document.title = currentState.title;
+
+                    history.pushState(1 + states.length, title, url);
+                }
+            }
+        }
+    }, false);
+
+    window.addEventListener("popstate", function(e) {
+        var stateIndex = e.state;
+        // numeric value indicates better-ajaxify state
+        if (stateIndex > 0) {
+            const state = states[stateIndex - 1];
+            const target = document.querySelector(state.selector);
+
+            if (target && dispatchAjaxifyEvent(target, "replace", state.target)) {
+                currentState.title = document.title;
+                currentState.target = target;
+                currentState.selector = state.selector;
+
+                var currentStateIndex = states.indexOf(currentState);
+                if (currentStateIndex < 0) {
+                    // if state does not exist - store it in memory
+                    currentStateIndex = states.push(currentState) - 1;
+                }
+
+                currentState = state;
+
+                document.title = currentState.title;
+            }
+        }
+    });
+
+    // update initial state address url
+    history.replaceState(1, document.title);
+
+    // default behavior for content replacement
+    document.addEventListener("ajaxify:replace", function(e) {
+        const target = e.target;
+
+        target.parentNode.replaceChild(e.detail, target);
+    }, false);
+}(window.document, window.location, window.history));
