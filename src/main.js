@@ -1,7 +1,7 @@
 (function(document, location, history) {
     "use strict";
-
-    if (!history.pushState) return; // skip unsupported browsers
+    // filter out old/buggy browsers
+    if (!history.pushState || !("timeout" in XMLHttpRequest.prototype)) return;
 
     const states = []; // in-memory storage for states
     var currentState = {};
