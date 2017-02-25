@@ -92,6 +92,7 @@
 
             xhr.open(method, e.detail, true);
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            xhr.responseType = "document";
             xhr.data = null;
 
             if (dispatchAjaxifyEvent(el, "send", xhr)) {
@@ -102,26 +103,34 @@
 
     document.addEventListener("ajaxify:load", function(e) {
         const xhr = e.detail;
-        const selector = xhr.getResponseHeader("X-Ajaxify-Selector") || "main";
-        const target = document.querySelector(selector);
+        const response = xhr.response;
 
-        if (target) {
-            const targetClone = target.cloneNode(false);
+        var target = document.body;
+        var replacement = response.body;
+        var selector = response.body.getAttribute("data-selector");
 
-            targetClone.innerHTML = xhr.responseText;
-
-            if (dispatchAjaxifyEvent(target, "replace", targetClone)) {
-                const url = xhr.getResponseHeader("X-Ajaxify-Url") || xhr.responseURL;
-                const title = xhr.getResponseHeader("X-Ajaxify-Title") || document.title;
-
-                updateCurrentState(target, selector, title);
-
-                if (url !== location.href) {
-                    history.pushState(states.length, title, url);
-                }
-
-                currentState = {}; // create a new state object
+        if (!selector) {
+            selector = "body";
+        } else {
+            target = document.querySelector(selector);
+            replacement = target.cloneNode(false);
+            // move all elements to replacement
+            for (var it; it = response.body.firstChild; ) {
+                replacement.appendChild(it);
             }
+        }
+
+        if (dispatchAjaxifyEvent(target, "replace", replacement)) {
+            const url = response.URL || xhr.responseURL;
+            const title = response.title || document.title;
+
+            updateCurrentState(target, selector, title);
+
+            if (url !== location.href) {
+                history.pushState(states.length, title, url);
+            }
+
+            currentState = {}; // create a new state object
         }
     }, false);
 
