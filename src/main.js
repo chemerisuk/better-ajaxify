@@ -14,10 +14,9 @@
         return target.dispatchEvent(e);
     }
 
-    function updateCurrentState(target, selector, title) {
+    function updateCurrentState(target, title) {
         currentState.title = document.title;
         currentState.target = target;
-        currentState.selector = selector;
 
         if (states.indexOf(currentState) < 0) {
             // if state does not exist - store it in memory
@@ -103,28 +102,26 @@
 
     document.addEventListener("ajaxify:load", function(e) {
         const xhr = e.detail;
-        const response = xhr.response;
+        const res = xhr.response;
+        const resBody = res.body;
 
         var target = document.body;
-        var replacement = response.body;
-        var selector = response.body.getAttribute("data-selector");
+        var replacement = resBody;
 
-        if (!selector) {
-            selector = "body";
-        } else {
-            target = document.querySelector(selector);
+        if (resBody.id) {
+            target = document.getElementById(resBody.id);
             replacement = target.cloneNode(false);
             // move all elements to replacement
-            for (var it; it = response.body.firstChild; ) {
+            for (var it; it = resBody.firstChild; ) {
                 replacement.appendChild(it);
             }
         }
 
         if (dispatchAjaxifyEvent(target, "replace", replacement)) {
-            const url = response.URL || xhr.responseURL;
-            const title = response.title || document.title;
+            const url = res.URL || xhr.responseURL;
+            const title = res.title || document.title;
 
-            updateCurrentState(target, selector, title);
+            updateCurrentState(target, title);
 
             if (url !== location.href) {
                 history.pushState(states.length, title, url);
@@ -148,11 +145,11 @@
         // numeric value indicates better-ajaxify state
         if (stateIndex >= 0) {
             const state = states[stateIndex];
-            const selector = state.selector;
-            const target = document.querySelector(selector);
+            const id = state.target.id;
+            const target = id ? document.getElementById(id) : document.body;
 
             if (target && dispatchAjaxifyEvent(target, "replace", state.target)) {
-                updateCurrentState(target, selector, state.title);
+                updateCurrentState(target, state.title);
 
                 currentState = state;
             }
