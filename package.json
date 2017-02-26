@@ -10,20 +10,10 @@
     "url": "https://github.com/chemerisuk/better-ajaxify"
   },
   "devDependencies": {
-    "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git",
-    "es6-promise-polyfill": "^1.0.0"
+    "better-dom-boilerplate": "git://github.com/chemerisuk/better-dom-boilerplate.git"
   },
   "config": {
-    "gulp": "--gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd .",
-    "karma": {
-      "files": [
-        "bower_components/better-dom/dist/better-dom.js",
-        "node_modules/es6-promise-polyfill/promise.js",
-        "bower_components/better-xhr/dist/better-xhr.js",
-        "build/*.js",
-        "test/*.spec.js"
-      ]
-    }
+    "gulp": "--gulpfile node_modules/better-dom-boilerplate/gulpfile.js --cwd ."
   },
   "scripts": {
     "test": "gulp test $npm_package_config_gulp",

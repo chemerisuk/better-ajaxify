@@ -62,12 +62,10 @@
             <button type="submit">Search</button>
         </form>
     </main>
-    <script src="//cdn.jsdelivr.net/es6-promise/1.0.0/promise.min.js"></script>
-    <script src="bower_components/better-xhr/dist/better-xhr.js"></script>
-    <script src="bower_components/better-dom/dist/better-dom.js"></script>
+    <script src="https://cdn.jsdelivr.net/better-dom/3.0.0-rc.1/better-dom.min.js"></script>
     <script src="build/better-ajaxify.js"></script>
     <script>
-        DOM.on("ajaxify:update", ["target", "detail"], (el, content) => {
+        DOM.on("ajaxify:update", ["target", "detail"], function(el, content) {
             content = DOM.constructor(content).set("aria-hidden", "true");
 
             const a = content.get("_ts") || Date.now();

@@ -12,10 +12,8 @@
     "bower.json"
   ],
   "keywords": [
-    "better-dom"
-  ],
-  "dependencies": {
-    "better-dom": "~2.1.0",
-    "better-xhr": "~0.4.2"
-  }
+    "better-ajaxify",
+    "pjax",
+    "ajax"
+  ]
 }
