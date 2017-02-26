@@ -1,4 +1,4 @@
-(function(document, location, history) { /* jshint maxdepth:8, boss:true */
+(function(document, location, history, AJAXIFY_TARGET) { /* jshint maxdepth:8, boss:true */
     "use strict";
     // filter out old/buggy browsers
     if (!history.pushState || !("timeout" in XMLHttpRequest.prototype)) return;
@@ -172,9 +172,16 @@
 
         var el = document.body;
         var content = resBody;
+        var id = xhr.getResponseHeader(AJAXIFY_TARGET);
 
-        if (resBody.id) {
-            el = document.getElementById(resBody.id);
+        if (!id) {
+            const meta = res.querySelector(`[http-equiv=${AJAXIFY_TARGET}]`);
+
+            id = meta ? meta.content : null;
+        }
+
+        if (id) {
+            el = document.getElementById(id);
             content = el.cloneNode(false);
             // move all elements to replacement
             for (var node; node = resBody.firstChild; ) {
@@ -215,4 +222,4 @@
     // update initial state address url
     history.replaceState(0, document.title);
 
-}(window.document, window.location, window.history));
+}(window.document, window.location, window.history, "X-Ajaxify-Target"));
