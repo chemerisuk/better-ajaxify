@@ -1,4 +1,4 @@
-(function(document, location, history) { /* jshint maxdepth:7, boss:true */
+(function(document, location, history) { /* jshint maxdepth:8, boss:true */
     "use strict";
     // filter out old/buggy browsers
     if (!history.pushState || !("timeout" in XMLHttpRequest.prototype)) return;
@@ -56,8 +56,10 @@
         }
 
         if (link && !link.target) {
-            // handle only http(s) links
-            if (link.protocol.slice(0, 4) === "http") {
+            if (link.getAttribute("aria-disabled") === "true") {
+                e.preventDefault();
+            } else if (link.protocol.slice(0, 4) === "http") {
+                // handle only http(s) links
                 const targetUrl = link.href;
                 const currentUrl = location.href;
 
@@ -79,49 +81,53 @@
         const el = e.target;
 
         if (!el.target) {
-            const formEnctype = el.enctype;
-
-            var url = el.action;
-
-            if (formEnctype === "multipart/form-data") {
-                lastFormData = new FormData(el);
+            if (el.getAttribute("aria-disabled") === "true") {
+                e.preventDefault();
             } else {
-                const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
-                const qs = [];
+                const formEnctype = el.enctype;
 
-                for (var i = 0, field; field = el.elements[i]; ++i) {
-                    if (field.name && !field.disabled) {
-                        const fieldType = field.type;
-                        const fieldName = encode(field.name);
+                var url = el.action;
 
-                        if (fieldType === "select-multiple") {
-                            for (var j = 0, option; option = field.options[j]; ++j) {
-                                if (option.selected) {
-                                    qs.push(fieldName + "=" + encode(option.value));
+                if (formEnctype === "multipart/form-data") {
+                    lastFormData = new FormData(el);
+                } else {
+                    const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
+                    const qs = [];
+
+                    for (var i = 0, field; field = el.elements[i]; ++i) {
+                        if (field.name && !field.disabled) {
+                            const fieldType = field.type;
+                            const fieldName = encode(field.name);
+
+                            if (fieldType === "select-multiple") {
+                                for (var j = 0, option; option = field.options[j]; ++j) {
+                                    if (option.selected) {
+                                        qs.push(fieldName + "=" + encode(option.value));
+                                    }
                                 }
+                            } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
+                                qs.push(fieldName + "=" + encode(field.value));
                             }
-                        } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
-                            qs.push(fieldName + "=" + encode(field.value));
+                        }
+                    }
+
+                    if (qs.length) {
+                        lastFormData = qs.join("&").split(formEnctype === "text/plain" ? " " : "%20").join("+");
+
+                        if (!el.method || el.method.toUpperCase() === "GET") {
+                            url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
+
+                            lastFormData = null; // don't send data for GET forms
                         }
                     }
                 }
 
-                if (qs.length) {
-                    lastFormData = qs.join("&").split(formEnctype === "text/plain" ? " " : "%20").join("+");
-
-                    if (!el.method || el.method.toUpperCase() === "GET") {
-                        url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
-
-                        lastFormData = null; // don't send data for GET forms
-                    }
+                if (dispatchAjaxifyEvent(el, "fetch", url)) {
+                    e.preventDefault();
                 }
-            }
 
-            if (dispatchAjaxifyEvent(el, "fetch", url)) {
-                e.preventDefault();
+                lastFormData = null; // cleanup internal reference
             }
-
-            lastFormData = null; // cleanup internal reference
         }
     });
 
@@ -132,6 +138,8 @@
 
         ["abort", "error", "load", "timeout"].forEach((type) => {
             xhr["on" + type] = () => {
+                el.setAttribute("aria-disabled", "false");
+
                 dispatchAjaxifyEvent(el, type, xhr);
             };
         });
@@ -147,6 +155,8 @@
         }
 
         if (dispatchAjaxifyEvent(el, "send", xhr)) {
+            el.setAttribute("aria-disabled", "true");
+
             xhr.send(xhr.data);
         }
     });
