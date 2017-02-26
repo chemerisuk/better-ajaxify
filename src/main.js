@@ -3,6 +3,7 @@
     // filter out old/buggy browsers
     if (!history.pushState || !("timeout" in XMLHttpRequest.prototype)) return;
 
+    const identity = (s) => s;
     const states = []; // in-memory storage for states
     var currentState = {};
     var lastFormData = null;
@@ -78,32 +79,35 @@
         const el = e.target;
 
         if (!el.target) {
+            const formEnctype = el.enctype;
+
             var url = el.action;
 
-            if (el.enctype === "multipart/form-data") {
+            if (formEnctype === "multipart/form-data") {
                 lastFormData = new FormData(el);
             } else {
+                const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
                 const qs = [];
 
                 for (var i = 0, field; field = el.elements[i]; ++i) {
                     if (field.name && !field.disabled) {
                         const fieldType = field.type;
-                        const fieldName = encodeURIComponent(field.name);
+                        const fieldName = encode(field.name);
 
                         if (fieldType === "select-multiple") {
                             for (var j = 0, option; option = field.options[j]; ++j) {
                                 if (option.selected) {
-                                    qs.push(fieldName + "=" + encodeURIComponent(option.value));
+                                    qs.push(fieldName + "=" + encode(option.value));
                                 }
                             }
                         } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
-                            qs.push(fieldName + "=" + encodeURIComponent(field.value));
+                            qs.push(fieldName + "=" + encode(field.value));
                         }
                     }
                 }
 
                 if (qs.length) {
-                    lastFormData = qs.join("&").replace(/%20/g, "+");
+                    lastFormData = qs.join("&").split(formEnctype === "text/plain" ? " " : "%20").join("+");
 
                     if (!el.method || el.method.toUpperCase() === "GET") {
                         url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
