@@ -47,11 +47,20 @@
             <li><a href="/better-ajaxify/demo/backend.html">Backend setup</a></li>
             <li><a href="/better-ajaxify/demo/invalid-url">404 test</a></li>
         </ul>
+        <form action="" method="post">
+            <input type="hidden" name="key 1" value="value 1">
+            <input type="hidden" name="key 2" value="value 2">
+            <button type="submit">Post data</button>
+        </form>
     </nav>
     <main id="main">
         <h1>Home page</h1>
         <p>Ajax website engine for <a href="https://github.com/chemerisuk/better-dom" target="_blank" class="logo">better-dom</a></p>
         <p>The library helps to solve one of the most important problem for a typical website: improving performance. There is a term called "Full AJAX" that means a library that makes a regular HTTP links or forms to be AJAXified. After including the library on page and simple adaptation on backend each navigation change triggers an partial page reload which is always faster than full page refresh and allows to save a use state on client side as well.</p>
+        <form action="">
+            <input type="search" name="q">
+            <button type="submit">Search</button>
+        </form>
     </main>
     <script src="//cdn.jsdelivr.net/es6-promise/1.0.0/promise.min.js"></script>
     <script src="bower_components/better-xhr/dist/better-xhr.js"></script>
@@ -59,7 +68,7 @@
     <script src="build/better-ajaxify.js"></script>
     <script>
         DOM.on("ajaxify:replace", ["target", "detail"], (el, content) => {
-            content = DOM.constructor(content).hide();
+            content = DOM.constructor(content).set("aria-hidden", "true");
 
             const a = content.get("_ts") || Date.now();
             const b = el.get("_ts") || Date.now() - 1;

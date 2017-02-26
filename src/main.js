@@ -1,10 +1,11 @@
-(function(document, location, history) {
+(function(document, location, history) { /* jshint maxdepth:7, boss:true */
     "use strict";
     // filter out old/buggy browsers
     if (!history.pushState || !("timeout" in XMLHttpRequest.prototype)) return;
 
     const states = []; // in-memory storage for states
     var currentState = {};
+    var lastFormData = null;
 
     function attachNonPreventedListener(eventType, callback) {
         document.addEventListener(eventType, function(e) {
@@ -77,15 +78,53 @@
         const el = e.target;
 
         if (!el.target) {
-            if (dispatchAjaxifyEvent(el, "fetch", el.action)) {
+            var url = el.action;
+
+            if (el.enctype === "multipart/form-data") {
+                lastFormData = new FormData(el);
+            } else {
+                const qs = [];
+
+                for (var i = 0, field; field = el.elements[i]; ++i) {
+                    if (field.name && !field.disabled) {
+                        const fieldType = field.type;
+                        const fieldName = encodeURIComponent(field.name);
+
+                        if (fieldType === "select-multiple") {
+                            for (var j = 0, option; option = field.options[j]; ++j) {
+                                if (option.selected) {
+                                    qs.push(fieldName + "=" + encodeURIComponent(option.value));
+                                }
+                            }
+                        } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
+                            qs.push(fieldName + "=" + encodeURIComponent(field.value));
+                        }
+                    }
+                }
+
+                if (qs.length) {
+                    lastFormData = qs.join("&").replace(/%20/g, "+");
+
+                    if (!el.method || el.method.toUpperCase() === "GET") {
+                        url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
+
+                        lastFormData = null; // don't send data for GET forms
+                    }
+                }
+            }
+
+            if (dispatchAjaxifyEvent(el, "fetch", url)) {
                 e.preventDefault();
             }
+
+            lastFormData = null; // cleanup internal reference
         }
     });
 
     attachNonPreventedListener("ajaxify:fetch", (e) => {
         const el = e.target;
         const xhr = new XMLHttpRequest();
+        const method = (el.method || "GET").toUpperCase();
 
         ["abort", "error", "load", "timeout"].forEach((type) => {
             xhr["on" + type] = () => {
@@ -93,10 +132,15 @@
             };
         });
 
-        xhr.open((el.method || "get").toUpperCase(), e.detail, true);
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        xhr.open(method, e.detail, true);
         xhr.responseType = "document";
-        xhr.data = null;
+        xhr.data = lastFormData;
+
+        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+        if (method !== "GET") {
+            xhr.setRequestHeader("Content-Type", el.enctype);
+        }
 
         if (dispatchAjaxifyEvent(el, "send", xhr)) {
             xhr.send(xhr.data);
