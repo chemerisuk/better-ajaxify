@@ -153,52 +153,53 @@
         const resBody = res.body;
 
         var el = document.body;
-        var replacement = resBody;
+        var content = resBody;
 
         if (resBody.id) {
             el = document.getElementById(resBody.id);
-            replacement = el.cloneNode(false);
+            content = el.cloneNode(false);
             // move all elements to replacement
             for (var node; node = resBody.firstChild; ) {
-                replacement.appendChild(node);
+                content.appendChild(node);
             }
         }
-
-        dispatchAjaxifyEvent(el, "replace", replacement);
 
         const url = res.URL || xhr.responseURL;
         const title = res.title || document.title;
 
+        if (dispatchAjaxifyEvent(el, "update", content)) {
+            el.parentNode.replaceChild(content, el);
+        }
+
         updateCurrentState(el, title);
+
+        currentState = {}; // create a new state object
 
         if (url !== location.href) {
             history.pushState(states.length, title, url);
         }
-
-        currentState = {}; // create a new state object
-    });
-
-    // default behavior for a content replacement
-    attachNonPreventedListener("ajaxify:replace", (e) => {
-        const el = e.target;
-
-        el.parentNode.replaceChild(e.detail, el);
     });
 
     window.addEventListener("popstate", (e) => {
-        var stateIndex = e.state;
         // numeric value indicates better-ajaxify state
-        if (stateIndex >= 0) {
-            const state = states[stateIndex];
-            const id = state.el.id;
-            const el = id ? document.getElementById(id) : document.body;
+        if (!e.defaultPrevented && e.state >= 0) {
+            const state = states[e.state];
 
-            if (el) {
-                dispatchAjaxifyEvent(el, "replace", state.el);
+            if (state) {
+                const id = state.el.id;
+                const el = id ? document.getElementById(id) : document.body;
 
-                updateCurrentState(el, state.title);
+                if (el) {
+                    const content = state.el;
 
-                currentState = state;
+                    if (dispatchAjaxifyEvent(el, "update", content)) {
+                        el.parentNode.replaceChild(content, el);
+                    }
+
+                    updateCurrentState(el, state.title);
+
+                    currentState = state;
+                }
             }
         }
     });

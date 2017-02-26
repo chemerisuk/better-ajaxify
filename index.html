@@ -67,7 +67,7 @@
     <script src="bower_components/better-dom/dist/better-dom.js"></script>
     <script src="build/better-ajaxify.js"></script>
     <script>
-        DOM.on("ajaxify:replace", ["target", "detail"], (el, content) => {
+        DOM.on("ajaxify:update", ["target", "detail"], (el, content) => {
             content = DOM.constructor(content).set("aria-hidden", "true");
 
             const a = content.get("_ts") || Date.now();
