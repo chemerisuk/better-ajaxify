@@ -14,8 +14,8 @@
         -webkit-transform: translate3d(0,0,0);
         transform: translate3d(0,0,0);
 
-        -webkit-transition: -webkit-transform 0.25s ease-in-out;
-        transition: transform 0.25s ease-in-out;
+        -webkit-transition: -webkit-transform 0.1s ease-out;
+        transition: transform 0.1s ease-out;
     }
 
     main[aria-hidden=true] {
@@ -68,14 +68,14 @@
         DOM.on("ajaxify:update", ["target", "detail"], function(el, content) {
             content = DOM.constructor(content).set("aria-hidden", "true");
 
-            const a = content.get("_ts") || Date.now();
-            const b = el.get("_ts") || Date.now() - 1;
+            const a = content.data("ts") || Date.now();
+            const b = el.data("ts") || Date.now() - 1;
 
             el[a > b ? "before" : "after"](content);
 
-            content.set("_ts", a).show();
+            content.data("ts", a).show();
 
-            el.set("_ts", b).hide(function() {
+            el.data("ts", b).hide(function() {
                 el.remove();
             });
 

@@ -5,7 +5,7 @@
 
     const identity = (s) => s;
     const states = []; // in-memory storage for states
-    var currentState = {};
+    var lastState = {};
     var lastFormData = null;
 
     function attachNonPreventedListener(eventType, callback) {
@@ -24,13 +24,17 @@
         return el.dispatchEvent(e);
     }
 
-    function updateCurrentState(el, title) {
-        currentState.el = el;
-        currentState.title = document.title;
+    function updateCurrentState(el, title, content) {
+        if (dispatchAjaxifyEvent(el, "update", content)) {
+            el.parentNode.replaceChild(content, el);
+        }
 
-        if (states.indexOf(currentState) < 0) {
+        lastState.el = el;
+        lastState.title = document.title;
+
+        if (states.indexOf(lastState) < 0) {
             // if state does not exist - store it in memory
-            states.push(currentState);
+            states.push(lastState);
         }
 
         document.title = title;
@@ -181,13 +185,9 @@
         const url = res.URL || xhr.responseURL;
         const title = res.title || document.title;
 
-        if (dispatchAjaxifyEvent(el, "update", content)) {
-            el.parentNode.replaceChild(content, el);
-        }
+        updateCurrentState(el, title, content);
 
-        updateCurrentState(el, title);
-
-        currentState = {}; // create a new state object
+        lastState = {}; // create a new state object
 
         if (url !== location.href) {
             history.pushState(states.length, title, url);
@@ -204,15 +204,9 @@
                 const el = id ? document.getElementById(id) : document.body;
 
                 if (el) {
-                    const content = state.el;
+                    updateCurrentState(el, state.title, state.el);
 
-                    if (dispatchAjaxifyEvent(el, "update", content)) {
-                        el.parentNode.replaceChild(content, el);
-                    }
-
-                    updateCurrentState(el, state.title);
-
-                    currentState = state;
+                    lastState = state;
                 }
             }
         }
