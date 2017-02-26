@@ -57,5 +57,23 @@
     <script src="bower_components/better-xhr/dist/better-xhr.js"></script>
     <script src="bower_components/better-dom/dist/better-dom.js"></script>
     <script src="build/better-ajaxify.js"></script>
+    <script>
+        DOM.on("ajaxify:replace", ["target", "detail"], (el, content) => {
+            content = DOM.constructor(content).hide();
+
+            const a = content.get("_ts") || Date.now();
+            const b = el.get("_ts") || Date.now() - 1;
+
+            el[a > b ? "before" : "after"](content);
+
+            content.set("_ts", a).show();
+
+            el.set("_ts", b).hide(function() {
+                el.remove();
+            });
+
+            return false;
+        });
+    </script>
 </body>
 </html>
