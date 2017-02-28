@@ -1,7 +1,7 @@
 {
   "name": "better-ajaxify",
   "description": "Ajax website engine for better-dom",
-  "version": "1.8.2",
+  "version": "2.0.0-beta.0",
   "author": "Maksim Chemerisuk",
   "license": "MIT",
   "homepage": "https://github.com/chemerisuk/better-ajaxify",
@@ -18,7 +18,8 @@
   "scripts": {
     "test": "gulp test $npm_package_config_gulp",
     "start": "gulp dev $npm_package_config_gulp",
-    "release": "gulp release $npm_package_config_gulp",
-    "postrelease": "gulp gh-pages $npm_package_config_gulp"
+    "version": "gulp dist $npm_package_config_gulp && git add -A dist bower.json",
+    "postversion": "git push && git push --tags",
+    "publish": "gulp gh-pages $npm_package_config_gulp"
   }
 }
