@@ -142,7 +142,9 @@
 
         ["abort", "error", "load", "timeout"].forEach((type) => {
             xhr["on" + type] = () => {
-                el.setAttribute("aria-disabled", "false");
+                if (el.nodeType === 1) {
+                    el.setAttribute("aria-disabled", "false");
+                }
 
                 dispatchAjaxifyEvent(el, type, xhr);
             };
@@ -159,7 +161,9 @@
         }
 
         if (dispatchAjaxifyEvent(el, "send", xhr)) {
-            el.setAttribute("aria-disabled", "true");
+            if (el.nodeType === 1) {
+                el.setAttribute("aria-disabled", "true");
+            }
 
             xhr.send(xhr.data);
         }

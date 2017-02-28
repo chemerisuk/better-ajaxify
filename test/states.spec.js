@@ -4,148 +4,156 @@ describe("state", function() {
     beforeEach(function() {
         jasmine.Ajax.install();
 
-        this.sandbox = DOM.create("div#sandbox");
-        this.randomUrl = String(Date.now());
+        // this.sandbox = DOM.create("div#sandbox");
+        // this.randomUrl = String(Date.now());
 
-        DOM.find("body").append(this.sandbox);
+        // DOM.find("body").append(this.sandbox);
     });
 
     afterEach(function() {
         jasmine.Ajax.uninstall();
 
-        this.sandbox.remove();
+        // this.sandbox.remove();
 
-        this.xhr = null;
+        // this.xhr = null;
     });
 
-    it("should be changed on ajaxify response with success status", function(done) {
-        var link = DOM.mock("a[href=testsuccess]"),
-            main = DOM.mock("main"),
-            spy = spyOn(main, "remove");
 
-        this.sandbox.append(main.append(link));
+    function dispatchAjaxifyEvent(el, eventType, eventDetail) {
+        const e = document.createEvent("CustomEvent");
 
-        link.fire("click");
+        e.initCustomEvent("ajaxify:" + eventType, true, true, eventDetail || null);
 
-        this.xhr = jasmine.Ajax.requests.mostRecent();
-        this.xhr.respondWith({
-            status: 200,
-            contentType: "application/json",
-            responseText: JSON.stringify({html: {main: "new content"}})
-        });
+        return el.dispatchEvent(e);
+    }
+//     it("should be changed on ajaxify response with success status", function(done) {
+//         var link = DOM.mock("a[href=testsuccess]"),
+//             main = DOM.mock("main"),
+//             spy = spyOn(main, "remove");
 
-        spy.and.callFake(function() {
-            var sandbox = DOM.find("#sandbox");
+//         this.sandbox.append(main.append(link));
 
-            expect(sandbox.children("main").length).toBe(2);
-            expect(sandbox.child(0).get()).toBe("new content");
+//         link.fire("click");
 
-            done();
-        });
-    });
+//         this.xhr = jasmine.Ajax.requests.mostRecent();
+//         this.xhr.respondWith({
+//             status: 200,
+//             contentType: "application/json",
+//             responseText: JSON.stringify({html: {main: "new content"}})
+//         });
 
-    it("updates body for text responses", function(done) {
-        var link = DOM.mock("a[href=testbody]");
+//         spy.and.callFake(function() {
+//             var sandbox = DOM.find("#sandbox");
 
-        this.sandbox.append(link);
+//             expect(sandbox.children("main").length).toBe(2);
+//             expect(sandbox.child(0).get()).toBe("new content");
 
-        link.fire("click");
-        link.on("ajaxify:load", function(state) {
-            expect(state).toEqual(jasmine.objectContaining({
-                html: {body: "foo"}
-            }));
+//             done();
+//         });
+//     });
 
-            done();
+//     it("updates body for text responses", function(done) {
+//         var link = DOM.mock("a[href=testbody]");
 
-            return false;
-        });
+//         this.sandbox.append(link);
 
-        this.xhr = jasmine.Ajax.requests.mostRecent();
-        this.xhr.respondWith({
-            status: 200,
-            contentType: "text/plain",
-            responseText: "foo"
-        });
-    });
+//         link.fire("click");
+//         link.on("ajaxify:load", function(state) {
+//             expect(state).toEqual(jasmine.objectContaining({
+//                 html: {body: "foo"}
+//             }));
 
-    it("should be changed on ajaxify response with error status", function(done) {
-        var link = DOM.mock("a[href=testerror]"),
-            main = DOM.mock("main"),
-            spy = spyOn(main, "remove");
+//             done();
 
-        this.sandbox.append(main.append(link));
+//             return false;
+//         });
 
-        link.fire("click");
+//         this.xhr = jasmine.Ajax.requests.mostRecent();
+//         this.xhr.respondWith({
+//             status: 200,
+//             contentType: "text/plain",
+//             responseText: "foo"
+//         });
+//     });
 
-        this.xhr = jasmine.Ajax.requests.mostRecent();
-        this.xhr.respondWith({
-            status: 500,
-            contentType: "application/json",
-            responseText: JSON.stringify({html: {main: "error page"}})
-        });
+//     it("should be changed on ajaxify response with error status", function(done) {
+//         var link = DOM.mock("a[href=testerror]"),
+//             main = DOM.mock("main"),
+//             spy = spyOn(main, "remove");
 
-        spy.and.callFake(function() {
-            var sandbox = DOM.find("#sandbox");
+//         this.sandbox.append(main.append(link));
 
-            expect(sandbox.children("main").length).toBe(2);
-            expect(sandbox.child(0).get()).toBe("error page");
+//         link.fire("click");
 
-            done();
-        });
-    });
+//         this.xhr = jasmine.Ajax.requests.mostRecent();
+//         this.xhr.respondWith({
+//             status: 500,
+//             contentType: "application/json",
+//             responseText: JSON.stringify({html: {main: "error page"}})
+//         });
 
-    it("listens to browser history changes", function(done) {
-        var sandbox = this.sandbox;
+//         spy.and.callFake(function() {
+//             var sandbox = DOM.find("#sandbox");
 
-        sandbox.append(DOM.mock("main"));
+//             expect(sandbox.children("main").length).toBe(2);
+//             expect(sandbox.child(0).get()).toBe("error page");
 
-        DOM.fire("ajaxify:get", this.randomUrl);
+//             done();
+//         });
+//     });
 
-        this.xhr = jasmine.Ajax.requests.mostRecent();
-        this.xhr.respondWith({
-            status: 200,
-            contentType: "application/json",
-            responseText: JSON.stringify({html: {main: "foo"}})
-        });
+//     it("listens to browser history changes", function(done) {
+//         var sandbox = this.sandbox;
 
-        setTimeout(function() {
-            expect(sandbox.find("main").value()).toBe("foo");
+//         sandbox.append(DOM.mock("main"));
 
-            history.back();
+//         DOM.fire("ajaxify:get", this.randomUrl);
 
-            setTimeout(function() {
-                expect(sandbox.find("main").value()).not.toBe("foo");
+//         this.xhr = jasmine.Ajax.requests.mostRecent();
+//         this.xhr.respondWith({
+//             status: 200,
+//             contentType: "application/json",
+//             responseText: JSON.stringify({html: {main: "foo"}})
+//         });
 
-                done();
-            }, 60);
-        }, 30);
-    });
+//         setTimeout(function() {
+//             expect(sandbox.find("main").value()).toBe("foo");
 
-    it("triggers error event for timed responses", function(done) {
-        var changeSpy = jasmine.createSpy("change");
+//             history.back();
 
-        DOM.once("ajaxify:load", changeSpy);
-        DOM.once("ajaxify:error", function() {
-            expect(changeSpy).not.toHaveBeenCalled();
+//             setTimeout(function() {
+//                 expect(sandbox.find("main").value()).not.toBe("foo");
 
-            DOM.off("ajaxify:load", changeSpy);
+//                 done();
+//             }, 60);
+//         }, 30);
+//     });
 
-            done();
-        });
+//     it("triggers error event for timed responses", function(done) {
+//         var changeSpy = jasmine.createSpy("change");
 
-        DOM.fire("ajaxify:get", this.randomUrl);
+//         DOM.once("ajaxify:load", changeSpy);
+//         DOM.once("ajaxify:error", function() {
+//             expect(changeSpy).not.toHaveBeenCalled();
 
-        this.xhr = jasmine.Ajax.requests.mostRecent();
-        this.xhr.respondWith({
-            status: 0,
-            contentType: "text/plain",
-            responseText: ""
-        });
-    });
+//             DOM.off("ajaxify:load", changeSpy);
+
+//             done();
+//         });
+
+//         DOM.fire("ajaxify:get", this.randomUrl);
+
+//         this.xhr = jasmine.Ajax.requests.mostRecent();
+//         this.xhr.respondWith({
+//             status: 0,
+//             contentType: "text/plain",
+//             responseText: ""
+//         });
+//     });
 
     it("should allow multiple requests for DOM", function() {
-        DOM.fire("ajaxify:get", "url1", null);
-        DOM.fire("ajaxify:get", "url2");
+        dispatchAjaxifyEvent(document, "fetch", "url1");
+        dispatchAjaxifyEvent(document, "fetch", "url2");
 
         expect(jasmine.Ajax.requests.count()).toBe(2);
     });

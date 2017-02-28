@@ -21,5 +21,6 @@
     "version": "gulp dist $npm_package_config_gulp && git add -A dist bower.json",
     "postversion": "git push && git push --tags",
     "publish": "gulp gh-pages $npm_package_config_gulp"
-  }
+  },
+  "karmaFiles": []
 }
