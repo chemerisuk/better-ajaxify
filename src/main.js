@@ -1,4 +1,4 @@
-(function(document, location, history, AJAXIFY_TARGET) { /* jshint maxdepth:8, boss:true */
+(function(document, location, history) { /* jshint maxdepth:8, boss:true */
     "use strict";
 
     // do not enable the plugin for old browsers BUT keep for jasmine
@@ -30,7 +30,7 @@
             el.parentNode.replaceChild(content, el);
         }
 
-        lastState.el = el;
+        lastState.body = el;
         lastState.title = document.title;
 
         if (states.indexOf(lastState) < 0) {
@@ -173,36 +173,25 @@
     attachNonPreventedListener("ajaxify:load", (e) => {
         const xhr = e.detail;
         const res = xhr.response;
-        const resBody = res.body;
 
         var el = document.body;
-        var content = resBody;
-        var id = xhr.getResponseHeader(AJAXIFY_TARGET);
+        var content = res.body;
 
-        if (!id) {
-            const meta = res.querySelector(`[http-equiv=${AJAXIFY_TARGET}]`);
-
-            id = meta ? meta.content : null;
-        }
-
-        if (id) {
-            el = document.getElementById(id);
+        if (content.getAttribute("role") === "main") {
+            el = document.querySelector("main,[role=main]");
             content = el.cloneNode(false);
             // move all elements to replacement
-            for (var node; node = resBody.firstChild; ) {
+            for (var node; node = res.body.firstChild; ) {
                 content.appendChild(node);
             }
         }
 
-        const url = res.URL || xhr.responseURL;
-        const title = res.title || document.title;
-
-        updateCurrentState(el, title, content);
+        updateCurrentState(el, res.title, content);
 
         lastState = {}; // create a new state object
 
-        if (url !== location.href) {
-            history.pushState(states.length, title, url);
+        if (xhr.responseURL !== location.href) {
+            history.pushState(states.length, res.title, xhr.responseURL);
         }
     });
 
@@ -212,11 +201,14 @@
             const state = states[e.state];
 
             if (state) {
-                const id = state.el.id;
-                const el = id ? document.getElementById(id) : document.body;
+                var el = document.body;
+
+                if (state.body.nodeName.toLowerCase() !== "body") {
+                    el = document.querySelector("main,[role=main]");
+                }
 
                 if (el) {
-                    updateCurrentState(el, state.title, state.el);
+                    updateCurrentState(el, state.title, state.body);
 
                     lastState = state;
                 }
@@ -227,4 +219,4 @@
     // update initial state address url
     history.replaceState(0, document.title);
 
-}(window.document, window.location, window.history, "X-Ajaxify-Target"));
+}(window.document, window.location, window.history));
