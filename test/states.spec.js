@@ -151,7 +151,7 @@ describe("state", function() {
 //         });
 //     });
 
-    it("should allow multiple requests for DOM", function() {
+    it("should allow multiple requests for DOM", () => {
         dispatchAjaxifyEvent(document, "fetch", "url1");
         dispatchAjaxifyEvent(document, "fetch", "url2");
 

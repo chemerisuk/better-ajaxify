@@ -1,7 +1,8 @@
 (function(document, location, history, AJAXIFY_TARGET) { /* jshint maxdepth:8, boss:true */
     "use strict";
-    // filter out old/buggy browsers
-    if (!history.pushState || !("timeout" in XMLHttpRequest.prototype)) return;
+
+    // do not enable the plugin for old browsers BUT keep for jasmine
+    if (!history.pushState || !("timeout" in XMLHttpRequest.prototype || window.jasmine)) return;
 
     const identity = (s) => s;
     const states = []; // in-memory storage for states
