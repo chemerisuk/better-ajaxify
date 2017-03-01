@@ -1,11 +1,11 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 2.0.0-beta.1 Tue, 28 Feb 2017 18:39:00 GMT
+ * @version 2.0.0-beta.2 Wed, 01 Mar 2017 09:13:36 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2017 Maksim Chemerisuk
  * @license MIT
  */
-(function (document, location, history, AJAXIFY_TARGET) {
+(function (document, location, history) {
     /* jshint maxdepth:8, boss:true */
     "use strict";
 
@@ -41,7 +41,7 @@
             el.parentNode.replaceChild(content, el);
         }
 
-        lastState.el = el;
+        lastState.body = el;
         lastState.title = document.title;
 
         if (states.indexOf(lastState) < 0) {
@@ -128,7 +128,7 @@
                     }
 
                     if (qs.length) {
-                        lastFormData = qs.join("&").split(formEnctype === "text/plain" ? " " : "%20").join("+");
+                        lastFormData = qs.join("&").split(encode === identity ? " " : "%20").join("+");
 
                         if (!el.method || el.method.toUpperCase() === "GET") {
                             url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
@@ -184,31 +184,39 @@
     attachNonPreventedListener("ajaxify:load", function (e) {
         var xhr = e.detail;
         var res = xhr.response;
-        var resBody = res.body;
+        var status = xhr.status;
+        var title = res.title;
 
-        var el = document.body;
-        var content = resBody;
-        var id = xhr.getResponseHeader(AJAXIFY_TARGET);
-
-        if (!id) {
-            var meta = res.querySelector("[http-equiv=" + AJAXIFY_TARGET + "]");
-
-            id = meta ? meta.content : null;
-        }
-
-        if (id) {
-            el = document.getElementById(id);
-            content = el.cloneNode(false);
+        var target = document.body;
+        var content = res.body;
+        // replace content of the main element
+        // only for successful responses
+        if (status >= 200 && status < 300 || status === 304) {
+            target = document.querySelector("main,[role=main]");
+            content = target.cloneNode(false);
             // move all elements to replacement
-            for (var node; node = resBody.firstChild;) {
+            for (var node; node = res.body.firstChild;) {
                 content.appendChild(node);
             }
         }
 
-        var url = res.URL || xhr.responseURL;
-        var title = res.title || document.title;
+        var url = xhr.responseURL;
 
-        updateCurrentState(el, title, content);
+        if (!url) {
+            url = xhr.getResponseHeader("Location");
+
+            if (url) {
+                url = res.URL.split("/").slice(0, 3).join("/") + url;
+            } else {
+                url = res.URL;
+            }
+            // polyfill xhr.responseURL
+            Object.defineProperty(xhr, "responseURL", { get: function () {
+                    return url;
+                } });
+        }
+
+        updateCurrentState(target, title, content);
 
         lastState = {}; // create a new state object
 
@@ -223,11 +231,14 @@
             var state = states[e.state];
 
             if (state) {
-                var id = state.el.id;
-                var el = id ? document.getElementById(id) : document.body;
+                var target = document.body;
 
-                if (el) {
-                    updateCurrentState(el, state.title, state.el);
+                if (state.body.nodeName.toLowerCase() !== "body") {
+                    target = document.querySelector("main,[role=main]");
+                }
+
+                if (target) {
+                    updateCurrentState(target, state.title, state.body);
 
                     lastState = state;
                 }
@@ -237,4 +248,4 @@
 
     // update initial state address url
     history.replaceState(0, document.title);
-})(window.document, window.location, window.history, "X-Ajaxify-Target");
+})(window.document, window.location, window.history);
