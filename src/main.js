@@ -117,7 +117,7 @@
                     }
 
                     if (qs.length) {
-                        lastFormData = qs.join("&").split(formEnctype === "text/plain" ? " " : "%20").join("+");
+                        lastFormData = qs.join("&").split(encode === identity ? " " : "%20").join("+");
 
                         if (!el.method || el.method.toUpperCase() === "GET") {
                             url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
@@ -174,21 +174,21 @@
         const xhr = e.detail;
         const res = xhr.response;
         const status = xhr.status;
+        const title = res.title;
 
-        var el = document.body;
+        var target = document.body;
         var content = res.body;
         // replace content of the main element
         // only for successful responses
         if (status >= 200 && status < 300 || status === 304) {
-            el = document.querySelector("main,[role=main]");
-            content = el.cloneNode(false);
+            target = document.querySelector("main,[role=main]");
+            content = target.cloneNode(false);
             // move all elements to replacement
             for (var node; node = res.body.firstChild; ) {
                 content.appendChild(node);
             }
         }
 
-        const title = res.title;
         var url = xhr.responseURL;
 
         if (!url) {
@@ -203,7 +203,7 @@
             Object.defineProperty(xhr, "responseURL", {get: () => url});
         }
 
-        updateCurrentState(el, title, content);
+        updateCurrentState(target, title, content);
 
         lastState = {}; // create a new state object
 
@@ -218,14 +218,14 @@
             const state = states[e.state];
 
             if (state) {
-                var el = document.body;
+                var target = document.body;
 
                 if (state.body.nodeName.toLowerCase() !== "body") {
-                    el = document.querySelector("main,[role=main]");
+                    target = document.querySelector("main,[role=main]");
                 }
 
-                if (el) {
-                    updateCurrentState(el, state.title, state.body);
+                if (target) {
+                    updateCurrentState(target, state.title, state.body);
 
                     lastState = state;
                 }
