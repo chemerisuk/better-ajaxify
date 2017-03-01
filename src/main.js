@@ -186,7 +186,7 @@
             }
         }
 
-        const url = xhr.responseURL || xhr.getResponseHeader("Location");
+        const url = xhr.responseURL || xhr.getResponseHeader("Location") || res.URL;
         const title = res.title;
 
         updateCurrentState(el, title, content);
