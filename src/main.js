@@ -186,12 +186,15 @@
             }
         }
 
-        updateCurrentState(el, res.title, content);
+        const url = xhr.responseURL || xhr.getResponseHeader("Location");
+        const title = res.title;
+
+        updateCurrentState(el, title, content);
 
         lastState = {}; // create a new state object
 
-        if (xhr.responseURL !== location.href) {
-            history.pushState(states.length, res.title, xhr.responseURL);
+        if (url !== location.href) {
+            history.pushState(states.length, title, url);
         }
     });
 
