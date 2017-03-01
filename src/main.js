@@ -173,11 +173,13 @@
     attachNonPreventedListener("ajaxify:load", (e) => {
         const xhr = e.detail;
         const res = xhr.response;
+        const status = xhr.status;
 
         var el = document.body;
         var content = res.body;
-
-        if (content.getAttribute("role") === "main") {
+        // replace content of the main element
+        // only for successful responses
+        if (status >= 200 && status < 300 || status === 304) {
             el = document.querySelector("main,[role=main]");
             content = el.cloneNode(false);
             // move all elements to replacement
