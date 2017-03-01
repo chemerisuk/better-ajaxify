@@ -188,8 +188,20 @@
             }
         }
 
-        const url = xhr.responseURL || xhr.getResponseHeader("Location") || res.URL;
         const title = res.title;
+        var url = xhr.responseURL;
+
+        if (!url) {
+            url = xhr.getResponseHeader("Location");
+
+            if (url) {
+                url = res.URL.split("/").slice(0, 3).join("/") + url;
+            } else {
+                url = res.URL;
+            }
+            // polyfill xhr.responseURL
+            Object.defineProperty(xhr, "responseURL", {get: () => url});
+        }
 
         updateCurrentState(el, title, content);
 
