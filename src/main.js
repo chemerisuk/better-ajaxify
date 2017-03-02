@@ -89,7 +89,7 @@
             if (el.getAttribute("aria-disabled") === "true") {
                 e.preventDefault();
             } else {
-                const formEnctype = el.enctype;
+                const formEnctype = el.getAttribute("enctype");
 
                 var data;
 
@@ -183,7 +183,7 @@
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
 
             if (method !== "GET") {
-                xhr.setRequestHeader("Content-Type", el.enctype);
+                xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
             }
 
             if (el.nodeType === 1) {
