@@ -61,15 +61,13 @@
         }
 
         if (link && !link.target) {
-            if (link.getAttribute("aria-disabled") === "true") {
-                e.preventDefault();
-            } else if (link.protocol.slice(0, 4) === "http") {
+            if (link.protocol.slice(0, 4) === "http") {
                 // handle only http(s) links
                 const targetUrl = link.href;
                 const currentUrl = location.href;
 
                 if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
-                    if (dispatchAjaxifyEvent(link, "fetch", link.href)) {
+                    if (dispatchAjaxifyEvent(link, "fetch")) {
                         // override default bahavior for links
                         e.preventDefault();
                     }
@@ -86,62 +84,58 @@
         const el = e.target;
 
         if (!el.target) {
-            if (el.getAttribute("aria-disabled") === "true") {
-                e.preventDefault();
+            const formEnctype = el.getAttribute("enctype");
+
+            var data;
+
+            if (formEnctype === "multipart/form-data") {
+                data = new FormData(el);
             } else {
-                const formEnctype = el.getAttribute("enctype");
+                data = {};
 
-                var data;
+                for (var i = 0, field; field = el.elements[i]; ++i) {
+                    const fieldType = field.type;
 
-                if (formEnctype === "multipart/form-data") {
-                    data = new FormData(el);
-                } else {
-                    data = {};
+                    if (fieldType && field.name && !field.disabled) {
+                        const fieldName = field.name;
 
-                    for (var i = 0, field; field = el.elements[i]; ++i) {
-                        const fieldType = field.type;
-
-                        if (fieldType && field.name && !field.disabled) {
-                            const fieldName = field.name;
-
-                            if (fieldType === "select-multiple") {
-                                for (var j = 0, option; option = field.options[j]; ++j) {
-                                    if (option.selected) {
-                                        (data[fieldName] = data[fieldName] || []).push(option.value);
-                                    }
+                        if (fieldType === "select-multiple") {
+                            for (var j = 0, option; option = field.options[j]; ++j) {
+                                if (option.selected) {
+                                    (data[fieldName] = data[fieldName] || []).push(option.value);
                                 }
-                            } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
-                                data[fieldName] = field.value;
                             }
+                        } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
+                            data[fieldName] = field.value;
                         }
                     }
                 }
+            }
 
-                if (dispatchAjaxifyEvent(el, "serialize", data)) {
-                    if (data instanceof FormData) {
-                        lastFormData = data;
-                    } else {
-                        const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
-                        const reSpace = encode === identity ? / /g : /%20/g;
+            if (dispatchAjaxifyEvent(el, "serialize", data)) {
+                if (data instanceof FormData) {
+                    lastFormData = data;
+                } else {
+                    const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
+                    const reSpace = encode === identity ? / /g : /%20/g;
 
-                        lastFormData = Object.keys(data).map((key) => {
-                            const name = encode(key);
-                            var value = data[key];
+                    lastFormData = Object.keys(data).map((key) => {
+                        const name = encode(key);
+                        var value = data[key];
 
-                            if (Array.isArray(value)) {
-                                value = value.map(encode).join("&" + name + "=");
-                            }
+                        if (Array.isArray(value)) {
+                            value = value.map(encode).join("&" + name + "=");
+                        }
 
-                            return name + "=" + encode(value);
-                        }).join("&").replace(reSpace, "+");
-                    }
-
-                    if (dispatchAjaxifyEvent(el, "fetch")) {
-                        e.preventDefault();
-                    }
-
-                    lastFormData = null; // cleanup internal reference
+                        return name + "=" + encode(value);
+                    }).join("&").replace(reSpace, "+");
                 }
+
+                if (dispatchAjaxifyEvent(el, "fetch")) {
+                    e.preventDefault();
+                }
+
+                lastFormData = null; // cleanup internal reference
             }
         }
     });
@@ -168,10 +162,6 @@
 
         ["abort", "error", "load", "timeout"].forEach((type) => {
             xhr["on" + type] = () => {
-                if (el.nodeType === 1) {
-                    el.setAttribute("aria-disabled", "false");
-                }
-
                 dispatchAjaxifyEvent(el, type, xhr);
             };
         });
@@ -184,10 +174,6 @@
 
             if (method !== "GET") {
                 xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
-            }
-
-            if (el.nodeType === 1) {
-                el.setAttribute("aria-disabled", "true");
             }
 
             xhr.send(lastFormData);
