@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 2.0.0-beta.2 Wed, 01 Mar 2017 09:13:36 GMT
+ * @version 2.0.0-beta.3 Thu, 02 Mar 2017 09:08:38 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2017 Maksim Chemerisuk
  * @license MIT
@@ -17,8 +17,9 @@
         return s;
     };
     var states = []; // in-memory storage for states
-    var lastState = {};
-    var lastFormData = null;
+    var lastState = {},
+        lastClickedLink,
+        lastFormData;
 
     function attachNonPreventedListener(eventType, callback) {
         document.addEventListener(eventType, function (e) {
@@ -80,7 +81,7 @@
                 var currentUrl = location.href;
 
                 if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
-                    if (dispatchAjaxifyEvent(link, "fetch", link.href)) {
+                    if (dispatchAjaxifyEvent(link, "fetch")) {
                         // override default bahavior for links
                         e.preventDefault();
                     }
@@ -100,49 +101,59 @@
             if (el.getAttribute("aria-disabled") === "true") {
                 e.preventDefault();
             } else {
-                var formEnctype = el.enctype;
+                var formEnctype = el.getAttribute("enctype");
 
-                var url = el.action;
+                var data;
 
                 if (formEnctype === "multipart/form-data") {
-                    lastFormData = new FormData(el);
+                    data = new FormData(el);
                 } else {
-                    var encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
-                    var qs = [];
+                    data = {};
 
                     for (var i = 0, field; field = el.elements[i]; ++i) {
-                        if (field.name && !field.disabled) {
-                            var fieldType = field.type;
-                            var fieldName = encode(field.name);
+                        var fieldType = field.type;
+
+                        if (fieldType && field.name && !field.disabled) {
+                            var fieldName = field.name;
 
                             if (fieldType === "select-multiple") {
                                 for (var j = 0, option; option = field.options[j]; ++j) {
                                     if (option.selected) {
-                                        qs.push(fieldName + "=" + encode(option.value));
+                                        (data[fieldName] = data[fieldName] || []).push(option.value);
                                     }
                                 }
                             } else if (fieldType !== "checkbox" && fieldType !== "radio" || field.checked) {
-                                qs.push(fieldName + "=" + encode(field.value));
+                                data[fieldName] = field.value;
                             }
                         }
                     }
+                }
 
-                    if (qs.length) {
-                        lastFormData = qs.join("&").split(encode === identity ? " " : "%20").join("+");
+                if (dispatchAjaxifyEvent(el, "serialize", data)) {
+                    if (data instanceof FormData) {
+                        lastFormData = data;
+                    } else {
+                        var encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
+                        var reSpace = encode === identity ? / /g : /%20/g;
 
-                        if (!el.method || el.method.toUpperCase() === "GET") {
-                            url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
+                        lastFormData = Object.keys(data).map(function (key) {
+                            var name = encode(key);
+                            var value = data[key];
 
-                            lastFormData = null; // don't send data for GET forms
-                        }
+                            if (Array.isArray(value)) {
+                                value = value.map(encode).join("&" + name + "=");
+                            }
+
+                            return name + "=" + encode(value);
+                        }).join("&").replace(reSpace, "+");
                     }
-                }
 
-                if (dispatchAjaxifyEvent(el, "fetch", url)) {
-                    e.preventDefault();
-                }
+                    if (dispatchAjaxifyEvent(el, "fetch")) {
+                        e.preventDefault();
+                    }
 
-                lastFormData = null; // cleanup internal reference
+                    lastFormData = null; // cleanup internal reference
+                }
             }
         }
     });
@@ -151,33 +162,53 @@
         var el = e.target;
         var xhr = new XMLHttpRequest();
         var method = (el.method || "GET").toUpperCase();
+        var nodeName = el.nodeName.toLowerCase();
+
+        var url = e.detail;
+
+        if (nodeName === "a") {
+            url = url || el.href;
+
+            if (lastClickedLink) {
+                lastClickedLink.removeAttribute("aria-disabled");
+            }
+
+            lastClickedLink = el;
+
+            el.setAttribute("aria-disabled", "true");
+        } else if (nodeName === "form") {
+            url = url || el.action;
+
+            if (method === "GET") {
+                url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
+                // for get forms append all data to url
+                lastFormData = null;
+            }
+
+            el.setAttribute("aria-disabled", "true");
+        }
 
         ["abort", "error", "load", "timeout"].forEach(function (type) {
             xhr["on" + type] = function () {
-                if (el.nodeType === 1) {
-                    el.setAttribute("aria-disabled", "false");
+                if (nodeName === "form") {
+                    el.removeAttribute("aria-disabled");
                 }
 
                 dispatchAjaxifyEvent(el, type, xhr);
             };
         });
 
-        xhr.open(method, e.detail, true);
+        xhr.open(method, url, true);
         xhr.responseType = "document";
-        xhr.data = lastFormData;
-
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-        if (method !== "GET") {
-            xhr.setRequestHeader("Content-Type", el.enctype);
-        }
 
         if (dispatchAjaxifyEvent(el, "send", xhr)) {
-            if (el.nodeType === 1) {
-                el.setAttribute("aria-disabled", "true");
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+            if (method !== "GET") {
+                xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
             }
 
-            xhr.send(xhr.data);
+            xhr.send(lastFormData);
         }
     });
 
