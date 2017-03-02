@@ -91,47 +91,57 @@
             } else {
                 const formEnctype = el.enctype;
 
-                var url = el.action;
+                var data;
 
                 if (formEnctype === "multipart/form-data") {
-                    lastFormData = new FormData(el);
+                    data = new FormData(el);
                 } else {
-                    const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
-                    const qs = [];
+                    data = {};
 
                     for (var i = 0, field; field = el.elements[i]; ++i) {
-                        if (field.name && !field.disabled) {
-                            const fieldType = field.type;
-                            const fieldName = encode(field.name);
+                        const fieldType = field.type;
+
+                        if (fieldType && field.name && !field.disabled) {
+                            const fieldName = field.name;
 
                             if (fieldType === "select-multiple") {
                                 for (var j = 0, option; option = field.options[j]; ++j) {
                                     if (option.selected) {
-                                        qs.push(fieldName + "=" + encode(option.value));
+                                        (data[fieldName] = data[fieldName] || []).push(option.value);
                                     }
                                 }
                             } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
-                                qs.push(fieldName + "=" + encode(field.value));
+                                data[fieldName] = field.value;
                             }
                         }
                     }
+                }
 
-                    if (qs.length) {
-                        lastFormData = qs.join("&").split(encode === identity ? " " : "%20").join("+");
+                if (dispatchAjaxifyEvent(el, "serialize", data)) {
+                    if (data instanceof FormData) {
+                        lastFormData = data;
+                    } else {
+                        const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
+                        const reSpace = encode === identity ? / /g : /%20/g;
 
-                        if (!el.method || el.method.toUpperCase() === "GET") {
-                            url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
+                        lastFormData = Object.keys(data).map((key) => {
+                            const name = encode(key);
+                            var value = data[key];
 
-                            lastFormData = null; // don't send data for GET forms
-                        }
+                            if (Array.isArray(value)) {
+                                value = value.map(encode).join("&" + name + "=");
+                            }
+
+                            return name + "=" + encode(value);
+                        }).join("&").replace(reSpace, "+");
                     }
-                }
 
-                if (dispatchAjaxifyEvent(el, "fetch", url)) {
-                    e.preventDefault();
-                }
+                    if (dispatchAjaxifyEvent(el, "fetch")) {
+                        e.preventDefault();
+                    }
 
-                lastFormData = null; // cleanup internal reference
+                    lastFormData = null; // cleanup internal reference
+                }
             }
         }
     });
@@ -140,6 +150,21 @@
         const el = e.target;
         const xhr = new XMLHttpRequest();
         const method = (el.method || "GET").toUpperCase();
+        const nodeName = el.nodeName.toLowerCase();
+
+        var url = e.detail;
+
+        if (nodeName === "a") {
+            url = url || el.href;
+        } else if (nodeName === "form") {
+            url = url || el.action;
+
+            if (method === "GET") {
+                url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
+                // for get forms append all data to url
+                lastFormData = null;
+            }
+        }
 
         ["abort", "error", "load", "timeout"].forEach((type) => {
             xhr["on" + type] = () => {
@@ -151,22 +176,21 @@
             };
         });
 
-        xhr.open(method, e.detail, true);
+        xhr.open(method, url, true);
         xhr.responseType = "document";
-        xhr.data = lastFormData;
-
-        xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-        if (method !== "GET") {
-            xhr.setRequestHeader("Content-Type", el.enctype);
-        }
 
         if (dispatchAjaxifyEvent(el, "send", xhr)) {
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+            if (method !== "GET") {
+                xhr.setRequestHeader("Content-Type", el.enctype);
+            }
+
             if (el.nodeType === 1) {
                 el.setAttribute("aria-disabled", "true");
             }
 
-            xhr.send(xhr.data);
+            xhr.send(lastFormData);
         }
     });
 
