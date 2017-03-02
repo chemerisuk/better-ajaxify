@@ -6,8 +6,7 @@
 
     const identity = (s) => s;
     const states = []; // in-memory storage for states
-    var lastState = {};
-    var lastFormData = null;
+    var lastState = {}, lastClickedLink, lastFormData;
 
     function attachNonPreventedListener(eventType, callback) {
         document.addEventListener(eventType, function(e) {
@@ -61,7 +60,9 @@
         }
 
         if (link && !link.target) {
-            if (link.protocol.slice(0, 4) === "http") {
+            if (link.getAttribute("aria-disabled") === "true") {
+                e.preventDefault();
+            } else if (link.protocol.slice(0, 4) === "http") {
                 // handle only http(s) links
                 const targetUrl = link.href;
                 const currentUrl = location.href;
@@ -84,58 +85,62 @@
         const el = e.target;
 
         if (!el.target) {
-            const formEnctype = el.getAttribute("enctype");
-
-            var data;
-
-            if (formEnctype === "multipart/form-data") {
-                data = new FormData(el);
+            if (el.getAttribute("aria-disabled") === "true") {
+                e.preventDefault();
             } else {
-                data = {};
+                const formEnctype = el.getAttribute("enctype");
 
-                for (var i = 0, field; field = el.elements[i]; ++i) {
-                    const fieldType = field.type;
+                var data;
 
-                    if (fieldType && field.name && !field.disabled) {
-                        const fieldName = field.name;
+                if (formEnctype === "multipart/form-data") {
+                    data = new FormData(el);
+                } else {
+                    data = {};
 
-                        if (fieldType === "select-multiple") {
-                            for (var j = 0, option; option = field.options[j]; ++j) {
-                                if (option.selected) {
-                                    (data[fieldName] = data[fieldName] || []).push(option.value);
+                    for (var i = 0, field; field = el.elements[i]; ++i) {
+                        const fieldType = field.type;
+
+                        if (fieldType && field.name && !field.disabled) {
+                            const fieldName = field.name;
+
+                            if (fieldType === "select-multiple") {
+                                for (var j = 0, option; option = field.options[j]; ++j) {
+                                    if (option.selected) {
+                                        (data[fieldName] = data[fieldName] || []).push(option.value);
+                                    }
                                 }
+                            } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
+                                data[fieldName] = field.value;
                             }
-                        } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
-                            data[fieldName] = field.value;
                         }
                     }
                 }
-            }
 
-            if (dispatchAjaxifyEvent(el, "serialize", data)) {
-                if (data instanceof FormData) {
-                    lastFormData = data;
-                } else {
-                    const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
-                    const reSpace = encode === identity ? / /g : /%20/g;
+                if (dispatchAjaxifyEvent(el, "serialize", data)) {
+                    if (data instanceof FormData) {
+                        lastFormData = data;
+                    } else {
+                        const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
+                        const reSpace = encode === identity ? / /g : /%20/g;
 
-                    lastFormData = Object.keys(data).map((key) => {
-                        const name = encode(key);
-                        var value = data[key];
+                        lastFormData = Object.keys(data).map((key) => {
+                            const name = encode(key);
+                            var value = data[key];
 
-                        if (Array.isArray(value)) {
-                            value = value.map(encode).join("&" + name + "=");
-                        }
+                            if (Array.isArray(value)) {
+                                value = value.map(encode).join("&" + name + "=");
+                            }
 
-                        return name + "=" + encode(value);
-                    }).join("&").replace(reSpace, "+");
+                            return name + "=" + encode(value);
+                        }).join("&").replace(reSpace, "+");
+                    }
+
+                    if (dispatchAjaxifyEvent(el, "fetch")) {
+                        e.preventDefault();
+                    }
+
+                    lastFormData = null; // cleanup internal reference
                 }
-
-                if (dispatchAjaxifyEvent(el, "fetch")) {
-                    e.preventDefault();
-                }
-
-                lastFormData = null; // cleanup internal reference
             }
         }
     });
@@ -150,6 +155,14 @@
 
         if (nodeName === "a") {
             url = url || el.href;
+
+            if (lastClickedLink) {
+                lastClickedLink.removeAttribute("aria-disabled");
+            }
+
+            lastClickedLink = el;
+
+            el.setAttribute("aria-disabled", "true");
         } else if (nodeName === "form") {
             url = url || el.action;
 
@@ -158,10 +171,16 @@
                 // for get forms append all data to url
                 lastFormData = null;
             }
+
+            el.setAttribute("aria-disabled", "true");
         }
 
         ["abort", "error", "load", "timeout"].forEach((type) => {
             xhr["on" + type] = () => {
+                if (nodeName === "form") {
+                    el.removeAttribute("aria-disabled");
+                }
+
                 dispatchAjaxifyEvent(el, type, xhr);
             };
         });
