@@ -175,6 +175,18 @@
             };
         });
 
+        // for error response always set responseType to "text"
+        // otherwise browser blocks access to xhr.responseText
+        xhr.onreadystatechange = function() {
+            const status = xhr.status;
+            // http://stackoverflow.com/questions/29023509/handling-error-messages-when-retrieving-a-blob-via-ajax
+            if (xhr.readyState === 2) {
+                if (status !== 304 && (status < 200 || status > 300)) {
+                    xhr.responseType = "text";
+                }
+            }
+        };
+
         xhr.open(method, url, true);
         xhr.responseType = "document";
 
@@ -196,20 +208,27 @@
     attachNonPreventedListener("ajaxify:load", (e) => {
         const xhr = e.detail;
         const res = xhr.response;
-        const status = xhr.status;
-        const title = res.title;
+        var target, content, title;
 
-        var target = document.body;
-        var content = res.body;
-        // replace content of the main element
-        // only for successful responses
-        if (status >= 200 && status < 300 || status === 304) {
+        if (res.body) {
+            title = res.title;
             target = document.querySelector("main,[role=main]");
-            content = target.cloneNode(false);
-            // move all elements to replacement
-            for (var node; node = res.body.firstChild; ) {
-                content.appendChild(node);
+
+            if (!target) {
+                target = document.body;
+                content = res.body;
+            } else {
+                content = target.cloneNode(false);
+                // move all elements to replacement
+                for (var node; node = res.body.firstChild; ) {
+                    content.appendChild(node);
+                }
             }
+        } else {
+            title = xhr.status + " " + xhr.statusText;
+            target = document.body;
+            content = document.createElement("body");
+            content.innerHTML = xhr.responseText;
         }
 
         var url = xhr.responseURL;
