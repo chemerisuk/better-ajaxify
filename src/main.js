@@ -6,7 +6,7 @@
 
     const identity = (s) => s;
     const states = []; // in-memory storage for states
-    var lastState = {}, lastClickedLink, lastFormData;
+    var lastState = {}, lastFormData;
 
     function attachNonPreventedListener(eventType, callback) {
         document.addEventListener(eventType, function(e) {
@@ -155,14 +155,6 @@
 
         if (nodeName === "a") {
             url = url || el.href;
-
-            if (lastClickedLink) {
-                lastClickedLink.removeAttribute("aria-disabled");
-            }
-
-            lastClickedLink = el;
-
-            el.setAttribute("aria-disabled", "true");
         } else if (nodeName === "form") {
             url = url || el.action;
 
@@ -171,13 +163,11 @@
                 // for get forms append all data to url
                 lastFormData = null;
             }
-
-            el.setAttribute("aria-disabled", "true");
         }
 
         ["abort", "error", "load", "timeout"].forEach((type) => {
             xhr["on" + type] = () => {
-                if (nodeName === "form") {
+                if (el.nodeType === 1) {
                     el.removeAttribute("aria-disabled");
                 }
 
@@ -196,6 +186,10 @@
             }
 
             xhr.send(lastFormData);
+
+            if (el.nodeType === 1) {
+                el.setAttribute("aria-disabled", "true");
+            }
         }
     });
 
