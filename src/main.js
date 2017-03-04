@@ -116,7 +116,9 @@
                     }
                 }
 
-                if (dispatchAjaxifyEvent(el, "serialize", data)) {
+                if (!dispatchAjaxifyEvent(el, "serialize", data)) {
+                    e.preventDefault();
+                } else {
                     if (data instanceof FormData) {
                         lastFormData = data;
                     } else {
