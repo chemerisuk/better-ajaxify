@@ -65,22 +65,51 @@
     <script src="https://cdn.jsdelivr.net/better-dom/3.0.0-rc.1/better-dom.min.js"></script>
     <script src="build/better-ajaxify.js"></script>
     <script>
-        DOM.on("ajaxify:update", ["target", "detail"], function(el, content) {
-            content = DOM.constructor(content).set("aria-hidden", "true");
+    document.addEventListener("ajaxify:update", function(e) {
+        const target = e.target;
+        var detail = e.detail;
 
-            const a = content.data("ts") || Date.now();
-            const b = el.data("ts") || Date.now() - 1;
+        if (target === document.body) {
+            const main = document.querySelector("main");
 
-            el[a > b ? "before" : "after"](content);
+            if (main) {
+                e.preventDefault();
+                // fire event for the main element instead of body
+                if (detail.response) {
+                    const resBody = detail.response.body;
 
-            content.data("ts", a).show();
+                    detail = main.cloneNode(false);
+                    // move all elements to replacement
+                    for (var node; node = resBody.firstChild; ) {
+                        detail.appendChild(node);
+                    }
+                }
 
-            el.data("ts", b).hide(function() {
-                el.remove();
-            });
+                const newEvent = document.createEvent("CustomEvent");
+                newEvent.initCustomEvent("ajaxify:update", true, true, detail);
+                main.dispatchEvent(newEvent);
+            }
+        } else {
+            target.parentNode.replaceChild(detail, target);
+        }
+    }, false);
 
-            return false;
-        });
+        // DOM.on("ajaxify:update", ["target", "detail"], function(el, content) {
+        //     content = DOM.constructor(content).set("aria-hidden", "true");
+
+        //     const a = content.data("ts") || Date.now();
+        //     const b = el.data("ts") || Date.now() - 1;
+
+        //     el[a > b ? "before" : "after"](content);
+
+        //     content.data("ts", a).show();
+
+        //     el.data("ts", b).hide(function() {
+        //         el.remove();
+        //     });
+
+        //     return false;
+        // });
     </script>
 </body>
 </html>

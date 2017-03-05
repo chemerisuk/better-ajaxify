@@ -24,19 +24,13 @@
         return el.dispatchEvent(e);
     }
 
-    function updateCurrentState(state) {
-        var target = document.body;
+    function updateState(state, xhr) {
+        const body = document.body;
+        const detail = xhr || state.body;
 
-        if (state.body.nodeName.toLowerCase() !== "body") {
-            target = document.querySelector("main,[role=main]");
+        if (dispatchAjaxifyEvent(body, "update", detail)) {
+            body.parentNode.replaceChild(state.body, body);
         }
-
-        if (dispatchAjaxifyEvent(target, "update", state.body)) {
-            target.parentNode.replaceChild(state.body, target);
-        }
-
-        lastState.body = target;
-        lastState.title = document.title;
 
         if (states.indexOf(lastState) < 0) {
             // if state does not exist - store it in memory
@@ -219,26 +213,17 @@
         const state = {};
 
         if (res.body) {
-            const target = document.querySelector("main,[role=main]");
-
-            if (!target) {
-                state.body = res.body;
-            } else {
-                state.body = target.cloneNode(false);
-                // move all elements to replacement
-                for (var node; node = res.body.firstChild; ) {
-                    state.body.appendChild(node);
-                }
-            }
-
+            state.body = res.body;
             state.title = res.title;
         } else {
-            const body = document.createElement("body");
+            const doc = document.implementation.createHTMLDocument(xhr.status + " " + xhr.statusText);
 
-            body.innerHTML = xhr.responseText;
+            doc.body.innerHTML = xhr.responseText;
 
-            state.body = body;
-            state.title = xhr.status + " " + xhr.statusText;
+            Object.defineProperty(xhr, "response", {get: () => doc});
+
+            state.body = doc.body;
+            state.title = doc.title;
         }
 
         var url = xhr.responseURL;
@@ -255,7 +240,7 @@
             Object.defineProperty(xhr, "responseURL", {get: () => url});
         }
 
-        updateCurrentState(state);
+        updateState(state, xhr);
 
         lastState = {}; // create a new state object
 
@@ -264,13 +249,18 @@
         }
     });
 
+    document.addEventListener("ajaxify:update", function(e) {
+        lastState.body = e.target;
+        lastState.title = document.title;
+    }, true);
+
     window.addEventListener("popstate", (e) => {
         // numeric value indicates better-ajaxify state
         if (!e.defaultPrevented && e.state >= 0) {
             const state = states[e.state];
 
             if (state) {
-                updateCurrentState(state);
+                updateState(state);
 
                 lastState = state;
             }
