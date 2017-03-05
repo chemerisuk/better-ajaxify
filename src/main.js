@@ -24,12 +24,18 @@
         return el.dispatchEvent(e);
     }
 
-    function updateCurrentState(el, title, content) {
-        if (dispatchAjaxifyEvent(el, "update", content)) {
-            el.parentNode.replaceChild(content, el);
+    function updateCurrentState(state) {
+        var target = document.body;
+
+        if (state.body.nodeName.toLowerCase() !== "body") {
+            target = document.querySelector("main,[role=main]");
         }
 
-        lastState.body = el;
+        if (dispatchAjaxifyEvent(target, "update", state.body)) {
+            target.parentNode.replaceChild(state.body, target);
+        }
+
+        lastState.body = target;
         lastState.title = document.title;
 
         if (states.indexOf(lastState) < 0) {
@@ -37,7 +43,7 @@
             states.push(lastState);
         }
 
-        document.title = title;
+        document.title = state.title;
     }
 
     attachNonPreventedListener("click", (e) => {
@@ -210,27 +216,29 @@
     attachNonPreventedListener("ajaxify:load", (e) => {
         const xhr = e.detail;
         const res = xhr.response;
-        var target, content, title;
+        const state = {};
 
         if (res.body) {
-            title = res.title;
-            target = document.querySelector("main,[role=main]");
+            const target = document.querySelector("main,[role=main]");
 
             if (!target) {
-                target = document.body;
-                content = res.body;
+                state.body = res.body;
             } else {
-                content = target.cloneNode(false);
+                state.body = target.cloneNode(false);
                 // move all elements to replacement
                 for (var node; node = res.body.firstChild; ) {
-                    content.appendChild(node);
+                    state.body.appendChild(node);
                 }
             }
+
+            state.title = res.title;
         } else {
-            title = xhr.status + " " + xhr.statusText;
-            target = document.body;
-            content = document.createElement("body");
-            content.innerHTML = xhr.responseText;
+            const body = document.createElement("body");
+
+            body.innerHTML = xhr.responseText;
+
+            state.body = body;
+            state.title = xhr.status + " " + xhr.statusText;
         }
 
         var url = xhr.responseURL;
@@ -247,12 +255,12 @@
             Object.defineProperty(xhr, "responseURL", {get: () => url});
         }
 
-        updateCurrentState(target, title, content);
+        updateCurrentState(state);
 
         lastState = {}; // create a new state object
 
         if (url !== location.href) {
-            history.pushState(states.length, title, url);
+            history.pushState(states.length, state.title, url);
         }
     });
 
@@ -262,17 +270,9 @@
             const state = states[e.state];
 
             if (state) {
-                var target = document.body;
+                updateCurrentState(state);
 
-                if (state.body.nodeName.toLowerCase() !== "body") {
-                    target = document.querySelector("main,[role=main]");
-                }
-
-                if (target) {
-                    updateCurrentState(target, state.title, state.body);
-
-                    lastState = state;
-                }
+                lastState = state;
             }
         }
     });
