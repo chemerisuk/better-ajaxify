@@ -5,6 +5,7 @@
     if (!history.pushState || !("timeout" in XMLHttpRequest.prototype || window.jasmine)) return;
 
     const identity = (s) => s;
+    const reTitle = /<title>(.*?)<\/title>/;
     const states = []; // in-memory storage for states
     var lastState = {}, lastFormData;
 
@@ -235,14 +236,8 @@
             state.body = res.body;
             state.title = res.title;
         } else {
-            const doc = document.implementation.createHTMLDocument(xhr.status + " " + xhr.statusText);
-
-            doc.body.innerHTML = xhr.responseText;
-
-            Object.defineProperty(xhr, "response", {get: () => doc});
-
-            state.body = doc.body;
-            state.title = doc.title;
+            state.body = res;
+            state.title = xhr.status + " " + xhr.statusText;
         }
 
         updateState(state, xhr.response);
@@ -257,9 +252,19 @@
     });
 
     document.addEventListener("ajaxify:update", function(e) {
+        const detail = e.detail;
+        // override string e.detail
+        if (typeof detail === "string") {
+            const titleMatch = reTitle.exec(detail);
+            const doc = document.implementation.createHTMLDocument(titleMatch && titleMatch[1] || "");
+
+            doc.body.innerHTML = detail.trim().replace(titleMatch && titleMatch[0], "");
+
+            Object.defineProperty(e, "detail", {get: () => doc});
+        }
+
         lastState.body = e.target;
         lastState.title = document.title;
-        // TODO: override string e.detail?
     }, true);
 
     window.addEventListener("popstate", (e) => {
