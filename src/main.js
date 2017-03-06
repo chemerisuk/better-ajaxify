@@ -24,11 +24,11 @@
         return el.dispatchEvent(e);
     }
 
-    function updateState(state, xhr) {
+    function updateState(state, detail) {
         const body = document.body;
-        const detail = xhr || state.body;
 
         if (dispatchAjaxifyEvent(body, "update", detail)) {
+            // by default just swap body elements
             body.parentNode.replaceChild(state.body, body);
         }
 
@@ -240,7 +240,7 @@
             Object.defineProperty(xhr, "responseURL", {get: () => url});
         }
 
-        updateState(state, xhr);
+        updateState(state, xhr.response);
 
         lastState = {}; // create a new state object
 
@@ -252,6 +252,7 @@
     document.addEventListener("ajaxify:update", function(e) {
         lastState.body = e.target;
         lastState.title = document.title;
+        // TODO: override string e.detail?
     }, true);
 
     window.addEventListener("popstate", (e) => {
@@ -260,7 +261,7 @@
             const state = states[e.state];
 
             if (state) {
-                updateState(state);
+                updateState(state, state.body);
 
                 lastState = state;
             }

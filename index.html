@@ -62,7 +62,6 @@
             <button type="submit">Search</button>
         </form>
     </main>
-    <script src="https://cdn.jsdelivr.net/better-dom/3.0.0-rc.1/better-dom.min.js"></script>
     <script src="build/better-ajaxify.js"></script>
     <script>
     document.addEventListener("ajaxify:update", function(e) {
@@ -74,17 +73,19 @@
 
             if (main) {
                 e.preventDefault();
-                // fire event for the main element instead of body
-                if (detail.response) {
-                    const resBody = detail.response.body;
 
-                    detail = main.cloneNode(false);
+                if (detail.nodeType !== 1) {
+                    const resBody = detail.body;
+                    const mainClone = main.cloneNode(false);
                     // move all elements to replacement
                     for (var node; node = resBody.firstChild; ) {
-                        detail.appendChild(node);
+                        mainClone.appendChild(node);
                     }
+
+                    detail = mainClone;
                 }
 
+                // fire event for the main element instead of body
                 const newEvent = document.createEvent("CustomEvent");
                 newEvent.initCustomEvent("ajaxify:update", true, true, detail);
                 main.dispatchEvent(newEvent);
@@ -93,23 +94,6 @@
             target.parentNode.replaceChild(detail, target);
         }
     }, false);
-
-        // DOM.on("ajaxify:update", ["target", "detail"], function(el, content) {
-        //     content = DOM.constructor(content).set("aria-hidden", "true");
-
-        //     const a = content.data("ts") || Date.now();
-        //     const b = el.data("ts") || Date.now() - 1;
-
-        //     el[a > b ? "before" : "after"](content);
-
-        //     content.data("ts", a).show();
-
-        //     el.data("ts", b).hide(function() {
-        //         el.remove();
-        //     });
-
-        //     return false;
-        // });
     </script>
 </body>
 </html>
