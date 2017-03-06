@@ -207,6 +207,25 @@
         }
     });
 
+    document.addEventListener("ajaxify:load", function(e) {
+        const xhr = e.detail;
+        const res = xhr.response;
+
+        var url = xhr.responseURL;
+        // polyfill xhr.responseURL value
+        if (!url && res && res.URL) {
+            url = xhr.getResponseHeader("Location");
+
+            if (url) {
+                url = res.URL.split("/").slice(0, 3).join("/") + url;
+            } else {
+                url = res.URL;
+            }
+
+            Object.defineProperty(xhr, "responseURL", {get: () => url});
+        }
+    }, true);
+
     attachNonPreventedListener("ajaxify:load", (e) => {
         const xhr = e.detail;
         const res = xhr.response;
@@ -226,23 +245,11 @@
             state.title = doc.title;
         }
 
-        var url = xhr.responseURL;
-
-        if (!url) {
-            url = xhr.getResponseHeader("Location");
-
-            if (url) {
-                url = res.URL.split("/").slice(0, 3).join("/") + url;
-            } else {
-                url = res.URL;
-            }
-            // polyfill xhr.responseURL
-            Object.defineProperty(xhr, "responseURL", {get: () => url});
-        }
-
         updateState(state, xhr.response);
 
         lastState = {}; // create a new state object
+
+        var url = xhr.responseURL;
 
         if (url !== location.href) {
             history.pushState(states.length, state.title, url);
