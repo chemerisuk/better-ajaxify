@@ -161,7 +161,7 @@
         } else if (nodeName === "form") {
             url = url || el.action;
 
-            if (method === "GET") {
+            if (method === "GET" && lastFormData) {
                 url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
                 // for get forms append all data to url
                 lastFormData = null;
