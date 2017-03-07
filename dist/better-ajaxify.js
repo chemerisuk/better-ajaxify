@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 2.0.0-beta.3 Thu, 02 Mar 2017 09:08:38 GMT
+ * @version 2.0.0-beta.4 Tue, 07 Mar 2017 12:04:52 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2017 Maksim Chemerisuk
  * @license MIT
@@ -16,9 +16,9 @@
     var identity = function (s) {
         return s;
     };
+    var reTitle = /<title>(.*?)<\/title>/;
     var states = []; // in-memory storage for states
     var lastState = {},
-        lastClickedLink,
         lastFormData;
 
     function attachNonPreventedListener(eventType, callback) {
@@ -37,20 +37,20 @@
         return el.dispatchEvent(e);
     }
 
-    function updateCurrentState(el, title, content) {
-        if (dispatchAjaxifyEvent(el, "update", content)) {
-            el.parentNode.replaceChild(content, el);
-        }
+    function updateState(state, detail) {
+        var body = document.body;
 
-        lastState.body = el;
-        lastState.title = document.title;
+        if (dispatchAjaxifyEvent(body, "update", detail)) {
+            // by default just swap body elements
+            body.parentNode.replaceChild(state.body, body);
+        }
 
         if (states.indexOf(lastState) < 0) {
             // if state does not exist - store it in memory
             states.push(lastState);
         }
 
-        document.title = title;
+        document.title = state.title;
     }
 
     attachNonPreventedListener("click", function (e) {
@@ -129,7 +129,9 @@
                     }
                 }
 
-                if (dispatchAjaxifyEvent(el, "serialize", data)) {
+                if (!dispatchAjaxifyEvent(el, "serialize", data)) {
+                    e.preventDefault();
+                } else {
                     if (data instanceof FormData) {
                         lastFormData = data;
                     } else {
@@ -168,14 +170,6 @@
 
         if (nodeName === "a") {
             url = url || el.href;
-
-            if (lastClickedLink) {
-                lastClickedLink.removeAttribute("aria-disabled");
-            }
-
-            lastClickedLink = el;
-
-            el.setAttribute("aria-disabled", "true");
         } else if (nodeName === "form") {
             url = url || el.action;
 
@@ -184,19 +178,29 @@
                 // for get forms append all data to url
                 lastFormData = null;
             }
-
-            el.setAttribute("aria-disabled", "true");
         }
 
         ["abort", "error", "load", "timeout"].forEach(function (type) {
             xhr["on" + type] = function () {
-                if (nodeName === "form") {
+                if (el.nodeType === 1) {
                     el.removeAttribute("aria-disabled");
                 }
 
                 dispatchAjaxifyEvent(el, type, xhr);
             };
         });
+
+        // for error response always set responseType to "text"
+        // otherwise browser blocks access to xhr.responseText
+        xhr.onreadystatechange = function () {
+            var status = xhr.status;
+            // http://stackoverflow.com/questions/29023509/handling-error-messages-when-retrieving-a-blob-via-ajax
+            if (xhr.readyState === 2) {
+                if (status !== 304 && (status < 200 || status > 300)) {
+                    xhr.responseType = "text";
+                }
+            }
+        };
 
         xhr.open(method, url, true);
         xhr.responseType = "document";
@@ -209,31 +213,20 @@
             }
 
             xhr.send(lastFormData);
+
+            if (el.nodeType === 1) {
+                el.setAttribute("aria-disabled", "true");
+            }
         }
     });
 
-    attachNonPreventedListener("ajaxify:load", function (e) {
+    document.addEventListener("ajaxify:load", function (e) {
         var xhr = e.detail;
         var res = xhr.response;
-        var status = xhr.status;
-        var title = res.title;
-
-        var target = document.body;
-        var content = res.body;
-        // replace content of the main element
-        // only for successful responses
-        if (status >= 200 && status < 300 || status === 304) {
-            target = document.querySelector("main,[role=main]");
-            content = target.cloneNode(false);
-            // move all elements to replacement
-            for (var node; node = res.body.firstChild;) {
-                content.appendChild(node);
-            }
-        }
 
         var url = xhr.responseURL;
-
-        if (!url) {
+        // polyfill xhr.responseURL value
+        if (!url && res && res.URL) {
             url = xhr.getResponseHeader("Location");
 
             if (url) {
@@ -241,20 +234,54 @@
             } else {
                 url = res.URL;
             }
-            // polyfill xhr.responseURL
+
             Object.defineProperty(xhr, "responseURL", { get: function () {
                     return url;
                 } });
         }
+    }, true);
 
-        updateCurrentState(target, title, content);
+    attachNonPreventedListener("ajaxify:load", function (e) {
+        var xhr = e.detail;
+        var res = xhr.response;
+        var state = {};
+
+        if (res.body) {
+            state.body = res.body;
+            state.title = res.title;
+        } else {
+            state.body = res;
+            state.title = xhr.status + " " + xhr.statusText;
+        }
+
+        updateState(state, xhr.response);
 
         lastState = {}; // create a new state object
 
+        var url = xhr.responseURL;
+
         if (url !== location.href) {
-            history.pushState(states.length, title, url);
+            history.pushState(states.length, state.title, url);
         }
     });
+
+    document.addEventListener("ajaxify:update", function (e) {
+        var detail = e.detail;
+        // override string e.detail
+        if (typeof detail === "string") {
+            var titleMatch = reTitle.exec(detail);
+            var doc = document.implementation.createHTMLDocument(titleMatch && titleMatch[1] || "");
+
+            doc.body.innerHTML = detail.trim().replace(titleMatch && titleMatch[0], "");
+
+            Object.defineProperty(e, "detail", { get: function () {
+                    return doc;
+                } });
+        }
+
+        lastState.body = e.target;
+        lastState.title = document.title;
+    }, true);
 
     window.addEventListener("popstate", function (e) {
         // numeric value indicates better-ajaxify state
@@ -262,17 +289,9 @@
             var state = states[e.state];
 
             if (state) {
-                var target = document.body;
+                updateState(state, state.body);
 
-                if (state.body.nodeName.toLowerCase() !== "body") {
-                    target = document.querySelector("main,[role=main]");
-                }
-
-                if (target) {
-                    updateCurrentState(target, state.title, state.body);
-
-                    lastState = state;
-                }
+                lastState = state;
             }
         }
     });
