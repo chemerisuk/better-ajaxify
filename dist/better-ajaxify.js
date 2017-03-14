@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 2.0.0-beta.4 Tue, 07 Mar 2017 12:04:52 GMT
+ * @version 2.0.0-beta.5 Tue, 14 Mar 2017 20:03:15 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2017 Maksim Chemerisuk
  * @license MIT
@@ -29,6 +29,10 @@
         }, false);
     }
 
+    function attachCapturingListener(eventType, callback) {
+        document.addEventListener("ajaxify:update", callback, true);
+    }
+
     function dispatchAjaxifyEvent(el, eventType, eventDetail) {
         var e = document.createEvent("CustomEvent");
 
@@ -54,42 +58,32 @@
     }
 
     attachNonPreventedListener("click", function (e) {
-        var el = e.target;
+        var body = document.body;
 
-        var link;
-
-        if (el.nodeName.toLowerCase() === "a") {
-            // detected click on a link
-            link = el;
-        } else {
-            var focusedElement = document.activeElement;
-
-            if (focusedElement.nodeName.toLowerCase() === "a") {
-                if (focusedElement.contains(el)) {
-                    // detected click on a link inner element
-                    link = focusedElement;
-                }
-            }
-        }
-
-        if (link && !link.target) {
-            if (link.getAttribute("aria-disabled") === "true") {
-                e.preventDefault();
-            } else if (link.protocol.slice(0, 4) === "http") {
-                // handle only http(s) links
-                var targetUrl = link.href;
-                var currentUrl = location.href;
-
-                if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
-                    if (dispatchAjaxifyEvent(link, "fetch")) {
-                        // override default bahavior for links
+        for (var el = e.target; el !== body; el = el.parentNode) {
+            if (el.nodeName.toLowerCase() === "a") {
+                if (!el.target) {
+                    if (el.getAttribute("aria-disabled") === "true") {
                         e.preventDefault();
+                    } else if (el.protocol.slice(0, 4) === "http") {
+                        // handle only http(s) links
+                        var targetUrl = el.href;
+                        var currentUrl = location.href;
+
+                        if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
+                            if (dispatchAjaxifyEvent(el, "fetch")) {
+                                // override default bahavior for links
+                                e.preventDefault();
+                            }
+                        } else {
+                            location.hash = el.hash;
+                            // override default bahavior for anchors
+                            e.preventDefault();
+                        }
                     }
-                } else {
-                    location.hash = link.hash;
-                    // override default bahavior for anchors
-                    e.preventDefault();
                 }
+
+                break;
             }
         }
     });
@@ -165,6 +159,7 @@
         var xhr = new XMLHttpRequest();
         var method = (el.method || "GET").toUpperCase();
         var nodeName = el.nodeName.toLowerCase();
+        var nodeType = el.nodeType;
 
         var url = e.detail;
 
@@ -173,7 +168,7 @@
         } else if (nodeName === "form") {
             url = url || el.action;
 
-            if (method === "GET") {
+            if (method === "GET" && lastFormData) {
                 url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
                 // for get forms append all data to url
                 lastFormData = null;
@@ -182,7 +177,7 @@
 
         ["abort", "error", "load", "timeout"].forEach(function (type) {
             xhr["on" + type] = function () {
-                if (el.nodeType === 1) {
+                if (nodeType === 1) {
                     el.removeAttribute("aria-disabled");
                 }
 
@@ -190,20 +185,7 @@
             };
         });
 
-        // for error response always set responseType to "text"
-        // otherwise browser blocks access to xhr.responseText
-        xhr.onreadystatechange = function () {
-            var status = xhr.status;
-            // http://stackoverflow.com/questions/29023509/handling-error-messages-when-retrieving-a-blob-via-ajax
-            if (xhr.readyState === 2) {
-                if (status !== 304 && (status < 200 || status > 300)) {
-                    xhr.responseType = "text";
-                }
-            }
-        };
-
         xhr.open(method, url, true);
-        xhr.responseType = "document";
 
         if (dispatchAjaxifyEvent(el, "send", xhr)) {
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
@@ -214,13 +196,13 @@
 
             xhr.send(lastFormData);
 
-            if (el.nodeType === 1) {
+            if (nodeType === 1) {
                 el.setAttribute("aria-disabled", "true");
             }
         }
     });
 
-    document.addEventListener("ajaxify:load", function (e) {
+    attachCapturingListener("ajaxify:load", function (e) {
         var xhr = e.detail;
         var res = xhr.response;
 
@@ -230,27 +212,21 @@
             url = xhr.getResponseHeader("Location");
 
             if (url) {
-                url = res.URL.split("/").slice(0, 3).join("/") + url;
-            } else {
-                url = res.URL;
-            }
+                url = location.origin + url;
 
-            Object.defineProperty(xhr, "responseURL", { get: function () {
-                    return url;
-                } });
+                Object.defineProperty(xhr, "responseURL", { get: function () {
+                        return url;
+                    } });
+            }
         }
-    }, true);
+    });
 
     attachNonPreventedListener("ajaxify:load", function (e) {
         var xhr = e.detail;
-        var res = xhr.response;
-        var state = {};
+        var status = xhr.status;
+        var state = { body: xhr.responseText };
 
-        if (res.body) {
-            state.body = res.body;
-            state.title = res.title;
-        } else {
-            state.body = res;
+        if (status < 200 || status > 300 && status !== 304) {
             state.title = xhr.status + " " + xhr.statusText;
         }
 
@@ -265,7 +241,7 @@
         }
     });
 
-    document.addEventListener("ajaxify:update", function (e) {
+    attachCapturingListener("ajaxify:update", function (e) {
         var detail = e.detail;
         // override string e.detail
         if (typeof detail === "string") {
@@ -281,7 +257,7 @@
 
         lastState.body = e.target;
         lastState.title = document.title;
-    }, true);
+    });
 
     window.addEventListener("popstate", function (e) {
         // numeric value indicates better-ajaxify state
