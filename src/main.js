@@ -17,6 +17,10 @@
         }, false);
     }
 
+    function attachCapturingListener(eventType, callback) {
+        document.addEventListener("ajaxify:update", callback, true);
+    }
+
     function dispatchAjaxifyEvent(el, eventType, eventDetail) {
         const e = document.createEvent("CustomEvent");
 
@@ -186,7 +190,7 @@
         }
     });
 
-    document.addEventListener("ajaxify:load", function(e) {
+    attachCapturingListener("ajaxify:load", (e) => {
         const xhr = e.detail;
         const res = xhr.response;
 
@@ -201,7 +205,7 @@
                 Object.defineProperty(xhr, "responseURL", {get: () => url});
             }
         }
-    }, true);
+    });
 
     attachNonPreventedListener("ajaxify:load", (e) => {
         const xhr = e.detail;
@@ -223,7 +227,7 @@
         }
     });
 
-    document.addEventListener("ajaxify:update", function(e) {
+    attachCapturingListener("ajaxify:update", (e) => {
         const detail = e.detail;
         // override string e.detail
         if (typeof detail === "string") {
@@ -237,7 +241,7 @@
 
         lastState.body = e.target;
         lastState.title = document.title;
-    }, true);
+    });
 
     window.addEventListener("popstate", (e) => {
         // numeric value indicates better-ajaxify state
