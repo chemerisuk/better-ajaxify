@@ -143,6 +143,7 @@
         const xhr = new XMLHttpRequest();
         const method = (el.method || "GET").toUpperCase();
         const nodeName = el.nodeName.toLowerCase();
+        const nodeType = el.nodeType;
 
         var url = e.detail;
 
@@ -160,7 +161,7 @@
 
         ["abort", "error", "load", "timeout"].forEach((type) => {
             xhr["on" + type] = () => {
-                if (el.nodeType === 1) {
+                if (nodeType === 1) {
                     el.removeAttribute("aria-disabled");
                 }
 
@@ -168,20 +169,7 @@
             };
         });
 
-        // for error response always set responseType to "text"
-        // otherwise browser blocks access to xhr.responseText
-        xhr.onreadystatechange = function() {
-            const status = xhr.status;
-            // http://stackoverflow.com/questions/29023509/handling-error-messages-when-retrieving-a-blob-via-ajax
-            if (xhr.readyState === 2) {
-                if (status !== 304 && (status < 200 || status > 300)) {
-                    xhr.responseType = "text";
-                }
-            }
-        };
-
         xhr.open(method, url, true);
-        xhr.responseType = "document";
 
         if (dispatchAjaxifyEvent(el, "send", xhr)) {
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
@@ -192,7 +180,7 @@
 
             xhr.send(lastFormData);
 
-            if (el.nodeType === 1) {
+            if (nodeType === 1) {
                 el.setAttribute("aria-disabled", "true");
             }
         }
@@ -208,25 +196,19 @@
             url = xhr.getResponseHeader("Location");
 
             if (url) {
-                url = res.URL.split("/").slice(0, 3).join("/") + url;
-            } else {
-                url = res.URL;
-            }
+                url = location.origin + url;
 
-            Object.defineProperty(xhr, "responseURL", {get: () => url});
+                Object.defineProperty(xhr, "responseURL", {get: () => url});
+            }
         }
     }, true);
 
     attachNonPreventedListener("ajaxify:load", (e) => {
         const xhr = e.detail;
-        const res = xhr.response;
-        const state = {};
+        const status = xhr.status;
+        const state = {body: xhr.responseText};
 
-        if (res.body) {
-            state.body = res.body;
-            state.title = res.title;
-        } else {
-            state.body = res;
+        if (status < 200 || status > 300 && status !== 304) {
             state.title = xhr.status + " " + xhr.statusText;
         }
 
