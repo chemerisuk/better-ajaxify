@@ -42,42 +42,32 @@
     }
 
     attachNonPreventedListener("click", (e) => {
-        const el = e.target;
+        const body = document.body;
 
-        var link;
-
-        if (el.nodeName.toLowerCase() === "a") {
-            // detected click on a link
-            link = el;
-        } else {
-            const focusedElement = document.activeElement;
-
-            if (focusedElement.nodeName.toLowerCase() === "a") {
-                if (focusedElement.contains(el)) {
-                    // detected click on a link inner element
-                    link = focusedElement;
-                }
-            }
-        }
-
-        if (link && !link.target) {
-            if (link.getAttribute("aria-disabled") === "true") {
-                e.preventDefault();
-            } else if (link.protocol.slice(0, 4) === "http") {
-                // handle only http(s) links
-                const targetUrl = link.href;
-                const currentUrl = location.href;
-
-                if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
-                    if (dispatchAjaxifyEvent(link, "fetch")) {
-                        // override default bahavior for links
+        for (var el = e.target; el !== body; el = el.parentNode) {
+            if (el.nodeName.toLowerCase() === "a") {
+                if (!el.target) {
+                    if (el.getAttribute("aria-disabled") === "true") {
                         e.preventDefault();
+                    } else if (el.protocol.slice(0, 4) === "http") {
+                        // handle only http(s) links
+                        var targetUrl = el.href;
+                        var currentUrl = location.href;
+
+                        if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
+                            if (dispatchAjaxifyEvent(el, "fetch")) {
+                                // override default bahavior for links
+                                e.preventDefault();
+                            }
+                        } else {
+                            location.hash = el.hash;
+                            // override default bahavior for anchors
+                            e.preventDefault();
+                        }
                     }
-                } else {
-                    location.hash = link.hash;
-                    // override default bahavior for anchors
-                    e.preventDefault();
                 }
+
+                break;
             }
         }
     });
