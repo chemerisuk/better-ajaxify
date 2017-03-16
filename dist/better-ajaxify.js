@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 2.0.0-beta.5 Tue, 14 Mar 2017 20:03:15 GMT
+ * @version 2.0.0-rc.1 Thu, 16 Mar 2017 15:02:35 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2017 Maksim Chemerisuk
  * @license MIT
@@ -55,6 +55,15 @@
         }
 
         document.title = state.title;
+    }
+
+    function createDocument(htmlText) {
+        var titleMatch = reTitle.exec(htmlText);
+        var doc = document.implementation.createHTMLDocument(titleMatch && titleMatch[1] || "");
+
+        doc.body.innerHTML = htmlText.trim().replace(titleMatch && titleMatch[0], "");
+
+        return doc;
     }
 
     attachNonPreventedListener("click", function (e) {
@@ -223,14 +232,16 @@
 
     attachNonPreventedListener("ajaxify:load", function (e) {
         var xhr = e.detail;
-        var status = xhr.status;
-        var state = { body: xhr.responseText };
+        var detail = createDocument(xhr.responseText);
+        var state = { body: detail.body };
 
-        if (status < 200 || status > 300 && status !== 304) {
+        if (detail.title) {
+            state.title = detail.title;
+        } else {
             state.title = xhr.status + " " + xhr.statusText;
         }
 
-        updateState(state, xhr.response);
+        updateState(state, detail);
 
         lastState = {}; // create a new state object
 
@@ -243,15 +254,12 @@
 
     attachCapturingListener("ajaxify:update", function (e) {
         var detail = e.detail;
-        // override string e.detail
+
         if (typeof detail === "string") {
-            var titleMatch = reTitle.exec(detail);
-            var doc = document.implementation.createHTMLDocument(titleMatch && titleMatch[1] || "");
-
-            doc.body.innerHTML = detail.trim().replace(titleMatch && titleMatch[0], "");
-
+            detail = createDocument(detail);
+            // override property e.detail
             Object.defineProperty(e, "detail", { get: function () {
-                    return doc;
+                    return detail;
                 } });
         }
 
