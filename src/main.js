@@ -45,6 +45,15 @@
         document.title = state.title;
     }
 
+    function createDocument(htmlText) {
+        const titleMatch = reTitle.exec(htmlText);
+        const doc = document.implementation.createHTMLDocument(titleMatch && titleMatch[1] || "");
+
+        doc.body.innerHTML = htmlText.trim().replace(titleMatch && titleMatch[0], "");
+
+        return doc;
+    }
+
     attachNonPreventedListener("click", (e) => {
         const body = document.body;
 
@@ -209,14 +218,16 @@
 
     attachNonPreventedListener("ajaxify:load", (e) => {
         const xhr = e.detail;
-        const status = xhr.status;
-        const state = {body: xhr.responseText};
+        const detail = createDocument(xhr.responseText);
+        const state = {body: detail.body};
 
-        if (status < 200 || status > 300 && status !== 304) {
+        if (detail.title) {
+            state.title = detail.title;
+        } else {
             state.title = xhr.status + " " + xhr.statusText;
         }
 
-        updateState(state, xhr.response);
+        updateState(state, detail);
 
         lastState = {}; // create a new state object
 
@@ -228,15 +239,12 @@
     });
 
     attachCapturingListener("ajaxify:update", (e) => {
-        const detail = e.detail;
-        // override string e.detail
+        var detail = e.detail;
+
         if (typeof detail === "string") {
-            const titleMatch = reTitle.exec(detail);
-            const doc = document.implementation.createHTMLDocument(titleMatch && titleMatch[1] || "");
-
-            doc.body.innerHTML = detail.trim().replace(titleMatch && titleMatch[0], "");
-
-            Object.defineProperty(e, "detail", {get: () => doc});
+            detail = createDocument(detail);
+            // override property e.detail
+            Object.defineProperty(e, "detail", {get: () => detail});
         }
 
         lastState.body = e.target;
