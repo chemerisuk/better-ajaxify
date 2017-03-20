@@ -57,7 +57,7 @@
     attachNonPreventedListener("click", (e) => {
         const body = document.body;
 
-        for (var el = e.target; el !== body; el = el.parentNode) {
+        for (var el = e.target; el && el !== body; el = el.parentNode) {
             if (el.nodeName.toLowerCase() === "a") {
                 if (!el.target) {
                     if (el.getAttribute("aria-disabled") === "true") {
