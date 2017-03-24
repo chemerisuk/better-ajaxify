@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 2.0.0-rc.1 Thu, 16 Mar 2017 15:02:35 GMT
+ * @version 2.0.0-rc.2 Fri, 24 Mar 2017 12:49:36 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2017 Maksim Chemerisuk
  * @license MIT
@@ -9,9 +9,9 @@
     /* jshint maxdepth:8, boss:true */
     "use strict";
 
-    // do not enable the plugin for old browsers BUT keep for jasmine
+    // do not enable the plugin for old browsers
 
-    if (!history.pushState || !("timeout" in XMLHttpRequest.prototype || window.jasmine)) return;
+    if (typeof history.pushState !== "function") return;
 
     var identity = function (s) {
         return s;
@@ -69,7 +69,7 @@
     attachNonPreventedListener("click", function (e) {
         var body = document.body;
 
-        for (var el = e.target; el !== body; el = el.parentNode) {
+        for (var el = e.target; el && el !== body; el = el.parentNode) {
             if (el.nodeName.toLowerCase() === "a") {
                 if (!el.target) {
                     if (el.getAttribute("aria-disabled") === "true") {
