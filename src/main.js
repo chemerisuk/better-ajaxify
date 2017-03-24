@@ -1,8 +1,8 @@
 (function(document, location, history) { /* jshint maxdepth:8, boss:true */
     "use strict";
 
-    // do not enable the plugin for old browsers BUT keep for jasmine
-    if (!history.pushState || !("timeout" in XMLHttpRequest.prototype || window.jasmine)) return;
+    // do not enable the plugin for old browsers
+    if (typeof history.pushState !== "function") return;
 
     const identity = (s) => s;
     const reTitle = /<title>(.*?)<\/title>/;
