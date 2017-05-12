@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 2.0.0-rc.2 Fri, 24 Mar 2017 12:49:36 GMT
+ * @version 2.0.0-rc.3 Fri, 12 May 2017 08:28:50 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2017 Maksim Chemerisuk
  * @license MIT
@@ -30,7 +30,7 @@
     }
 
     function attachCapturingListener(eventType, callback) {
-        document.addEventListener("ajaxify:update", callback, true);
+        document.addEventListener(eventType, callback, true);
     }
 
     function dispatchAjaxifyEvent(el, eventType, eventDetail) {
