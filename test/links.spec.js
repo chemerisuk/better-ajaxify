@@ -1,146 +1,135 @@
 describe("links", function() {
     "use strict";
 
-    // beforeEach(function() {
-    //     jasmine.Ajax.install();
+    function createLink(url) {
+        const link = document.createElement("a");
 
-    //     this.sandbox = DOM.create("div");
-    //     this.randomUrl = Math.random().toString(32).slice(2);
+        if (url !== null) {
+            link.setAttribute("href", url);
+        }
 
-    //     DOM.find("body").append(this.sandbox);
-    // });
+        return link;
+    }
 
-    // afterEach(function() {
-    //     jasmine.Ajax.uninstall();
+    beforeEach(function() {
+        jasmine.Ajax.install();
 
-    //     this.sandbox.remove();
+        this.sandbox = document.createElement("div");
+        this.randomUrl = Math.random().toString(32).slice(2);
 
-    //     this.xhr = null;
-    // });
+        document.body.appendChild(this.sandbox);
+    });
 
-    // it("should send AJAX request for links", function() {
-    //     var link = DOM.create("a[href=test]");
+    afterEach(function() {
+        jasmine.Ajax.uninstall();
 
-    //     this.sandbox.append(link);
+        document.body.removeChild(this.sandbox);
 
-    //     link.fire("click");
+        this.xhr = null;
+    });
 
-    //     this.xhr = jasmine.Ajax.requests.mostRecent();
+    it("should send AJAX request for links", function() {
+        const link = createLink("test" + Date.now());
 
-    //     expect(this.xhr).toBeDefined();
-    //     expect(this.xhr.readyState).toBe(2);
-    //     expect(this.xhr.method).toBe("GET");
-    //     expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
-    // });
+        this.sandbox.appendChild(link);
 
-    // it("should skip canceled events", function() {
-    //     var link = DOM.create("a[href=test]"),
-    //         spy = jasmine.createSpy("click");
+        link.click();
 
-    //     this.sandbox.append(link);
+        this.xhr = jasmine.Ajax.requests.mostRecent();
 
-    //     link.on("click", spy.and.returnValue(false));
-    //     link.fire("click");
+        expect(this.xhr).toBeDefined();
+        expect(this.xhr.method).toBe("GET");
+        expect(this.xhr.url === link.href).toBe(true);
+    });
 
-    //     expect(spy).toHaveBeenCalled();
+    it("should skip canceled events", function() {
+        const link = createLink("test" + Date.now());
+        const spy = jasmine.createSpy("click");
 
-    //     this.xhr = jasmine.Ajax.requests.mostRecent();
-    //     expect(this.xhr).not.toBeDefined();
-    // });
+        this.sandbox.appendChild(link);
 
-    // it("should skip elements with target", function(done) {
-    //     var link = DOM.create("a[href=test target=_blank]");
+        link.onclick = spy.and.returnValue(false);
+        link.click();
 
-    //     document.onclick = function(e) {
-    //         expect(e.defaultPrevented).toBe(false);
-    //         e.preventDefault();
-    //         // cleanup
-    //         document.onclick = null;
+        expect(spy).toHaveBeenCalled();
 
-    //         done();
-    //     };
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
 
-    //     this.sandbox.append(link);
-    //     link.fire("click");
+    it("should skip elements with target", function(done) {
+        const link = createLink("test" + Date.now());
 
-    //     this.xhr = jasmine.Ajax.requests.mostRecent();
-    //     expect(this.xhr).not.toBeDefined();
-    // });
+        link.target = "_blank";
 
-    // it("should skip non-http", function(done) {
-    //     var link = DOM.create("a[href=`mailto:support@google.com`]");
+        document.onclick = function(e) {
+            expect(e.defaultPrevented).toBe(false);
+            e.preventDefault();
+            // cleanup
+            document.onclick = null;
 
-    //     document.onclick = function(e) {
-    //         expect(e.defaultPrevented).toBe(false);
-    //         e.preventDefault();
-    //         // cleanup
-    //         document.onclick = null;
+            done();
+        };
 
-    //         done();
-    //     };
+        this.sandbox.appendChild(link);
+        link.click();
 
-    //     this.sandbox.append(link);
-    //     link.fire("click");
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
 
-    //     this.xhr = jasmine.Ajax.requests.mostRecent();
-    //     expect(this.xhr).not.toBeDefined();
-    // });
+    it("should skip non-http", function(done) {
+        const link = createLink("mailto:support@google.com");
 
-    // it("should skip absent href", function() {
-    //     var link = DOM.create("a");
+        document.onclick = function(e) {
+            expect(e.defaultPrevented).toBe(false);
+            e.preventDefault();
+            // cleanup
+            document.onclick = null;
 
-    //     this.sandbox.append(link);
+            done();
+        };
 
-    //     link.fire("click");
+        this.sandbox.appendChild(link);
+        link.click();
 
-    //     this.xhr = jasmine.Ajax.requests.mostRecent();
-    //     expect(this.xhr).not.toBeDefined();
-    // });
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
 
-    // it("overrides default behavior for anchors", function() {
-    //     var link = DOM.create("a[href=#foo]");
+    it("should skip absent href", function() {
+        var link = createLink(null);
 
-    //     this.sandbox.append(link);
+        this.sandbox.appendChild(link);
+        link.click();
 
-    //     expect(link.fire("click")).toBe(false);
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
 
-    //     this.xhr = jasmine.Ajax.requests.mostRecent();
-    //     expect(this.xhr).not.toBeDefined();
-    // });
+    it("overrides default behavior for anchors", function() {
+        var link = createLink("#foo");
 
-    // it("should handle click on elements with internal tree", function() {
-    //     var link = DOM.create("a[href=`{0}`]>i>`icon`", [this.randomUrl]);
+        this.sandbox.appendChild(link);
+        link.click();
 
-    //     this.sandbox.append(link);
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
 
-    //     link.child(0).fire("click");
+    it("should handle click on elements with internal tree", function() {
+        const link = createLink("test" + Date.now());
+        const i = document.createElement("i");
 
-    //     this.xhr = jasmine.Ajax.requests.mostRecent();
-    //     expect(this.xhr).toBeDefined();
-    //     expect(this.xhr.readyState).toBe(2);
-    //     expect(this.xhr.method).toBe("GET");
-    //     expect(this.xhr.url.indexOf(link.get("href"))).toBe(0);
-    // });
+        i.textContent = "some content";
+        link.appendChild(i);
+        this.sandbox.appendChild(link);
+        i.click();
 
-    // it("should not allow to send the same request twice", function() {
-    //     var link = DOM.create("a[href=`{0}`]", [this.randomUrl]);
+        this.xhr = jasmine.Ajax.requests.mostRecent();
 
-    //     this.sandbox.append(link);
-
-    //     link.fire("click");
-    //     link.fire("click");
-
-    //     expect(jasmine.Ajax.requests.count()).toBe(1);
-    // });
-
-    // it("skips links with the current url", function(done) {
-    //     var link = DOM.create("a");
-
-    //     link.set("href", location.href.split("#")[0]);
-
-    //     this.sandbox.append(link);
-
-    //     expect(link.fire("click")).toBe(false);
-    //     link.on("ajaxify:load", done);
-    // });
+        expect(this.xhr).toBeDefined();
+        expect(this.xhr.method).toBe("GET");
+        expect(this.xhr.url === link.href).toBe(true);
+    });
 });
