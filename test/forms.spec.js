@@ -1,120 +1,98 @@
-// describe("form", function() {
-//     "use strict";
+describe("form", function() {
+    "use strict";
 
-//     beforeEach(function() {
-//         jasmine.Ajax.install();
+    function createForm(url) {
+        const form = document.createElement("form");
+        const submitBtn = document.createElement("button");
 
-//         this.sandbox = DOM.create("div");
-//         this.randomUrl = String(Date.now());
+        submitBtn.type = "submit";
 
-//         DOM.find("body").append(this.sandbox);
-//     });
+        form.appendChild(submitBtn);
 
-//     afterEach(function() {
-//         jasmine.Ajax.uninstall();
+        if (url !== null) {
+            form.setAttribute("action", url);
+        }
 
-//         this.sandbox.remove();
+        return form;
+    }
 
-//         this.xhr = null;
-//     });
+    beforeEach(function() {
+        jasmine.Ajax.install();
 
-//     it("should send AJAX request for GET method", function() {
-//         var form = DOM.mock("form[action=`{0}`]", [this.randomUrl]);
+        this.sandbox = document.createElement("div");
+        this.randomUrl = Math.random().toString(32).slice(2);
 
-//         this.sandbox.append(form);
+        document.body.appendChild(this.sandbox);
+    });
 
-//         form.fire("submit");
+    afterEach(function() {
+        jasmine.Ajax.uninstall();
 
-//         this.xhr = jasmine.Ajax.requests.mostRecent();
+        document.body.removeChild(this.sandbox);
 
-//         expect(this.xhr).toBeDefined();
-//         expect(this.xhr.readyState).toBe(2);
-//         expect(this.xhr.method).toBe("GET");
-//         expect(this.xhr.url.indexOf(form.get("action"))).toBe(0);
-//     });
+        this.xhr = null;
+    });
 
-//     it("should send AJAX request for POST method", function() {
-//         var form = DOM.mock("form[method=post]");
+    it("should send AJAX request for GET method", function() {
+        const form = createForm("test" + Date.now());
 
-//         this.sandbox.append(form);
+        this.sandbox.appendChild(form);
+        form.querySelector("[type=submit]").click();
 
-//         form.set("action", location.href).fire("submit");
+        this.xhr = jasmine.Ajax.requests.mostRecent();
 
-//         this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).toBeDefined();
+        expect(this.xhr.method).toBe("GET");
+        expect(this.xhr.url).toBe(form.action);
+    });
 
-//         expect(this.xhr).toBeDefined();
-//         expect(this.xhr.readyState).toBe(2);
-//         expect(this.xhr.method).toBe("POST");
-//         expect(this.xhr.url.indexOf(form.get("action"))).toBe(0);
-//     });
+    it("should send AJAX request for POST method", function() {
+        const form = createForm("test" + Date.now());
 
-//     it("should skip canceled events", function() {
-//         var form = DOM.mock("form[action=`{0}`]", [this.randomUrl]),
-//             spy = jasmine.createSpy("click");
+        form.method = "POST";
 
-//         this.sandbox.append(form);
+        this.sandbox.appendChild(form);
+        form.querySelector("[type=submit]").click();
 
-//         form.on("submit", spy.and.returnValue(false));
-//         form.fire("submit");
+        this.xhr = jasmine.Ajax.requests.mostRecent();
 
-//         expect(spy).toHaveBeenCalled();
+        expect(this.xhr).toBeDefined();
+        expect(this.xhr.method).toBe("POST");
+        expect(this.xhr.url).toBe(form.action);
+    });
 
-//         this.xhr = jasmine.Ajax.requests.mostRecent();
-//         expect(this.xhr).not.toBeDefined();
-//     });
+    it("should skip canceled events", function() {
+        const form = createForm("test" + Date.now());
+        const spy = jasmine.createSpy("click");
 
-//     it("should skip elements with target", function(done) {
-//         var form = DOM.mock("form[action=`{0}` target=`_blank`]", [this.randomUrl]);
+        form.onsubmit = spy.and.returnValue(false);
 
-//         document.onsubmit = function(e) {
-//             expect(e.defaultPrevented).toBe(false);
-//             e.preventDefault();
-//             // cleanup
-//             document.onsubmit = null;
+        this.sandbox.appendChild(form);
+        form.querySelector("[type=submit]").click();
 
-//             done();
-//         };
+        expect(spy).toHaveBeenCalled();
 
-//         this.sandbox.append(form);
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
 
-//         form.fire("submit");
-//     });
+    it("should skip elements with target", function(done) {
+        const form = createForm("test" + Date.now());
 
-//     describe("submit buttons", function() {
-//         it("disabled until request is completed", function(done) {
-//             var form = DOM.mock("form[action=`{0}`]>button[type=submit]", [this.randomUrl]),
-//                 submit = form.child(0),
-//                 spy = jasmine.createSpy("load").and.callFake(function() {
-//                     expect(submit.get("disabled")).toBeFalsy();
+        form.target = "_blank";
+        document.onsubmit = function(e) {
+            expect(e.defaultPrevented).toBe(false);
+            e.preventDefault();
+            // cleanup
+            document.onsubmit = null;
 
-//                     done();
-//                 });
+            done();
+        };
 
-//             this.sandbox.append(form);
+        this.sandbox.appendChild(form);
+        form.querySelector("[type=submit]").click();
 
-//             form.on("ajaxify:success", spy).fire("submit");
-
-//             expect(submit.get("disabled")).toBeTruthy();
-
-//             this.xhr = jasmine.Ajax.requests.mostRecent();
-//             this.xhr.respondWith({
-//                 status: 200,
-//                 contentType: "application/json",
-//                 responseText: JSON.stringify({html: {main: "success"}})
-//             });
-//         });
-
-//         it("disabled only when ajaxify:send succeed", function() {
-//             var form = DOM.mock("form[action=`{0}`]>button[type=submit]", [this.randomUrl]),
-//                 submit = form.child(0),
-//                 spy = jasmine.createSpy("start").and.returnValue(false);
-
-//             this.sandbox.append(form);
-
-//             form.on("ajaxify:send", spy);
-//             form.fire("submit");
-
-//             expect(submit.get("disabled")).toBeFalsy();
-//         });
-//     });
-// });
+        this.xhr = jasmine.Ajax.requests.mostRecent();
+        expect(this.xhr).not.toBeDefined();
+    });
+});

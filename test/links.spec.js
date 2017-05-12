@@ -32,14 +32,13 @@ describe("links", function() {
         const link = createLink("test" + Date.now());
 
         this.sandbox.appendChild(link);
-
         link.click();
 
         this.xhr = jasmine.Ajax.requests.mostRecent();
 
         expect(this.xhr).toBeDefined();
         expect(this.xhr.method).toBe("GET");
-        expect(this.xhr.url === link.href).toBe(true);
+        expect(this.xhr.url).toBe(link.href);
     });
 
     it("should skip canceled events", function() {
@@ -130,6 +129,6 @@ describe("links", function() {
 
         expect(this.xhr).toBeDefined();
         expect(this.xhr.method).toBe("GET");
-        expect(this.xhr.url === link.href).toBe(true);
+        expect(this.xhr.url).toBe(link.href);
     });
 });
