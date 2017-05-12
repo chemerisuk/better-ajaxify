@@ -18,7 +18,7 @@
     }
 
     function attachCapturingListener(eventType, callback) {
-        document.addEventListener("ajaxify:update", callback, true);
+        document.addEventListener(eventType, callback, true);
     }
 
     function dispatchAjaxifyEvent(el, eventType, eventDetail) {
