@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 2.0.0-rc.3 Fri, 12 May 2017 08:28:50 GMT
+ * @version 2.0.0 Sun, 18 Jun 2017 07:42:31 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2017 Maksim Chemerisuk
  * @license MIT
@@ -72,11 +72,11 @@
         for (var el = e.target; el && el !== body; el = el.parentNode) {
             if (el.nodeName.toLowerCase() === "a") {
                 if (!el.target) {
+                    var targetUrl = el.href;
+
                     if (el.getAttribute("aria-disabled") === "true") {
                         e.preventDefault();
-                    } else if (el.protocol.slice(0, 4) === "http") {
-                        // handle only http(s) links
-                        var targetUrl = el.href;
+                    } else if (targetUrl && targetUrl.indexOf("http") === 0) {
                         var currentUrl = location.href;
 
                         if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
