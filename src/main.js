@@ -60,12 +60,12 @@
         for (var el = e.target; el && el !== body; el = el.parentNode) {
             if (el.nodeName.toLowerCase() === "a") {
                 if (!el.target) {
+                    const targetUrl = el.href;
+
                     if (el.getAttribute("aria-disabled") === "true") {
                         e.preventDefault();
-                    } else if (el.protocol.slice(0, 4) === "http") {
-                        // handle only http(s) links
-                        var targetUrl = el.href;
-                        var currentUrl = location.href;
+                    } else if (targetUrl && targetUrl.indexOf("http") === 0) {
+                        const currentUrl = location.href;
 
                         if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
                             if (dispatchAjaxifyEvent(el, "fetch")) {
