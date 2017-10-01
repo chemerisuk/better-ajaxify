@@ -201,14 +201,9 @@
                     }
 
                     if (dispatchAjaxifyEvent(el, type, xhr) && type === "load") {
-                        const doc = xhr.response;
-                        const state = {body: doc.body};
-
-                        if (doc.title) {
-                            state.title = doc.title;
-                        } else {
-                            state.title = xhr.status + " " + xhr.statusText;
-                        }
+                        const defaultTitle = xhr.status + " " + xhr.statusText;
+                        const doc = res || document.implementation.createHTMLDocument(defaultTitle);
+                        const state = {body: doc.body, title: doc.title || defaultTitle};
 
                         updateState(state, doc);
 
