@@ -178,11 +178,41 @@
                     el.removeAttribute("aria-disabled");
                 }
 
-                dispatchAjaxifyEvent(el, type, xhr);
+                var url = xhr.responseURL;
+                // polyfill xhr.responseURL value
+                if (!url && res && res.URL) {
+                    url = xhr.getResponseHeader("Location");
+
+                    if (url) {
+                        url = location.origin + url;
+                        // patch XHR object to set responseURL
+                        Object.defineProperty(xhr, "responseURL", {get: () => url});
+                    }
+                }
+
+                if (dispatchAjaxifyEvent(el, type, xhr) && type === "load") {
+                    const doc = xhr.response;
+                    const state = {body: doc.body};
+
+                    if (doc.title) {
+                        state.title = doc.title;
+                    } else {
+                        state.title = xhr.status + " " + xhr.statusText;
+                    }
+
+                    updateState(state, doc);
+
+                    lastState = {}; // create a new state object
+
+                    if (url !== location.href) {
+                        history.pushState(states.length, state.title, url);
+                    }
+                }
             };
         });
 
         xhr.open(method, url, true);
+        xhr.responseType = "document";
 
         if (dispatchAjaxifyEvent(el, "send", xhr)) {
             xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
@@ -196,45 +226,6 @@
             if (nodeType === 1) {
                 el.setAttribute("aria-disabled", "true");
             }
-        }
-    });
-
-    attachCapturingListener("ajaxify:load", (e) => {
-        const xhr = e.detail;
-        const res = xhr.response;
-
-        var url = xhr.responseURL;
-        // polyfill xhr.responseURL value
-        if (!url && res && res.URL) {
-            url = xhr.getResponseHeader("Location");
-
-            if (url) {
-                url = location.origin + url;
-
-                Object.defineProperty(xhr, "responseURL", {get: () => url});
-            }
-        }
-    });
-
-    attachNonPreventedListener("ajaxify:load", (e) => {
-        const xhr = e.detail;
-        const detail = createDocument(xhr.responseText);
-        const state = {body: detail.body};
-
-        if (detail.title) {
-            state.title = detail.title;
-        } else {
-            state.title = xhr.status + " " + xhr.statusText;
-        }
-
-        updateState(state, detail);
-
-        lastState = {}; // create a new state object
-
-        var url = xhr.responseURL;
-
-        if (url !== location.href) {
-            history.pushState(states.length, state.title, url);
         }
     });
 
