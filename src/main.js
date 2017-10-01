@@ -17,10 +17,6 @@
         }, false);
     }
 
-    function attachCapturingListener(eventType, callback) {
-        document.addEventListener(eventType, callback, true);
-    }
-
     function dispatchAjaxifyEvent(el, eventType, eventDetail) {
         const e = document.createEvent("CustomEvent");
 
@@ -153,94 +149,101 @@
 
     attachNonPreventedListener("ajaxify:fetch", (e) => {
         const el = e.target;
-        const xhr = new XMLHttpRequest();
-        const method = (el.method || "GET").toUpperCase();
-        const nodeName = el.nodeName.toLowerCase();
-        const nodeType = el.nodeType;
+        const detail = e.detail;
 
-        var url = e.detail;
+        if (detail && detail.nodeType === 9) {
+            const state = {body: detail.body, title: detail.title};
 
-        if (nodeName === "a") {
-            url = url || el.href;
-        } else if (nodeName === "form") {
-            url = url || el.action;
+            updateState(state, detail);
 
-            if (method === "GET" && lastFormData) {
-                url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
-                // for get forms append all data to url
-                lastFormData = null;
+            lastState = {}; // create a new state object
+
+            if (detail.URL !== location.href) {
+                history.pushState(states.length, state.title, detail.URL);
             }
-        }
+        } else {
+            const xhr = new XMLHttpRequest();
+            const method = (el.method || "GET").toUpperCase();
+            const nodeName = el.nodeName.toLowerCase();
+            const nodeType = el.nodeType;
 
-        ["abort", "error", "load", "timeout"].forEach((type) => {
-            xhr["on" + type] = () => {
+            var url = detail;
+
+            if (nodeName === "a") {
+                url = url || el.href;
+            } else if (nodeName === "form") {
+                url = url || el.action;
+
+                if (method === "GET" && lastFormData) {
+                    url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
+                    // for get forms append all data to url
+                    lastFormData = null;
+                }
+            }
+
+            ["abort", "error", "load", "timeout"].forEach((type) => {
+                xhr["on" + type] = () => {
+                    if (nodeType === 1) {
+                        el.removeAttribute("aria-disabled");
+                    }
+
+                    const res = xhr.response;
+                    var url = xhr.responseURL;
+                    // polyfill xhr.responseURL value
+                    if (!url && res && res.URL) {
+                        url = xhr.getResponseHeader("Location");
+
+                        if (url) {
+                            url = location.origin + url;
+                            // patch XHR object to set responseURL
+                            Object.defineProperty(xhr, "responseURL", {get: () => url});
+                        }
+                    }
+
+                    if (dispatchAjaxifyEvent(el, type, xhr) && type === "load") {
+                        const doc = xhr.response;
+                        const state = {body: doc.body};
+
+                        if (doc.title) {
+                            state.title = doc.title;
+                        } else {
+                            state.title = xhr.status + " " + xhr.statusText;
+                        }
+
+                        updateState(state, doc);
+
+                        lastState = {}; // create a new state object
+
+                        if (url !== location.href) {
+                            history.pushState(states.length, state.title, url);
+                        }
+                    }
+                };
+            });
+
+            xhr.open(method, url, true);
+            xhr.responseType = "document";
+
+            if (dispatchAjaxifyEvent(el, "send", xhr)) {
+                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+                if (method !== "GET") {
+                    xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
+                }
+
+                xhr.send(lastFormData);
+
                 if (nodeType === 1) {
-                    el.removeAttribute("aria-disabled");
+                    el.setAttribute("aria-disabled", "true");
                 }
-
-                var url = xhr.responseURL;
-                // polyfill xhr.responseURL value
-                if (!url && res && res.URL) {
-                    url = xhr.getResponseHeader("Location");
-
-                    if (url) {
-                        url = location.origin + url;
-                        // patch XHR object to set responseURL
-                        Object.defineProperty(xhr, "responseURL", {get: () => url});
-                    }
-                }
-
-                if (dispatchAjaxifyEvent(el, type, xhr) && type === "load") {
-                    const doc = xhr.response;
-                    const state = {body: doc.body};
-
-                    if (doc.title) {
-                        state.title = doc.title;
-                    } else {
-                        state.title = xhr.status + " " + xhr.statusText;
-                    }
-
-                    updateState(state, doc);
-
-                    lastState = {}; // create a new state object
-
-                    if (url !== location.href) {
-                        history.pushState(states.length, state.title, url);
-                    }
-                }
-            };
-        });
-
-        xhr.open(method, url, true);
-        xhr.responseType = "document";
-
-        if (dispatchAjaxifyEvent(el, "send", xhr)) {
-            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-            if (method !== "GET") {
-                xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
-            }
-
-            xhr.send(lastFormData);
-
-            if (nodeType === 1) {
-                el.setAttribute("aria-disabled", "true");
             }
         }
     });
 
-    attachCapturingListener("ajaxify:update", (e) => {
-        var detail = e.detail;
-
-        if (typeof detail === "string") {
-            detail = createDocument(detail);
-            // override property e.detail
-            Object.defineProperty(e, "detail", {get: () => detail});
-        }
-
+    document.addEventListener("ajaxify:update", (e) => {
         lastState.body = e.target;
         lastState.title = document.title;
-    });
+    }, true);
 
     window.addEventListener("popstate", (e) => {
         // numeric value indicates better-ajaxify state
