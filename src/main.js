@@ -5,7 +5,6 @@
     if (typeof history.pushState !== "function") return;
 
     const identity = (s) => s;
-    const reTitle = /<title>(.*?)<\/title>/;
     const states = []; // in-memory storage for states
     var lastState = {}, lastFormData;
 
@@ -17,37 +16,51 @@
         }, false);
     }
 
-    function dispatchAjaxifyEvent(el, eventType, eventDetail) {
+    function dispatchAjaxifyEvent(el, type, detail) {
         const e = document.createEvent("CustomEvent");
-
-        e.initCustomEvent("ajaxify:" + eventType, true, true, eventDetail || null);
-
+        e.initCustomEvent("ajaxify:" + type, true, true, detail || null);
         return el.dispatchEvent(e);
     }
 
     function updateState(state, detail) {
-        const body = document.body;
+        var target = document.body;
 
-        if (dispatchAjaxifyEvent(body, "update", detail)) {
-            // by default just swap body elements
-            body.parentNode.replaceChild(state.body, body);
+        if (detail.nodeType === 9) {
+            state.selector = detail.body.getAttribute("data-selector");
         }
 
+        if (state.selector) {
+            // try to find the target
+            target = document.querySelector(state.selector);
+            if (target) {
+                lastState.selector = state.selector;
+            } else {
+                target = document.body;
+            }
+        }
+
+        if (detail.nodeType === 9) {
+            // prepare target content
+            state.body = target.cloneNode(false);
+            // move all elements to replacement
+            for (var node = detail.body.firstChild; !!node; node = detail.body.firstChild) {
+                state.body.appendChild(node);
+            }
+        }
+
+        if (dispatchAjaxifyEvent(target, "update", state.body)) {
+            // by default just swap elements
+            target.parentNode.replaceChild(state.body, target);
+        }
+
+        lastState.body = target;
+        lastState.title = document.title;
         if (states.indexOf(lastState) < 0) {
             // if state does not exist - store it in memory
             states.push(lastState);
         }
 
         document.title = state.title;
-    }
-
-    function createDocument(htmlText) {
-        const titleMatch = reTitle.exec(htmlText);
-        const doc = document.implementation.createHTMLDocument(titleMatch && titleMatch[1] || "");
-
-        doc.body.innerHTML = htmlText.trim().replace(titleMatch && titleMatch[0], "");
-
-        return doc;
     }
 
     attachNonPreventedListener("click", (e) => {
@@ -152,7 +165,7 @@
         const detail = e.detail;
 
         if (detail && detail.nodeType === 9) {
-            const state = {body: detail.body, title: detail.title};
+            const state = {title: detail.title};
 
             updateState(state, detail);
 
@@ -203,7 +216,7 @@
                     if (dispatchAjaxifyEvent(el, type, xhr) && type === "load") {
                         const defaultTitle = xhr.status + " " + xhr.statusText;
                         const doc = res || document.implementation.createHTMLDocument(defaultTitle);
-                        const state = {body: doc.body, title: doc.title || defaultTitle};
+                        const state = {title: doc.title || defaultTitle};
 
                         updateState(state, doc);
 
@@ -234,11 +247,6 @@
             }
         }
     });
-
-    document.addEventListener("ajaxify:update", (e) => {
-        lastState.body = e.target;
-        lastState.title = document.title;
-    }, true);
 
     window.addEventListener("popstate", (e) => {
         // numeric value indicates better-ajaxify state
