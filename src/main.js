@@ -24,19 +24,10 @@
 
     function updateState(state, detail) {
         var target = document.body;
+        var id = (state.body || detail.body || {}).id;
 
-        if (detail.nodeType === 9) {
-            state.selector = detail.body.getAttribute("data-selector");
-        }
-
-        if (state.selector) {
-            // try to find the target
-            target = document.querySelector(state.selector);
-            if (target) {
-                lastState.selector = state.selector;
-            } else {
-                target = document.body;
-            }
+        if (id) {
+            target = document.getElementById(id) || target;
         }
 
         if (detail.nodeType === 9) {
