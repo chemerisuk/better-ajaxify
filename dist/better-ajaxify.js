@@ -1,6 +1,6 @@
 /**
  * better-ajaxify: Ajax website engine for better-dom
- * @version 2.0.0 Sun, 18 Jun 2017 07:42:31 GMT
+ * @version 2.1.0-beta.1 Sun, 08 Oct 2017 14:28:38 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
  * @copyright 2017 Maksim Chemerisuk
  * @license MIT
@@ -16,7 +16,6 @@
     var identity = function (s) {
         return s;
     };
-    var reTitle = /<title>(.*?)<\/title>/;
     var states = []; // in-memory storage for states
     var lastState = {},
         lastFormData;
@@ -29,41 +28,42 @@
         }, false);
     }
 
-    function attachCapturingListener(eventType, callback) {
-        document.addEventListener(eventType, callback, true);
-    }
-
-    function dispatchAjaxifyEvent(el, eventType, eventDetail) {
+    function dispatchAjaxifyEvent(el, type, detail) {
         var e = document.createEvent("CustomEvent");
-
-        e.initCustomEvent("ajaxify:" + eventType, true, true, eventDetail || null);
-
+        e.initCustomEvent("ajaxify:" + type, true, true, detail || null);
         return el.dispatchEvent(e);
     }
 
     function updateState(state, detail) {
-        var body = document.body;
+        var target = document.body;
+        var id = (state.body || detail.body || {}).id;
 
-        if (dispatchAjaxifyEvent(body, "update", detail)) {
-            // by default just swap body elements
-            body.parentNode.replaceChild(state.body, body);
+        if (id) {
+            target = document.getElementById(id) || target;
         }
 
+        if (detail.nodeType === 9) {
+            // prepare target content
+            state.body = target.cloneNode(false);
+            // move all elements to replacement
+            for (var node = detail.body.firstChild; !!node; node = detail.body.firstChild) {
+                state.body.appendChild(node);
+            }
+        }
+
+        if (dispatchAjaxifyEvent(target, "update", state.body)) {
+            // by default just swap elements
+            target.parentNode.replaceChild(state.body, target);
+        }
+
+        lastState.body = target;
+        lastState.title = document.title;
         if (states.indexOf(lastState) < 0) {
             // if state does not exist - store it in memory
             states.push(lastState);
         }
 
         document.title = state.title;
-    }
-
-    function createDocument(htmlText) {
-        var titleMatch = reTitle.exec(htmlText);
-        var doc = document.implementation.createHTMLDocument(titleMatch && titleMatch[1] || "");
-
-        doc.body.innerHTML = htmlText.trim().replace(titleMatch && titleMatch[0], "");
-
-        return doc;
     }
 
     attachNonPreventedListener("click", function (e) {
@@ -165,106 +165,92 @@
 
     attachNonPreventedListener("ajaxify:fetch", function (e) {
         var el = e.target;
-        var xhr = new XMLHttpRequest();
-        var method = (el.method || "GET").toUpperCase();
-        var nodeName = el.nodeName.toLowerCase();
-        var nodeType = el.nodeType;
-
-        var url = e.detail;
-
-        if (nodeName === "a") {
-            url = url || el.href;
-        } else if (nodeName === "form") {
-            url = url || el.action;
-
-            if (method === "GET" && lastFormData) {
-                url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
-                // for get forms append all data to url
-                lastFormData = null;
-            }
-        }
-
-        ["abort", "error", "load", "timeout"].forEach(function (type) {
-            xhr["on" + type] = function () {
-                if (nodeType === 1) {
-                    el.removeAttribute("aria-disabled");
-                }
-
-                dispatchAjaxifyEvent(el, type, xhr);
-            };
-        });
-
-        xhr.open(method, url, true);
-
-        if (dispatchAjaxifyEvent(el, "send", xhr)) {
-            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-            if (method !== "GET") {
-                xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
-            }
-
-            xhr.send(lastFormData);
-
-            if (nodeType === 1) {
-                el.setAttribute("aria-disabled", "true");
-            }
-        }
-    });
-
-    attachCapturingListener("ajaxify:load", function (e) {
-        var xhr = e.detail;
-        var res = xhr.response;
-
-        var url = xhr.responseURL;
-        // polyfill xhr.responseURL value
-        if (!url && res && res.URL) {
-            url = xhr.getResponseHeader("Location");
-
-            if (url) {
-                url = location.origin + url;
-
-                Object.defineProperty(xhr, "responseURL", { get: function () {
-                        return url;
-                    } });
-            }
-        }
-    });
-
-    attachNonPreventedListener("ajaxify:load", function (e) {
-        var xhr = e.detail;
-        var detail = createDocument(xhr.responseText);
-        var state = { body: detail.body };
-
-        if (detail.title) {
-            state.title = detail.title;
-        } else {
-            state.title = xhr.status + " " + xhr.statusText;
-        }
-
-        updateState(state, detail);
-
-        lastState = {}; // create a new state object
-
-        var url = xhr.responseURL;
-
-        if (url !== location.href) {
-            history.pushState(states.length, state.title, url);
-        }
-    });
-
-    attachCapturingListener("ajaxify:update", function (e) {
         var detail = e.detail;
 
-        if (typeof detail === "string") {
-            detail = createDocument(detail);
-            // override property e.detail
-            Object.defineProperty(e, "detail", { get: function () {
-                    return detail;
-                } });
-        }
+        if (detail && detail.nodeType === 9) {
+            var state = { title: detail.title };
 
-        lastState.body = e.target;
-        lastState.title = document.title;
+            updateState(state, detail);
+
+            lastState = {}; // create a new state object
+
+            if (detail.URL !== location.href) {
+                history.pushState(states.length, state.title, detail.URL);
+            }
+        } else {
+            var xhr = new XMLHttpRequest();
+            var method = (el.method || "GET").toUpperCase();
+            var nodeName = el.nodeName.toLowerCase();
+            var nodeType = el.nodeType;
+
+            var url = detail;
+
+            if (nodeName === "a") {
+                url = url || el.href;
+            } else if (nodeName === "form") {
+                url = url || el.action;
+
+                if (method === "GET" && lastFormData) {
+                    url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
+                    // for get forms append all data to url
+                    lastFormData = null;
+                }
+            }
+
+            ["abort", "error", "load", "timeout"].forEach(function (type) {
+                xhr["on" + type] = function () {
+                    if (nodeType === 1) {
+                        el.removeAttribute("aria-disabled");
+                    }
+
+                    var res = xhr.response;
+                    var url = xhr.responseURL;
+                    // polyfill xhr.responseURL value
+                    if (!url && res && res.URL) {
+                        url = xhr.getResponseHeader("Location");
+
+                        if (url) {
+                            url = location.origin + url;
+                            // patch XHR object to set responseURL
+                            Object.defineProperty(xhr, "responseURL", { get: function () {
+                                    return url;
+                                } });
+                        }
+                    }
+
+                    if (dispatchAjaxifyEvent(el, type, xhr) && type === "load") {
+                        var defaultTitle = xhr.status + " " + xhr.statusText;
+                        var doc = res || document.implementation.createHTMLDocument(defaultTitle);
+                        var _state = { title: doc.title || defaultTitle };
+
+                        updateState(_state, doc);
+
+                        lastState = {}; // create a new state object
+
+                        if (url !== location.href) {
+                            history.pushState(states.length, _state.title, url);
+                        }
+                    }
+                };
+            });
+
+            xhr.open(method, url, true);
+            xhr.responseType = "document";
+
+            if (dispatchAjaxifyEvent(el, "send", xhr)) {
+                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+                if (method !== "GET") {
+                    xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
+                }
+
+                xhr.send(lastFormData);
+
+                if (nodeType === 1) {
+                    el.setAttribute("aria-disabled", "true");
+                }
+            }
+        }
     });
 
     window.addEventListener("popstate", function (e) {
