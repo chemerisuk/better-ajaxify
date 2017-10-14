@@ -39,11 +39,6 @@
             }
         }
 
-        if (dispatchAjaxifyEvent(target, "update", state.body)) {
-            // by default just swap elements
-            target.parentNode.replaceChild(state.body, target);
-        }
-
         lastState.body = target;
         lastState.title = document.title;
         if (states.indexOf(lastState) < 0) {
@@ -52,6 +47,11 @@
         }
 
         document.title = state.title;
+
+        if (dispatchAjaxifyEvent(target, "update", state.body)) {
+            // by default just swap elements
+            target.parentNode.replaceChild(state.body, target);
+        }
     }
 
     attachNonPreventedListener("click", (e) => {
