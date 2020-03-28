@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width">
     <title>better-ajaxify demo</title>
-    <link rel="stylesheet" href="demo/main.css">
+    <link rel="stylesheet" href="./demo/demo.css">
     <style>
 
     /* animation example */
@@ -63,37 +63,6 @@
         </form>
     </main>
     <script src="build/better-ajaxify.js"></script>
-    <script>
-    document.addEventListener("ajaxify:update", function(e) {
-        const target = e.target;
-        var detail = e.detail;
-
-        if (target === document.body) {
-            const main = document.querySelector("main");
-
-            if (main) {
-                e.preventDefault();
-
-                if (detail.nodeType !== 1) {
-                    const resBody = detail.body;
-                    const mainClone = main.cloneNode(false);
-                    // move all elements to replacement
-                    for (var node; node = resBody.firstChild; ) {
-                        mainClone.appendChild(node);
-                    }
-
-                    detail = mainClone;
-                }
-
-                // fire event for the main element instead of body
-                const newEvent = document.createEvent("CustomEvent");
-                newEvent.initCustomEvent("ajaxify:update", true, true, detail);
-                main.dispatchEvent(newEvent);
-            }
-        } else {
-            target.parentNode.replaceChild(detail, target);
-        }
-    }, false);
-    </script>
+    <script src="./demo/demo.js"></script>
 </body>
 </html>

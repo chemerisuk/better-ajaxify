@@ -22,38 +22,6 @@
         return el.dispatchEvent(e);
     }
 
-    function updateState(state, detail) {
-        var target = document.body;
-        var id = (state.body || detail.body || {}).id;
-
-        if (id) {
-            target = document.getElementById(id) || target;
-        }
-
-        if (detail.nodeType === 9) {
-            // prepare target content
-            state.body = target.cloneNode(false);
-            // move all elements to replacement
-            for (var node = detail.body.firstChild; !!node; node = detail.body.firstChild) {
-                state.body.appendChild(node);
-            }
-        }
-
-        lastState.body = target;
-        lastState.title = document.title;
-        if (states.indexOf(lastState) < 0) {
-            // if state does not exist - store it in memory
-            states.push(lastState);
-        }
-
-        document.title = state.title;
-
-        if (dispatchAjaxifyEvent(target, "update", state.body)) {
-            // by default just swap elements
-            target.parentNode.replaceChild(state.body, target);
-        }
-    }
-
     attachNonPreventedListener("click", (e) => {
         const body = document.body;
 
@@ -147,93 +115,102 @@
 
     attachNonPreventedListener("ajaxify:fetch", (e) => {
         const el = e.target;
-        const detail = e.detail;
+        const method = (el.method || "GET").toUpperCase();
+        const nodeName = el.nodeName.toLowerCase();
 
-        if (detail && detail.nodeType === 9) {
-            const state = {title: detail.title};
+        let url = e.detail;
+        if (nodeName === "a") {
+            url = url || el.href;
+        } else if (nodeName === "form") {
+            url = url || el.action;
 
-            updateState(state, detail);
-
-            lastState = {}; // create a new state object
-
-            if (detail.URL !== location.href) {
-                history.pushState(states.length, state.title, detail.URL);
-            }
-        } else {
-            const xhr = new XMLHttpRequest();
-            const method = (el.method || "GET").toUpperCase();
-            const nodeName = el.nodeName.toLowerCase();
-            const nodeType = el.nodeType;
-
-            var url = detail;
-
-            if (nodeName === "a") {
-                url = url || el.href;
-            } else if (nodeName === "form") {
-                url = url || el.action;
-
-                if (method === "GET" && lastFormData) {
-                    url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
-                    // for get forms append all data to url
-                    lastFormData = null;
-                }
-            }
-
-            ["abort", "error", "load", "timeout"].forEach((type) => {
-                xhr["on" + type] = () => {
-                    const res = xhr.response;
-                    var url = xhr.responseURL;
-                    // polyfill xhr.responseURL value
-                    if (!url && res && res.URL) {
-                        url = xhr.getResponseHeader("Location");
-
-                        if (url) {
-                            url = location.origin + url;
-                            // patch XHR object to set responseURL
-                            Object.defineProperty(xhr, "responseURL", {get: () => url});
-                        }
-                    }
-
-                    if (dispatchAjaxifyEvent(el, type, xhr) && type === "load") {
-                        const defaultTitle = xhr.status + " " + xhr.statusText;
-                        const doc = res || document.implementation.createHTMLDocument(defaultTitle);
-                        const state = {title: doc.title || defaultTitle};
-
-                        updateState(state, doc);
-
-                        lastState = {}; // create a new state object
-
-                        if (url !== location.href) {
-                            history.pushState(states.length, state.title, url);
-                        }
-                    }
-                };
-            });
-
-            xhr.open(method, url, true);
-            xhr.responseType = "document";
-
-            if (dispatchAjaxifyEvent(el, "send", xhr)) {
-                xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-                if (method !== "GET") {
-                    xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
-                }
-
-                xhr.send(lastFormData);
+            if (method === "GET" && lastFormData) {
+                url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
+                // for get forms append all data to url
+                lastFormData = null;
             }
         }
+
+        const xhr = new XMLHttpRequest();
+
+        ["abort", "error", "load", "timeout"].forEach((type) => {
+            xhr["on" + type] = () => {
+                const res = xhr.response;
+                var url = xhr.responseURL;
+                // polyfill xhr.responseURL value
+                if (!url && res && res.URL) {
+                    url = xhr.getResponseHeader("Location");
+
+                    if (url) {
+                        url = location.origin + url;
+                        // patch XHR object to set responseURL
+                        Object.defineProperty(xhr, "responseURL", {get: () => url});
+                    }
+                }
+
+                if (dispatchAjaxifyEvent(el, type, xhr) && type === "load") {
+                    const defaultTitle = xhr.status + " " + xhr.statusText;
+                    const doc = res || document.implementation.createHTMLDocument(defaultTitle);
+
+                    dispatchAjaxifyEvent(document.body, "navigate", doc);
+                }
+            };
+        });
+
+        xhr.open(method, url, true);
+        xhr.responseType = "document";
+
+        if (dispatchAjaxifyEvent(el, "send", xhr)) {
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+            if (method !== "GET") {
+                xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
+            }
+
+            xhr.send(lastFormData);
+        }
+    });
+
+    attachNonPreventedListener("ajaxify:navigate", (e) => {
+        const target = e.target;
+        const detail = e.detail;
+        let state = detail;
+        if (detail.nodeType === 9) {
+            state = {title: detail.title};
+            // current state content - create a deep copy
+            state.content = e.target.cloneNode(false);
+            for (let node; node = detail.body.firstChild;) {
+                state.content.appendChild(node);
+            }
+        }
+
+        // TODO: allow detail to be a string?
+
+        lastState.content = target;
+        lastState.title = document.title;
+        if (states.indexOf(lastState) < 0) {
+            // if state does not exist - store it in memory
+            states.push(lastState);
+        }
+        lastState = state;
+
+        if (dispatchAjaxifyEvent(target, "swap", state.content)) {
+            // by default just swap elements
+            target.parentNode.replaceChild(state.content, target);
+        }
+
+        if (detail.URL && detail.URL !== location.href) {
+            history.pushState(states.length, state.title, detail.URL);
+        }
+        document.title = state.title;
     });
 
     window.addEventListener("popstate", (e) => {
         // numeric value indicates better-ajaxify state
         if (!e.defaultPrevented && e.state >= 0) {
             const state = states[e.state];
-
             if (state) {
-                updateState(state, state.body);
-
-                lastState = state;
+                dispatchAjaxifyEvent(document.body, "navigate", state);
             }
         }
     });
