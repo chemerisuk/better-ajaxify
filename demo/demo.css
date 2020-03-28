@@ -47,6 +47,16 @@ nav a {
     text-decoration: none;
 }
 
+@keyframes slide-in {
+    from { transform: translate3d(-100%,0,0); }
+    to { transform: translate3d(0,0,0); }
+}
+
+/* @keyframes slide-out {
+    from { transform: translate3d(0,0,0); }
+    to { transform: translate3d(100%,0,0); }
+} */
+
 main {
     margin-left: 15em;
     background: #FFF;
@@ -57,7 +67,18 @@ main {
     border: 1px solid;
     border-top: 0;
     border-bottom: 0;
+
+    animation-duration: 0.3s;
+    animation-timing-function: linear;
 }
+
+main[aria-hidden=false] {
+    animation-name: slide-in;
+}
+
+/* main[aria-hidden=true] {
+    animation-name: slide-out;
+} */
 
 main a:link {
     color: #578cdb;
