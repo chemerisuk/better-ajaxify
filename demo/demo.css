@@ -6,7 +6,7 @@ html, body {
 }
 
 html {
-    background: #CCC;
+    background: #eee;
 }
 
 body {
@@ -41,10 +41,20 @@ nav > .logo {
     font-size: 150%;
 }
 
+nav ul {
+    list-style: none;
+    padding: 0;
+}
+
 nav a {
     color: inherit;
     font-size: larger;
     text-decoration: none;
+}
+
+nav li[aria-selected=true] {
+    background: white;
+    color: black;
 }
 
 @keyframes slide-in {
@@ -72,7 +82,7 @@ main {
     animation-timing-function: linear;
 }
 
-main[aria-hidden=false] {
+html[data-ajaxify=on] main:not([data-ajaxify=off]) {
     animation-name: slide-in;
 }
 

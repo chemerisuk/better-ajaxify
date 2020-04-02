@@ -113,6 +113,7 @@
         }
     });
 
+    // register global listener to allow triggering http requests in JS
     attachNonPreventedListener("ajaxify:fetch", (e) => {
         const el = e.target;
         const method = (el.method || "GET").toUpperCase();
@@ -171,38 +172,30 @@
         }
     });
 
+    // register global listener to allow navigation changes in JS
     attachNonPreventedListener("ajaxify:navigate", (e) => {
         const target = e.target;
         const detail = e.detail;
-        let state = detail;
-        if (detail.nodeType === 9) {
-            state = {title: detail.title};
-            // current state content - create a deep copy
-            state.content = e.target.cloneNode(false);
-            for (let node; node = detail.body.firstChild;) {
-                state.content.appendChild(node);
-            }
-        }
 
         // TODO: allow detail to be a string?
 
-        lastState.content = target;
+        lastState.body = target;
         lastState.title = document.title;
         if (states.indexOf(lastState) < 0) {
             // if state does not exist - store it in memory
             states.push(lastState);
         }
-        lastState = state;
+        lastState = detail.nodeType ? {} : detail;
 
-        if (dispatchAjaxifyEvent(target, "swap", state.content)) {
+        if (dispatchAjaxifyEvent(target, "swap", detail.body)) {
             // by default just swap elements
-            target.parentNode.replaceChild(state.content, target);
+            target.parentNode.replaceChild(detail.body, target);
         }
 
         if (detail.URL && detail.URL !== location.href) {
-            history.pushState(states.length, state.title, detail.URL);
+            history.pushState(states.length, detail.title, detail.URL);
         }
-        document.title = state.title;
+        document.title = detail.title;
     });
 
     window.addEventListener("popstate", (e) => {
