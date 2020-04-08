@@ -143,9 +143,9 @@
                     url = xhr.getResponseHeader("Location");
 
                     if (url) {
-                        url = location.origin + url;
+                        const responseURL = location.origin + url;
                         // patch XHR object to set responseURL
-                        Object.defineProperty(xhr, "responseURL", {get: () => url});
+                        Object.defineProperty(xhr, "responseURL", {get: () => responseURL});
                     }
                 }
 
@@ -153,7 +153,7 @@
                     const defaultTitle = xhr.status + " " + xhr.statusText;
                     const doc = res || document.implementation.createHTMLDocument(defaultTitle);
 
-                    dispatchAjaxifyEvent(document.body, "navigate", doc);
+                    dispatchAjaxifyEvent(document, "navigate", doc);
                 }
             };
         });
@@ -174,12 +174,11 @@
 
     // register global listener to allow navigation changes in JS
     attachNonPreventedListener("ajaxify:navigate", (e) => {
-        const target = e.target;
         const detail = e.detail;
 
         // TODO: allow detail to be a string?
 
-        lastState.body = target;
+        lastState.body = document.body;
         lastState.title = document.title;
         if (states.indexOf(lastState) < 0) {
             // if state does not exist - store it in memory
@@ -187,9 +186,9 @@
         }
         lastState = detail.nodeType ? {} : detail;
 
-        if (dispatchAjaxifyEvent(target, "swap", detail.body)) {
+        if (dispatchAjaxifyEvent(document, "swap", detail.body)) {
             // by default just swap elements
-            target.parentNode.replaceChild(detail.body, target);
+            document.documentElement.replaceChild(detail.body, document.body);
         }
 
         if (detail.URL && detail.URL !== location.href) {
@@ -203,7 +202,7 @@
         if (!e.defaultPrevented && e.state >= 0) {
             const state = states[e.state];
             if (state) {
-                dispatchAjaxifyEvent(document.body, "navigate", state);
+                dispatchAjaxifyEvent(document, "navigate", state);
             }
         }
     });
