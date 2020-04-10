@@ -52,7 +52,9 @@ nav a {
     text-decoration: none;
 }
 
-nav li[aria-selected=true] {
+html:not([aria-busy=true]) nav li[aria-selected=true],
+html[aria-busy=true] nav a:focus {
+    display: block;
     background: white;
     color: black;
 }
@@ -78,8 +80,24 @@ main {
     border-top: 0;
     border-bottom: 0;
 
+    opacity: 1;
+
     animation-duration: 0.3s;
     animation-timing-function: linear;
+}
+
+html[aria-busy=true] main {
+    pointer-events: none;
+}
+
+html[aria-busy=true] main::before {
+    content: url(spinner.svg);
+    border: 1px solid;
+    opacity: 0.5;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate3d(-50%, -50%, 0);
 }
 
 html[data-ajaxify=on] main:not([data-ajaxify=off]) {
