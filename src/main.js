@@ -4,9 +4,10 @@
     // do not enable the plugin for old browsers
     if (typeof history.pushState !== "function") return;
 
+    const parser = new DOMParser();
     const identity = (s) => s;
     const states = []; // in-memory storage for states
-    var lastState = {}, lastFormData;
+    let lastState = {};
 
     function attachNonPreventedListener(eventType, callback) {
         document.addEventListener(eventType, function(e) {
@@ -34,7 +35,7 @@
                         const currentUrl = location.href;
 
                         if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
-                            if (dispatchAjaxifyEvent(el, "fetch")) {
+                            if (dispatchAjaxifyEvent(el, "fetch", targetUrl)) {
                                 // override default bahavior for links
                                 e.preventDefault();
                             }
@@ -57,7 +58,7 @@
         if (!el.target) {
             const formEnctype = el.getAttribute("enctype");
 
-            var data;
+            let data;
 
             if (formEnctype === "multipart/form-data") {
                 data = new FormData(el);
@@ -86,15 +87,13 @@
             if (!dispatchAjaxifyEvent(el, "serialize", data)) {
                 e.preventDefault();
             } else {
-                if (data instanceof FormData) {
-                    lastFormData = data;
-                } else {
+                if (!(data instanceof FormData)) {
                     const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
                     const reSpace = encode === identity ? / /g : /%20/g;
 
-                    lastFormData = Object.keys(data).map((key) => {
+                    data = Object.keys(data).map((key) => {
                         const name = encode(key);
-                        var value = data[key];
+                        let value = data[key];
 
                         if (Array.isArray(value)) {
                             value = value.map(encode).join("&" + name + "=");
@@ -104,72 +103,39 @@
                     }).join("&").replace(reSpace, "+");
                 }
 
-                if (dispatchAjaxifyEvent(el, "fetch")) {
-                    e.preventDefault();
+                const options = {
+                    method: el.method.toUpperCase() || "GET",
+                    headers: {"Content-Type": formEnctype || el.enctype}
+                };
+                let url = el.action;
+                if (options.method === "GET") {
+                    url += (~url.indexOf("?") ? "&" : "?") + data;
+                } else {
+                    options.body = data;
                 }
 
-                lastFormData = null; // cleanup internal reference
+                if (dispatchAjaxifyEvent(el, "fetch", new Request(url, options))) {
+                    e.preventDefault();
+                }
             }
         }
     });
 
     // register global listener to allow triggering http requests in JS
     attachNonPreventedListener("ajaxify:fetch", (e) => {
-        const el = e.target;
-        const method = (el.method || "GET").toUpperCase();
-        const nodeName = el.nodeName.toLowerCase();
-
-        let url = e.detail;
-        if (nodeName === "a") {
-            url = url || el.href;
-        } else if (nodeName === "form") {
-            url = url || el.action;
-
-            if (method === "GET" && lastFormData) {
-                url += (~url.indexOf("?") ? "&" : "?") + lastFormData;
-                // for get forms append all data to url
-                lastFormData = null;
-            }
-        }
-
-        const xhr = new XMLHttpRequest();
-
-        ["abort", "error", "load", "timeout"].forEach((type) => {
-            xhr["on" + type] = () => {
-                const res = xhr.response;
-                var url = xhr.responseURL;
-                // polyfill xhr.responseURL value
-                if (!url && res && res.URL) {
-                    url = xhr.getResponseHeader("Location");
-
-                    if (url) {
-                        const responseURL = location.origin + url;
-                        // patch XHR object to set responseURL
-                        Object.defineProperty(xhr, "responseURL", {get: () => responseURL});
-                    }
-                }
-
-                if (dispatchAjaxifyEvent(el, type, xhr) && type === "load") {
-                    const defaultTitle = xhr.status + " " + xhr.statusText;
-                    const doc = res || document.implementation.createHTMLDocument(defaultTitle);
-
+        fetch(e.detail).then(res => {
+            if (dispatchAjaxifyEvent(document, "load", res)) {
+                return res.text().then(html => {
+                    const doc = parser.parseFromString(html, "text/html");
+                    Object.defineProperty(doc, "URL", {get: () => res.url});
                     dispatchAjaxifyEvent(document, "navigate", doc);
-                }
-            };
-        });
-
-        xhr.open(method, url, true);
-        xhr.responseType = "document";
-
-        if (dispatchAjaxifyEvent(el, "send", xhr)) {
-            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
-
-            if (method !== "GET") {
-                xhr.setRequestHeader("Content-Type", el.getAttribute("enctype") || el.enctype);
+                });
             }
-
-            xhr.send(lastFormData);
-        }
+        }).catch(err => {
+            if (!dispatchAjaxifyEvent(document, "error", err)) {
+                throw err;
+            }
+        });
     });
 
     // register global listener to allow navigation changes in JS
