@@ -2,7 +2,7 @@
     "use strict";
 
     // do not enable the plugin for old browsers
-    if (typeof history.pushState !== "function") return;
+    if (!window.fetch || !window.Request || !window.Response) return;
 
     const parser = new DOMParser();
     const identity = (s) => s;
@@ -117,13 +117,7 @@
     // register global listener to allow triggering http requests in JS
     attachNonPreventedListener("ajaxify:fetch", (e) => {
         fetch(e.detail).then(res => {
-            if (dispatchAjaxifyEvent(document, "load", res)) {
-                return res.text().then(html => {
-                    const doc = parser.parseFromString(html, "text/html");
-                    Object.defineProperty(doc, "URL", {get: () => res.url});
-                    dispatchAjaxifyEvent(document, "navigate", doc);
-                });
-            }
+            dispatchAjaxifyEvent(e.target, "load", res);
         }).catch(err => {
             if (!dispatchAjaxifyEvent(document, "error", err)) {
                 throw err;
@@ -132,28 +126,40 @@
     });
 
     // register global listener to allow navigation changes in JS
-    attachNonPreventedListener("ajaxify:navigate", (e) => {
+    attachNonPreventedListener("ajaxify:load", (e) => {
         const detail = e.detail;
-
-        // TODO: allow detail to be a string?
-
-        lastState.body = document.body;
-        lastState.title = document.title;
-        if (states.indexOf(lastState) < 0) {
-            // if state does not exist - store it in memory
-            states.push(lastState);
-        }
-        lastState = detail.nodeType ? {} : detail;
-
-        if (dispatchAjaxifyEvent(document, "swap", detail.body)) {
-            // by default just swap elements
-            document.documentElement.replaceChild(detail.body, document.body);
+        let promise = Promise.resolve(detail);
+        if (detail instanceof Response) {
+            promise = detail.text().then(html => {
+                const doc = parser.parseFromString(html, "text/html");
+                Object.defineProperty(doc, "URL", {get: () => detail.url});
+                return doc;
+            });
         }
 
-        if (detail.URL && detail.URL !== location.href) {
-            history.pushState(states.length, detail.title, detail.URL);
-        }
-        document.title = detail.title;
+        promise.then(currentState => {
+            lastState.body = document.body;
+            lastState.title = document.title;
+            if (states.indexOf(lastState) < 0) {
+                // if state does not exist - store it in memory
+                states.push(lastState);
+            }
+            lastState = currentState.nodeType ? {} : currentState;
+
+            if (dispatchAjaxifyEvent(document, "show", currentState.body)) {
+                // by default just swap elements
+                document.documentElement.replaceChild(currentState.body, document.body);
+            }
+
+            if (currentState.URL && currentState.URL !== location.href) {
+                history.pushState(states.length, currentState.title, currentState.URL);
+            }
+            document.title = currentState.title;
+        }).catch(err => {
+            if (!dispatchAjaxifyEvent(document, "error", err)) {
+                throw err;
+            }
+        });
     });
 
     window.addEventListener("popstate", (e) => {
@@ -161,7 +167,7 @@
         if (!e.defaultPrevented && e.state >= 0) {
             const state = states[e.state];
             if (state) {
-                dispatchAjaxifyEvent(document, "navigate", state);
+                dispatchAjaxifyEvent(document, "load", state);
             }
         }
     });
