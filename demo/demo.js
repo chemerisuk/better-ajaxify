@@ -3,7 +3,9 @@ document.addEventListener("ajaxify:fetch", function(e) {
 
     const req = e.detail;
     const html = sessionStorage[req.url];
-    if (html) {
+    if (!html) {
+        document.documentElement.setAttribute("aria-busy", "true");
+    } else {
         e.preventDefault();
 
         const res = new Response(html);
@@ -12,8 +14,6 @@ document.addEventListener("ajaxify:fetch", function(e) {
         const event = document.createEvent("CustomEvent");
         event.initCustomEvent("ajaxify:load", true, true, res);
         document.dispatchEvent(event);
-    } else {
-        document.documentElement.setAttribute("aria-busy", "true");
     }
 }, true);
 

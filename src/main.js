@@ -114,52 +114,59 @@
         }
     });
 
-    // register global listener to allow triggering http requests in JS
     attachNonPreventedListener("ajaxify:fetch", (e) => {
-        fetch(e.detail).then(res => {
-            dispatchAjaxifyEvent(e.target, "load", res);
+        const domElement = e.target;
+        const req = e.detail;
+
+        fetch(req).then(res => {
+            dispatchAjaxifyEvent(domElement, "load", res);
         }).catch(err => {
-            if (!dispatchAjaxifyEvent(document, "error", err)) {
+            if (dispatchAjaxifyEvent(domElement, "error", err)) {
                 throw err;
             }
         });
     });
 
-    // register global listener to allow navigation changes in JS
     attachNonPreventedListener("ajaxify:load", (e) => {
-        const detail = e.detail;
-        let promise = Promise.resolve(detail);
-        if (detail instanceof Response) {
-            promise = detail.text().then(html => {
-                const doc = parser.parseFromString(html, "text/html");
-                Object.defineProperty(doc, "URL", {get: () => detail.url});
-                return doc;
-            });
-        }
+        const domElement = e.target;
+        const res = e.detail;
 
-        promise.then(currentState => {
-            lastState.body = document.body;
-            lastState.title = document.title;
-            if (states.indexOf(lastState) < 0) {
-                // if state does not exist - store it in memory
-                states.push(lastState);
-            }
-            lastState = currentState.nodeType ? {} : currentState;
+        res.text().then(html => {
+            const doc = parser.parseFromString(html, "text/html");
 
-            if (dispatchAjaxifyEvent(document, "show", currentState.body)) {
-                // by default just swap elements
-                document.documentElement.replaceChild(currentState.body, document.body);
+            if (dispatchAjaxifyEvent(domElement, "render", doc)) {
+                if (res.url !== location.href) {
+                    // update URL in address bar
+                    history.pushState(states.length, doc.title, res.url);
+                }
             }
-
-            if (currentState.URL && currentState.URL !== location.href) {
-                history.pushState(states.length, currentState.title, currentState.URL);
-            }
-            document.title = currentState.title;
         }).catch(err => {
-            if (!dispatchAjaxifyEvent(document, "error", err)) {
+            if (dispatchAjaxifyEvent(domElement, "error", err)) {
                 throw err;
             }
         });
+    });
+
+    attachNonPreventedListener("ajaxify:render", (e) => {
+        const domElement = e.target;
+        const currentState = e.detail;
+
+        lastState.body = document.body;
+        lastState.title = document.title;
+        if (states.indexOf(lastState) >= 0) {
+            lastState = currentState;
+        } else {
+            states.push(lastState);
+            // make sure that next state will be a new object
+            lastState = {};
+        }
+        // update HTML
+        if (dispatchAjaxifyEvent(domElement, "show", currentState.body)) {
+            // by default just swap elements
+            document.documentElement.replaceChild(currentState.body, document.body);
+        }
+        // update page title
+        document.title = currentState.title;
     });
 
     window.addEventListener("popstate", (e) => {
@@ -167,7 +174,7 @@
         if (!e.defaultPrevented && e.state >= 0) {
             const state = states[e.state];
             if (state) {
-                dispatchAjaxifyEvent(document, "load", state);
+                dispatchAjaxifyEvent(document, "render", state);
             }
         }
     });
