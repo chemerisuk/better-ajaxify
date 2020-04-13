@@ -111,3 +111,15 @@ html[data-ajaxify=on] main:not([data-ajaxify=off]) {
 main a:link {
     color: #578cdb;
 }
+
+@media only screen and (max-width: 600px) {
+    nav {
+        display: none;
+    }
+
+    main {
+        margin-left: 0;
+        max-width: 100%;
+        border: 0;
+    }
+}

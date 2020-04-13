@@ -35,15 +35,12 @@
                         const currentUrl = location.href;
 
                         if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
-                            if (dispatchAjaxifyEvent(el, "fetch", targetUrl)) {
-                                // override default bahavior for links
-                                e.preventDefault();
-                            }
+                            dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl));
                         } else {
                             location.hash = el.hash;
-                            // override default bahavior for anchors
-                            e.preventDefault();
                         }
+                        // always prevent default bahavior for anchors and links
+                        e.preventDefault();
                     }
                 }
 
@@ -84,9 +81,7 @@
                 }
             }
 
-            if (!dispatchAjaxifyEvent(el, "serialize", data)) {
-                e.preventDefault();
-            } else {
+            if (dispatchAjaxifyEvent(el, "serialize", data)) {
                 if (!(data instanceof FormData)) {
                     const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
                     const reSpace = encode === identity ? / /g : /%20/g;
@@ -103,20 +98,18 @@
                     }).join("&").replace(reSpace, "+");
                 }
 
-                const options = {
-                    method: el.method.toUpperCase() || "GET",
-                    headers: {"Content-Type": formEnctype || el.enctype}
-                };
+                const options = {method: el.method.toUpperCase() || "GET"};
                 let url = el.action;
                 if (options.method === "GET") {
                     url += (~url.indexOf("?") ? "&" : "?") + data;
                 } else {
                     options.body = data;
                 }
+                options.headers = {"Content-Type": formEnctype || el.enctype};
 
-                if (dispatchAjaxifyEvent(el, "fetch", new Request(url, options))) {
-                    e.preventDefault();
-                }
+                dispatchAjaxifyEvent(el, "fetch", new Request(url, options));
+                // always prevent default behavior for forms
+                e.preventDefault();
             }
         }
     });
