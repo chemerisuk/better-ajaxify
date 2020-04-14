@@ -20,7 +20,7 @@ document.addEventListener("ajaxify:fetch", function(e) {
 document.addEventListener("ajaxify:load", function(e) {
     console.log("ajaxify:load", e);
 
-    document.documentElement.removeAttribute("aria-busy");
+    document.documentElement.setAttribute("aria-busy", "false");
 
     const res = e.detail;
     if (res.ok && !res.bodyUsed) {
@@ -33,5 +33,5 @@ document.addEventListener("ajaxify:load", function(e) {
 document.addEventListener("ajaxify:error", function(e) {
     console.log("ajaxify:error", e);
 
-    document.documentElement.removeAttribute("aria-busy");
+    document.documentElement.setAttribute("aria-busy", "false");
 }, true);

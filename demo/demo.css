@@ -55,7 +55,7 @@ nav a {
 
 html:not([aria-busy=true]) nav li[aria-selected=true],
 html[aria-busy=true] nav a:focus {
-    background: white;
+    background: #FFF;
     color: black;
 }
 
@@ -63,11 +63,6 @@ html[aria-busy=true] nav a:focus {
     from { transform: translate3d(-100%,0,0); }
     to { transform: translate3d(0,0,0); }
 }
-
-/* @keyframes slide-out {
-    from { transform: translate3d(0,0,0); }
-    to { transform: translate3d(100%,0,0); }
-} */
 
 main {
     margin-left: 15em;
@@ -83,7 +78,7 @@ main {
     opacity: 1;
 
     animation-duration: 0.3s;
-    animation-timing-function: linear;
+    animation-timing-function: ease-in-out;
 }
 
 html[aria-busy=true] main {
@@ -100,13 +95,9 @@ html[aria-busy=true] main::before {
     transform: translate3d(-50%, -50%, 0);
 }
 
-html[data-ajaxify=on] main:not([data-ajaxify=off]) {
+html[aria-busy] main {
     animation-name: slide-in;
 }
-
-/* main[aria-hidden=true] {
-    animation-name: slide-out;
-} */
 
 main a:link {
     color: #578cdb;

@@ -185,6 +185,8 @@
                 dispatchAjaxifyEvent(document, "fetch", new Request(location.href));
             }
         }
+
+        // FIXME: trigger navigation request when /a -> /b#hash
     });
 
     // update initial state address url
