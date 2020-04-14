@@ -140,6 +140,8 @@
                 if (res.url !== location.href.split("#")[0]) {
                     // update URL in address bar
                     history.pushState(domStates.length, doc.title, res.url);
+                } else {
+                    history.replaceState(domStates.length, doc.title, res.url);
                 }
             }
         }).catch(err => {
@@ -173,11 +175,14 @@
     });
 
     attachNonPreventedListener(window, "popstate", (e) => {
+        const stateIndex = e.state;
         // numeric value indicates better-ajaxify state
-        if (e.state >= 0) {
-            const domState = domStates[e.state];
+        if (stateIndex >= 0) {
+            const domState = domStates[stateIndex];
             if (domState) {
                 dispatchAjaxifyEvent(document, "navigate", domState);
+            } else {
+                dispatchAjaxifyEvent(document, "fetch", new Request(location.href));
             }
         }
     });
