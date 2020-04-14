@@ -1,16 +1,18 @@
-(function(document, location, history) { /* jshint maxdepth:8, boss:true */
-    "use strict";
-
+(function(window) { /* jshint maxdepth:8, boss:true */
     // do not enable the plugin for old browsers
     if (!window.fetch || !window.Request || !window.Response) return;
 
+    const document = window.document;
+    const location = window.location;
+    const history = window.history;
+
     const parser = new DOMParser();
     const identity = (s) => s;
-    const states = []; // in-memory storage for states
-    let lastState = {};
+    const domStates = []; // in-memory storage for states
+    let lastDomState = {};
 
-    function attachNonPreventedListener(eventType, callback) {
-        document.addEventListener(eventType, function(e) {
+    function attachNonPreventedListener(target, eventType, callback) {
+        target.addEventListener(eventType, (e) => {
             if (!e.defaultPrevented) {
                 callback(e);
             }
@@ -23,7 +25,7 @@
         return el.dispatchEvent(e);
     }
 
-    attachNonPreventedListener("click", (e) => {
+    attachNonPreventedListener(document, "click", (e) => {
         const body = document.body;
 
         for (var el = e.target; el && el !== body; el = el.parentNode) {
@@ -49,7 +51,7 @@
         }
     });
 
-    attachNonPreventedListener("submit", (e) => {
+    attachNonPreventedListener(document, "submit", (e) => {
         const el = e.target;
 
         if (!el.target) {
@@ -114,7 +116,7 @@
         }
     });
 
-    attachNonPreventedListener("ajaxify:fetch", (e) => {
+    attachNonPreventedListener(document, "ajaxify:fetch", (e) => {
         const domElement = e.target;
         const req = e.detail;
 
@@ -127,17 +129,17 @@
         });
     });
 
-    attachNonPreventedListener("ajaxify:load", (e) => {
+    attachNonPreventedListener(document, "ajaxify:load", (e) => {
         const domElement = e.target;
         const res = e.detail;
 
         res.text().then(html => {
             const doc = parser.parseFromString(html, "text/html");
 
-            if (dispatchAjaxifyEvent(domElement, "render", doc)) {
-                if (res.url !== location.href) {
+            if (dispatchAjaxifyEvent(domElement, "navigate", doc)) {
+                if (res.url !== location.href.split("#")[0]) {
                     // update URL in address bar
-                    history.pushState(states.length, doc.title, res.url);
+                    history.pushState(domStates.length, doc.title, res.url);
                 }
             }
         }).catch(err => {
@@ -147,34 +149,35 @@
         });
     });
 
-    attachNonPreventedListener("ajaxify:render", (e) => {
+    attachNonPreventedListener(document, "ajaxify:navigate", (e) => {
         const domElement = e.target;
-        const currentState = e.detail;
+        const currentDomState = e.detail;
 
-        lastState.body = document.body;
-        lastState.title = document.title;
-        if (states.indexOf(lastState) >= 0) {
-            lastState = currentState;
+        lastDomState.body = document.body;
+        lastDomState.title = document.title;
+
+        if (domStates.indexOf(lastDomState) >= 0) {
+            lastDomState = currentDomState;
         } else {
-            states.push(lastState);
+            domStates.push(lastDomState);
             // make sure that next state will be a new object
-            lastState = {};
+            lastDomState = {};
         }
         // update HTML
-        if (dispatchAjaxifyEvent(domElement, "show", currentState.body)) {
+        if (dispatchAjaxifyEvent(domElement, "render", currentDomState.body)) {
             // by default just swap elements
-            document.documentElement.replaceChild(currentState.body, document.body);
+            document.documentElement.replaceChild(currentDomState.body, document.body);
         }
         // update page title
-        document.title = currentState.title;
+        document.title = currentDomState.title;
     });
 
-    window.addEventListener("popstate", (e) => {
+    attachNonPreventedListener(window, "popstate", (e) => {
         // numeric value indicates better-ajaxify state
-        if (!e.defaultPrevented && e.state >= 0) {
-            const state = states[e.state];
-            if (state) {
-                dispatchAjaxifyEvent(document, "render", state);
+        if (e.state >= 0) {
+            const domState = domStates[e.state];
+            if (domState) {
+                dispatchAjaxifyEvent(document, "navigate", domState);
             }
         }
     });
@@ -182,4 +185,4 @@
     // update initial state address url
     history.replaceState(0, document.title);
 
-}(window.document, window.location, window.history));
+}(window));
