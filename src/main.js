@@ -141,7 +141,7 @@
                     // update URL in address bar
                     history.pushState(domStates.length, doc.title, res.url);
                 } else {
-                    history.replaceState(domStates.length, doc.title, res.url);
+                    history.replaceState(domStates.length - 1, doc.title, res.url);
                 }
             }
         }).catch(err => {
@@ -177,7 +177,7 @@
     attachNonPreventedListener(window, "popstate", (e) => {
         const stateIndex = e.state;
         // numeric value indicates better-ajaxify state
-        if (stateIndex >= 0) {
+        if (typeof stateIndex === "number") {
             const domState = domStates[stateIndex];
             if (domState) {
                 dispatchAjaxifyEvent(document, "navigate", domState);
