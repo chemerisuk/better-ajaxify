@@ -36,7 +36,8 @@
                     if (targetUrl && targetUrl.indexOf("http") === 0) {
                         const currentUrl = location.href;
 
-                        if (targetUrl === currentUrl || targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
+                        if (targetUrl.split("#")[0] !== currentUrl.split("#")[0] ||
+                            targetUrl === currentUrl && el.hash !== location.hash) {
                             dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl));
                         } else {
                             location.hash = el.hash;

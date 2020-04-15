@@ -12,14 +12,29 @@ html {
 body {
     font-family: "Open Sans", sans-serif;
     color: #393838;
-    width: 55em;
+}
+
+#hamburger {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    background: white;
+
+    position: absolute;
+    top: 0.5rem;
+    left: 1.5rem;
+    font-size: 2rem;
+    line-height: 3rem;
+    width: 3rem;
+    border-radius: 5px;
+    padding: 0;
+    margin: 0;
+    outline: 0;
 }
 
 nav, main {
     height: 100%;
-
-    -webkit-box-sizing: border-box;
-    -moz-box-sizing: border-box;
     box-sizing: border-box;
 }
 
@@ -30,11 +45,8 @@ nav {
     position: absolute;
     z-index: 1;
 
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-
-    width: 15em;
     padding: 1.5em;
+    width: 80%;
 }
 
 nav > .logo {
@@ -65,27 +77,15 @@ html[aria-busy=true] nav a:focus {
 }
 
 main {
-    margin-left: 15em;
     background: #FFF;
-
     padding: 1.5em;
-    width: 40em;
-
-    border: 1px solid;
-    border-top: 0;
-    border-bottom: 0;
-
-    opacity: 1;
-
-    animation-duration: 0.3s;
-    animation-timing-function: ease-in-out;
 }
 
 html[aria-busy=true] main {
     pointer-events: none;
 }
 
-html[aria-busy=true] main::before {
+html[aria-busy=true]::before {
     content: url(spinner.svg);
     border: 1px solid;
     opacity: 0.5;
@@ -95,22 +95,48 @@ html[aria-busy=true] main::before {
     transform: translate3d(-50%, -50%, 0);
 }
 
-html[aria-busy] main {
-    animation-name: slide-in;
-}
-
 main a:link {
     color: #578cdb;
 }
 
 @media only screen and (max-width: 600px) {
+    main {
+        padding-top: 4rem;
+    }
+
     nav {
-        display: none;
+        transform: translate3d(-100%, 0, 0);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    #hamburger:hover + nav,
+    #hamburger:focus + nav {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@media only screen and (min-width: 600px) {
+    body {
+        width: 55rem;
+    }
+
+    #hamburger {
+        visibility: hidden;
     }
 
     main {
-        margin-left: 0;
-        max-width: 100%;
-        border: 0;
+        margin-left: 15em;
+        width: 40em;
+        border-right: 1px solid gray;
+        animation-duration: 0.3s;
+        animation-timing-function: ease-in-out;
+    }
+
+    html[aria-busy] main {
+        animation-name: slide-in;
+    }
+
+    nav {
+        width: 15em;
     }
 }
