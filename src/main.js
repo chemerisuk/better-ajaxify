@@ -138,11 +138,15 @@
             const doc = parser.parseFromString(html, "text/html");
 
             if (dispatchAjaxifyEvent(domElement, "navigate", doc)) {
-                if (res.url !== location.href.split("#")[0]) {
-                    // update URL in address bar
-                    history.pushState(domStates.length, doc.title, res.url);
-                } else {
-                    history.replaceState(domStates.length - 1, doc.title, res.url);
+                // Mobile Safari in full mode shows address bar
+                // with navigation buttons after pushing a new state
+                if (!window.navigator.standalone) {
+                    if (res.url !== location.href.split("#")[0]) {
+                        // update URL in address bar
+                        history.pushState(domStates.length, doc.title, res.url);
+                    } else {
+                        history.replaceState(domStates.length - 1, doc.title, res.url);
+                    }
                 }
             }
         }).catch(err => {
