@@ -137,7 +137,7 @@
         res.text().then(html => {
             const doc = parser.parseFromString(html, "text/html");
 
-            if (dispatchAjaxifyEvent(domElement, "navigate", doc)) {
+            if (dispatchAjaxifyEvent(domElement, "render", doc)) {
                 if (res.url !== location.href.split("#")[0]) {
                     // update URL in address bar
                     history.pushState(domStates.length, doc.title, res.url);
@@ -152,27 +152,24 @@
         });
     });
 
-    attachNonPreventedListener(document, "ajaxify:navigate", (e) => {
+    attachNonPreventedListener(document, "ajaxify:render", (e) => {
         const domElement = e.target;
-        const currentDomState = e.detail;
+        const newDomState = e.detail;
 
         lastDomState.body = document.body;
         lastDomState.title = document.title;
 
         if (domStates.indexOf(lastDomState) >= 0) {
-            lastDomState = currentDomState;
+            lastDomState = newDomState;
         } else {
             domStates.push(lastDomState);
             // make sure that next state will be a new object
             lastDomState = {};
         }
         // update HTML
-        if (dispatchAjaxifyEvent(domElement, "render", currentDomState.body)) {
-            // by default just swap elements
-            document.documentElement.replaceChild(currentDomState.body, document.body);
-        }
+        document.documentElement.replaceChild(newDomState.body, document.body);
         // update page title
-        document.title = currentDomState.title;
+        document.title = newDomState.title;
     });
 
     attachNonPreventedListener(window, "popstate", (e) => {
@@ -181,7 +178,7 @@
         if (typeof stateIndex === "number") {
             const domState = domStates[stateIndex];
             if (domState) {
-                dispatchAjaxifyEvent(document, "navigate", domState);
+                dispatchAjaxifyEvent(document, "render", domState);
             } else {
                 dispatchAjaxifyEvent(document, "fetch", new Request(location.href));
             }
