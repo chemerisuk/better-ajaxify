@@ -30,6 +30,10 @@ document.addEventListener("ajaxify:load", function(e) {
     }
 }, true);
 
+document.addEventListener("ajaxify:navigate", function(e) {
+    console.log("ajaxify:navigate", e);
+}, true);
+
 document.addEventListener("ajaxify:error", function(e) {
     console.log("ajaxify:error", e);
 
