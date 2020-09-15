@@ -36,6 +36,11 @@ nav, main {
 }
 
 nav {
+    /* prevent long press menu on ios */
+    -webkit-touch-callout: none;
+    /* disable text selection */
+    -webkit-user-select: none;
+
     background: #578cdb;
     color: #FFF;
 
@@ -60,6 +65,7 @@ nav a {
     font-size: larger;
     text-decoration: none;
     display: block;
+    padding: 0.75em 0;
 }
 
 html:not([aria-busy=true]) nav li[aria-selected=true],

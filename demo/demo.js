@@ -30,12 +30,12 @@ document.addEventListener("ajaxify:load", function(e) {
     }
 }, true);
 
-document.addEventListener("ajaxify:render", function(e) {
-    console.log("ajaxify:render", e);
-}, true);
-
 document.addEventListener("ajaxify:error", function(e) {
     console.log("ajaxify:error", e);
 
     document.documentElement.setAttribute("aria-busy", "false");
+}, true);
+
+document.addEventListener("ajaxify:render", function(e) {
+    console.log("ajaxify:render", e);
 }, true);
