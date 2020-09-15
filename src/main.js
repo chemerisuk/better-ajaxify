@@ -1,13 +1,12 @@
-(function(window) { /* jshint maxdepth:8, boss:true */
+(function(window) { /* jshint maxdepth:5 */ /* global URLSearchParams */
     // do not enable the plugin for old browsers
-    if (!window.fetch || !window.Request || !window.Response) return;
+    if (!window.fetch || !window.Request || !window.Response || !window.URLSearchParams) return;
 
     const document = window.document;
     const location = window.location;
     const history = window.history;
 
     const parser = new DOMParser();
-    const identity = (s) => s;
     const domStates = []; // in-memory storage for states
     let lastDomState = {};
 
@@ -56,61 +55,20 @@
         const el = e.target;
 
         if (!el.target) {
-            const formEnctype = el.getAttribute("enctype");
+            const formData = new FormData(el);
 
-            let data;
-
-            if (formEnctype === "multipart/form-data") {
-                data = new FormData(el);
-            } else {
-                data = {};
-
-                for (var i = 0, field; field = el.elements[i]; ++i) {
-                    const fieldType = field.type;
-
-                    if (fieldType && field.name && !field.disabled) {
-                        const fieldName = field.name;
-
-                        if (fieldType === "select-multiple") {
-                            for (var j = 0, option; option = field.options[j]; ++j) {
-                                if (option.selected) {
-                                    (data[fieldName] = data[fieldName] || []).push(option.value);
-                                }
-                            }
-                        } else if ((fieldType !== "checkbox" && fieldType !== "radio") || field.checked) {
-                            data[fieldName] = field.value;
-                        }
-                    }
-                }
-            }
-
-            if (dispatchAjaxifyEvent(el, "serialize", data)) {
-                if (!(data instanceof FormData)) {
-                    const encode = formEnctype === "text/plain" ? identity : encodeURIComponent;
-                    const reSpace = encode === identity ? / /g : /%20/g;
-
-                    data = Object.keys(data).map((key) => {
-                        const name = encode(key);
-                        let value = data[key];
-
-                        if (Array.isArray(value)) {
-                            value = value.map(encode).join("&" + name + "=");
-                        }
-
-                        return name + "=" + encode(value);
-                    }).join("&").replace(reSpace, "+");
-                }
-
-                const options = {method: el.method.toUpperCase() || "GET"};
+            if (dispatchAjaxifyEvent(el, "serialize", formData)) {
+                const formEnctype = el.getAttribute("enctype");
+                const requestOptions = {method: el.method.toUpperCase() || "GET"};
                 let url = el.action;
-                if (options.method === "GET") {
-                    url += (~url.indexOf("?") ? "&" : "?") + data;
+                if (requestOptions.method === "GET") {
+                    url += (~url.indexOf("?") ? "&" : "?") + new URLSearchParams(formData).toString();
                 } else {
-                    options.body = data;
+                    requestOptions.body = formData;
                 }
-                options.headers = {"Content-Type": formEnctype || el.enctype};
+                requestOptions.headers = {"Content-Type": formEnctype || el.enctype};
 
-                dispatchAjaxifyEvent(el, "fetch", new Request(url, options));
+                dispatchAjaxifyEvent(el, "fetch", new Request(url, requestOptions));
                 // always prevent default behavior for forms
                 e.preventDefault();
             }
@@ -153,7 +111,6 @@
     });
 
     attachNonPreventedListener(document, "ajaxify:render", (e) => {
-        const domElement = e.target;
         const newDomState = e.detail;
 
         lastDomState.body = document.body;
