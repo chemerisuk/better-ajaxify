@@ -1,10 +1,12 @@
-(function(window) { /* jshint maxdepth:5 */ /* global URLSearchParams */
-    // do not enable the plugin for old browsers
-    if (!window.fetch || !window.Request || !window.Response || !window.URLSearchParams) return;
-
+(function(window) { /* jshint maxdepth:5 */
     const document = window.document;
     const location = window.location;
     const history = window.history;
+    const fetch = window.fetch;
+    const Request = window.Request;
+    const URLSearchParams = window.URLSearchParams;
+    // do not enable the plugin for old browsers
+    if (!fetch || !Request || !URLSearchParams) return;
 
     const parser = new DOMParser();
     const domStates = []; // in-memory storage for states
