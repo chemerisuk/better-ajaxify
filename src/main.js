@@ -1,4 +1,4 @@
-(function(window) { /* jshint maxdepth:5 */
+(function(window) {
     const document = window.document;
     const location = window.location;
     const history = window.history;
@@ -31,21 +31,19 @@
 
         for (var el = e.target; el && el !== body; el = el.parentNode) {
             if (el.nodeName.toLowerCase() === "a") {
-                if (!el.target) {
-                    const targetUrl = el.href;
+                const targetUrl = el.href;
 
-                    if (targetUrl && targetUrl.indexOf("http") === 0) {
-                        const currentUrl = location.href;
+                if (!el.target && targetUrl && targetUrl.indexOf("http") === 0) {
+                    const currentUrl = location.href;
 
-                        if (targetUrl.split("#")[0] !== currentUrl.split("#")[0] ||
-                            targetUrl === currentUrl && el.hash !== location.hash) {
-                            dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl));
-                        } else {
-                            location.hash = el.hash;
-                        }
-                        // always prevent default bahavior for anchors and links
-                        e.preventDefault();
+                    if (targetUrl.split("#")[0] !== currentUrl.split("#")[0] ||
+                        targetUrl === currentUrl && el.hash !== location.hash) {
+                        dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl));
+                    } else {
+                        location.hash = el.hash;
                     }
+                    // always prevent default bahavior for anchors and links
+                    e.preventDefault();
                 }
 
                 break;
@@ -55,22 +53,23 @@
 
     attachNonPreventedListener(document, "submit", (e) => {
         const el = e.target;
+        let targetUrl = el.action;
 
-        if (!el.target) {
+        if (!el.target || !targetUrl || targetUrl.indexOf("http") === 0) {
             const formData = new FormData(el);
 
             if (dispatchAjaxifyEvent(el, "serialize", formData)) {
                 const formEnctype = el.getAttribute("enctype");
                 const requestOptions = {method: el.method.toUpperCase() || "GET"};
-                let url = el.action;
+
                 if (requestOptions.method === "GET") {
-                    url += (~url.indexOf("?") ? "&" : "?") + new URLSearchParams(formData).toString();
+                    targetUrl += (~targetUrl.indexOf("?") ? "&" : "?") + new URLSearchParams(formData).toString();
                 } else {
                     requestOptions.body = formData;
                 }
                 requestOptions.headers = {"Content-Type": formEnctype || el.enctype};
 
-                dispatchAjaxifyEvent(el, "fetch", new Request(url, requestOptions));
+                dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl, requestOptions));
                 // always prevent default behavior for forms
                 e.preventDefault();
             }

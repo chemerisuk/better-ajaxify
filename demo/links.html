@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+    <meta name="theme-color" content="black">
+    <meta name="apple-mobile-web-app-title" content="better-ajaxify">
+    <title>Links</title>
+    <link rel="stylesheet" href="/better-ajaxify/demo/demo.css">
+</head>
+<body>
+    <button id="hamburger" type="button"></button>
+    <nav>
+        <a href="/better-ajaxify/" class="logo">better-ajaxify</a>
+        <ul>
+            <li><a href="/better-ajaxify/demo/installing.html">Installing</a></li>
+            <li aria-selected="true"><a href="/better-ajaxify/demo/links.html">Links</a></li>
+            <li><a href="/better-ajaxify/demo/forms.html">Forms</a></li>
+            <li><a href="/better-ajaxify/demo/events.html">Custom events</a></li>
+        </ul>
+    </nav>
+    <main>
+        <h1>Links</h1>
+        <p>HTML element <code>&lt;a&gt;</code> allows to navigate to a url. Library modifies this behavior to prevent a white flash. Request to server is made using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" target="_blank">Fetch API</a>, and response body replaces the current document without a full page reload.</p>
+        <p>In some cases regular <code>&lt;a&gt;</code> behavior preserved:</p>
+        <ul>
+            <li>when <code>href</code> attribute value has only a hash;</li>
+            <li>when <code>&lt;a&gt;</code> has non-empty <code>target</code> attribute;</li>
+            <li>when <code>&lt;a&gt;</code> has non-<code>http(s)</code> url as the <code>href</code> attribute value (<code>tel:</code>, <code>mailto:</code> etc.).</li>
+        </ul>
+        <p>Methods from the list above can be used in markup. When you need to keep regular <code>&lt;a&gt;</code> behavior in JavaScript - call method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault" target="_blank"><code>Event#preventDefault</code></a> inside your <code>click</code> event handler for an appropriate element.</p>
+    </main>
+    <script src="/better-ajaxify/build/better-ajaxify.js"></script>
+    <script src="/better-ajaxify/demo/demo.js"></script>
+</body>
+</html>
