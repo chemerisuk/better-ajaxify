@@ -42,7 +42,7 @@
                     } else {
                         location.hash = el.hash;
                     }
-                    // always prevent default bahavior for anchors and links
+                    // always prevent default behavior for anchors and links
                     e.preventDefault();
                 }
 
@@ -59,15 +59,15 @@
             const formData = new FormData(el);
 
             if (dispatchAjaxifyEvent(el, "serialize", formData)) {
-                const formEnctype = el.getAttribute("enctype");
-                const requestOptions = {method: el.method.toUpperCase() || "GET"};
+                const formMethod = el.method.toUpperCase() || "GET";
+                const formEnctype = el.getAttribute("enctype") || el.enctype;
+                const requestOptions = {method: formMethod, headers: {"Content-Type": formEnctype}};
 
                 if (requestOptions.method === "GET") {
                     targetUrl += (~targetUrl.indexOf("?") ? "&" : "?") + new URLSearchParams(formData).toString();
                 } else {
                     requestOptions.body = formData;
                 }
-                requestOptions.headers = {"Content-Type": formEnctype || el.enctype};
 
                 dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl, requestOptions));
                 // always prevent default behavior for forms
