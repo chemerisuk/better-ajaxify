@@ -63,10 +63,21 @@
                 const formEnctype = el.getAttribute("enctype") || el.enctype;
                 const requestOptions = {method: formMethod, headers: {"Content-Type": formEnctype}};
 
-                if (requestOptions.method === "GET") {
-                    targetUrl += (~targetUrl.indexOf("?") ? "&" : "?") + new URLSearchParams(formData).toString();
-                } else {
+                if (formEnctype === "multipart/form-data") {
                     requestOptions.body = formData;
+                } else {
+                    const searchParams = new URLSearchParams(formData);
+                    if (requestOptions.method === "GET") {
+                        targetUrl += (~targetUrl.indexOf("?") ? "&" : "?") + searchParams.toString();
+                    } else if (formEnctype !== "application/json") {
+                        requestOptions.body = searchParams.toString();
+                    } else {
+                        const jsonData = {};
+                        searchParams.forEach((value, key) => {
+                            jsonData[key] = value;
+                        });
+                        requestOptions.body = JSON.stringify(jsonData);
+                    }
                 }
 
                 dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl, requestOptions));
