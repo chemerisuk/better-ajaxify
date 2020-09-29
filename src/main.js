@@ -68,13 +68,19 @@
                 } else {
                     const searchParams = new URLSearchParams(formData);
                     if (requestOptions.method === "GET") {
-                        targetUrl += (~targetUrl.indexOf("?") ? "&" : "?") + searchParams.toString();
+                        targetUrl += (~targetUrl.indexOf("?") ? "&" : "?") + searchParams;
                     } else if (formEnctype !== "application/json") {
                         requestOptions.body = searchParams.toString();
                     } else {
                         const jsonData = {};
                         searchParams.forEach((value, key) => {
-                            jsonData[key] = value;
+                            if (Array.isArray(jsonData[key])) {
+                                jsonData[key].push(value);
+                            } else if (key in jsonData) {
+                                jsonData[key] = [jsonData[key], value];
+                            } else {
+                                jsonData[key] = value;
+                            }
                         });
                         requestOptions.body = JSON.stringify(jsonData);
                     }
