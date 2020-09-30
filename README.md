@@ -1,4 +1,4 @@
-# better-ajaxify<br>[![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
+# better-ajaxify<br>[![Build Status][status-image]][status-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
 > Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
 The library helps to solve the performance problem for HTML pages and also improves user experience. There is a term called "Full AJAX website" that defines a web site that instead of regular links or forms uses AJAX requests. After including an extra library on your page and simple adaptation on backend each navigation change triggers a **partial reload** instead of full refetching and rerendering of the whole page. That experience is always faster and nicer: user doesn't see white flashes, moreover you can show cool animations instead.
@@ -233,8 +233,8 @@ I recommend to use full url value there, because it avoids problems related to c
 * Android 2.3+
 * Chrome for Android
 
-[travis-url]: http://travis-ci.org/chemerisuk/better-ajaxify
-[travis-image]: http://img.shields.io/travis/chemerisuk/better-ajaxify/master.svg
+[status-url]: https://github.com/chemerisuk/better-ajaxify/actions
+[status-image]: https://github.com/chemerisuk/better-ajaxify/workflows/Node.js%20CI/badge.svg?branch=master
 
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-ajaxify
 [coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-ajaxify/master.svg
