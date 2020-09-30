@@ -2,6 +2,8 @@ document.addEventListener("ajaxify:fetch", function(e) {
     console.log("ajaxify:fetch", e);
 
     const req = e.detail;
+    if (req.method !== "GET") return;
+
     const html = sessionStorage[req.url];
     if (!html) {
         document.documentElement.setAttribute("aria-busy", "true");

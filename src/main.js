@@ -36,14 +36,11 @@
                 if (!el.target && targetUrl && targetUrl.indexOf("http") === 0) {
                     const currentUrl = location.href;
 
-                    if (targetUrl.split("#")[0] !== currentUrl.split("#")[0] ||
-                        targetUrl === currentUrl && el.hash !== location.hash) {
+                    if (targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
                         dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl));
-                    } else {
-                        location.hash = el.hash;
+                        // prevent default behavior for links
+                        e.preventDefault();
                     }
-                    // always prevent default behavior for anchors and links
-                    e.preventDefault();
                 }
 
                 break;
@@ -87,7 +84,7 @@
                 }
 
                 dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl, requestOptions));
-                // always prevent default behavior for forms
+                // prevent default behavior for forms
                 e.preventDefault();
             }
         }
