@@ -1,4 +1,4 @@
-# better-ajaxify<br>[![Build Status][status-image]][status-url] [![Coverage Status][coveralls-image]][coveralls-url]
+# better-ajaxify<br>[![NPM version][npm-version]][npm-url] [![NPM downloads][npm-downloads]][npm-url] [![Build Status][status-image]][status-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Twitter][twitter-follow]][twitter-url]
 > A simple PJAX engine for websites
 
 The library helps to solve the performance problem for HTML pages and also improves user experience. There is a term called "Full AJAX website" that defines a web site that instead of regular links or forms uses AJAX requests. After including an extra library on your page and simple adaptation on backend each navigation change triggers a **partial reload** instead of full refetching and rerendering of the whole page. That experience is always faster and nicer: user doesn't see white flashes, moreover you can show cool animations instead.
@@ -81,3 +81,11 @@ The library exposes set of custom events for advanced interaction.
 
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-ajaxify
 [coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-ajaxify/master.svg
+
+[npm-url]: https://www.npmjs.com/package/better-ajaxify
+[npm-version]: https://img.shields.io/npm/v/better-ajaxify.svg
+[npm-downloads]: https://img.shields.io/npm/dt/better-ajaxify.svg
+
+[twitter-url]: https://twitter.com/chemerisuk
+[twitter-follow]: https://img.shields.io/twitter/follow/chemerisuk.svg?style=social&label=Follow%20me
+
