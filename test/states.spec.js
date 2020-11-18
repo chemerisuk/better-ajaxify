@@ -1,3 +1,11 @@
+describe("state", function() {
+    "use strict";
+
+    it("allows to compile", function() {
+        expect(1).toBe(1);
+    });
+});
+
 // describe("state", function() {
 //     "use strict";
 
