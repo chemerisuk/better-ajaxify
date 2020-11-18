@@ -1,4 +1,4 @@
-# better-ajaxify<br>[![Build Status][status-image]][status-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Bower version][bower-image]][bower-url]
+# better-ajaxify<br>[![Build Status][status-image]][status-url] [![Coverage Status][coveralls-image]][coveralls-url]
 > Ajax website engine for [better-dom](https://github.com/chemerisuk/better-dom)
 
 The library helps to solve the performance problem for HTML pages and also improves user experience. There is a term called "Full AJAX website" that defines a web site that instead of regular links or forms uses AJAX requests. After including an extra library on your page and simple adaptation on backend each navigation change triggers a **partial reload** instead of full refetching and rerendering of the whole page. That experience is always faster and nicer: user doesn't see white flashes, moreover you can show cool animations instead.
@@ -238,6 +238,3 @@ I recommend to use full url value there, because it avoids problems related to c
 
 [coveralls-url]: https://coveralls.io/r/chemerisuk/better-ajaxify
 [coveralls-image]: http://img.shields.io/coveralls/chemerisuk/better-ajaxify/master.svg
-
-[bower-url]: https://github.com/chemerisuk/better-ajaxify
-[bower-image]: http://img.shields.io/bower/v/better-ajaxify.svg

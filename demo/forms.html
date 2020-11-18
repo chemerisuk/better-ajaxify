@@ -29,7 +29,16 @@
             <li>when a <code>&lt;form&gt;</code> has non-<code>http(s)</code> url as the <code>action</code> attribute value (<code>tel:</code>, <code>mailto:</code> etc.).</li>
         </ul>
         <p>Methods from the list above can be used in markup. When you need to keep regular <code>&lt;form&gt;</code> behavior in JavaScript - call method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault" target="_blank"><code>Event#preventDefault</code></a> inside your <code>submit</code> event handler for an appropriate element.</p>
-        <h2><code>ajaxify:serialize</code> event</h2>
+        <h2>Event flow</h2>
+        <ol>
+        <li>A <code>&lt;form&gt;</code> element triggers native <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLFormElement/submit_event" target="_blank"><code>submit</code> event</a> in browser</li>
+        <li>Library prevents default behavior, serializes the form and dispatches <a href="#serialize-event"><code>ajaxify:serialize</code> event</a> with the user input</li>
+        <li>If <code>ajaxify:serialize</code> wasn't prevented triggers <code>ajaxify:fetch</code> event and starts AJAX request</li>
+        <li>When the AJAX request ends library dispatches <code>ajaxify:load</code> event with the response object</li>
+        <li>If <code>ajaxify:load</code> wasn't prevented triggers <code>ajaxify:render</code> event and updates content of the <code>&lt;body&gt;</code> element</li>
+        </ol>
+        <p>Take a look at the <a href="/better-ajaxify/demo/events.html">Custom Events section</a> to read about dispatched events in more details.</p>
+        <h2 id="serialize-event"><code>ajaxify:serialize</code></h2>
         <p>In plain HTML it's not possible to change user data that will be submitted to server by a <code>&lt;form&gt;</code> element. Thats why library introduces additional custom event <code>ajaxify:serialize</code>. For this event <a href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail" target="_blank"><code>CustomEvent#detail</code></a> contains <a href="https://developer.mozilla.org/en-US/docs/Web/API/FormData" target="_blank"><code>FormData</code></a> object that is going to be sent to server.</p>
         <p>You can create an event handler for <code>ajaxify:serialize</code> and modify <a href="https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent/detail" target="_blank"><code>CustomEvent#detail</code></a> before it will be submitted to server:</p>
         <pre>
