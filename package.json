@@ -1,6 +1,6 @@
 {
   "name": "better-ajaxify",
-  "description": "Ajax website engine for better-dom",
+  "description": "A simple PJAX engine for websites",
   "version": "2.1.0-beta.2",
   "author": "Maksim Chemerisuk",
   "license": "MIT",
