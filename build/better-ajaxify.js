@@ -1,208 +1,166 @@
-(function(DOM, XHR, location) {
-    "use strict";
+(function () {
+  "use strict";
 
-    var stateData = [], // in-memory storage for states
-        currentState = {url: location.href.split("#")[0], status: 200},
-        previousEls = [],
-        switchContent = function(state, stateIndex)  {
-            if (typeof state !== "object" || typeof state.html !== "object" || state === currentState) return;
+  (function (window) {
+    var document = window.document;
+    var location = window.location;
+    var history = window.history;
+    var fetch = window.fetch;
+    var Request = window.Request;
+    var URLSearchParams = window.URLSearchParams; // do not enable the plugin for old browsers
 
-            currentState.html = {};
-            currentState.title = DOM.get("title");
-            // always make sure that previous state was completed
-            // it can be in-progress on very fast history navigation
-            previousEls.forEach(function(el)  {return el.remove()});
+    if (!fetch || !Request || !URLSearchParams) return;
+    var parser = new DOMParser();
+    var domStates = []; // in-memory storage for states
 
-            var currentStateIndex = stateData.indexOf(currentState);
+    var lastDomState = {};
 
-            if (currentStateIndex < 0) {
-                // store the current state in memory
-                currentStateIndex = stateData.push(currentState) - 1;
-            }
-
-            previousEls = Object.keys(state.html).map(function(selector)  {
-                var el = DOM.find(selector),
-                    content = state.html[selector];
-
-                // store reference to node in the state object
-                currentState.html[selector] = el;
-
-                if (content != null) {
-                    if (typeof content === "string") {
-                        // clone el that is already in the hidden state
-                        content = el.clone(false).set(content).hide();
-                    }
-                    // insert new state content
-                    el[currentStateIndex > stateIndex ? "after" : "before"](content);
-                    // show current content
-                    content.show(function()  {
-                        // autofocus attribute support
-                        content.find("[autofocus]").fire("focus");
-                    });
-                }
-
-                // Hide old content and remove when it's done. Use requestFrame
-                // to postpone layout triggered by the remove method call
-                el.hide(function()  {return DOM.requestFrame(function()  {return el.remove()})});
-
-                return el;
-            });
-            // update current state to the latest
-            currentState = state;
-            // update page title
-            DOM.set("title", state.title);
-            // update url in address bar
-            if (state.url !== location.href && stateIndex == null) {
-                history.pushState(stateData.length, state.title, state.url);
-            }
-        },
-        promiseXHR = (function(lockedUrl) {
-            return function(target, method, url, config)  {
-                if (method === "get") {
-                    if (url === currentState.url) {
-                        // if target url is the same as the current one
-                        // then trigger success early
-                        return Promise.resolve(currentState);
-                    } else if (url === lockedUrl) {
-                        // don't start a new request if request with
-                        // the same URL is already in progress
-                        return Promise.reject();
-                    } else {
-                        // remember target URL to prevent double requests
-                        lockedUrl = url;
-                    }
-                }
-
-                var xhr = XHR(method, url, config);
-                var complete = function(state)  {
-                    // cleanup outer variables
-                    lockedUrl = null;
-
-                    if (!state || state instanceof Error) {
-                        // do nothing when request was failed
-                        return Promise.reject(state);
-                    }
-
-                    if (typeof state === "string") {
-                        // state is a text content
-                        state = {html: {body: state}};
-                    }
-
-                    // populate default state values
-                    state.url = state.url || url;
-                    state.title = state.title || DOM.get("title");
-                    state.status = xhr[0].status;
-                    state.timestamp = Date.now();
-
-                    return Promise.resolve(state);
-                };
-                // handle success and error responses both
-                return xhr.then(complete, complete);
-            };
-        }());
-
-    ["get", "post", "put", "delete", "patch"].forEach(function(method)  {
-        DOM.on("ajaxify:" + method, [1, 2, "target"], function(url, data, target)  {
-            if (typeof url !== "string") return;
-            // disable cacheBurst that is not required for IE10+
-            var config = {data: data, cacheBurst: false},
-                submits = target.matches("form") ? target.findAll("[type=submit]") : [];
-
-            if (target.fire("ajaxify:send", config)) {
-                submits.forEach(function(el)  { el.set("disabled", true) });
-
-                promiseXHR(target, method, url, config).then(function(response)  {
-                    submits.forEach(function(el)  { el.set("disabled", false) });
-
-                    target.fire("ajaxify:load", response);
-                }, function(err)  {
-                    submits.forEach(function(el)  { el.set("disabled", false) });
-
-                    target.fire("ajaxify:error", err);
-                });
-            }
-        });
-    });
-
-    DOM.on("click", "a", ["currentTarget", "defaultPrevented"], function(link, cancel)  {
-        if (!cancel && !link.get("target")) {
-            var url = link.get("href");
-            var path = url.split("#")[0];
-            // skip non-http(s) links
-            if (url.indexOf("http") === 0) {
-                if (url === currentState.url || path !== currentState.url.split("#")[0]) {
-                    // override default bahavior for links
-                    return !link.fire("ajaxify:get", path);
-                } else {
-                    // override default bahavior for anchors
-                    location.hash = link.get("hash");
-                    // and prevent default one
-                    return false;
-                }
-            }
+    function attachNonPreventedListener(target, eventType, callback) {
+      target.addEventListener(eventType, function (e) {
+        if (!e.defaultPrevented) {
+          callback(e);
         }
-    });
-
-    DOM.on("submit", ["target", "defaultPrevented"], function(form, cancel)  {
-        if (!cancel && !form.get("target")) {
-            var url = form.get("action"),
-                method = form.get("method") || "get",
-                data = XHR.serialize(form[0]);
-
-            return !form.fire("ajaxify:" + method.toLowerCase(), url, data);
-        }
-    });
-
-    DOM.on("ajaxify:load", [1, "target", "defaultPrevented"], function(state, el, cancel)  {
-        if (cancel || !state) return;
-
-        var stateIndex = stateData.lastIndexOf(state);
-
-        if (stateIndex >= 0) {
-            switchContent(state, stateIndex);
-        } else {
-            setTimeout(function()  {
-                var responseStatus = state.status, eventType;
-
-                if (responseStatus >= 200 && responseStatus < 300 || responseStatus === 304) {
-                    eventType = "ajaxify:success";
-                } else {
-                    eventType = "ajaxify:error";
-                }
-
-                if (el.fire(eventType, state)) {
-                    switchContent(state);
-                }
-            }, 0);
-        }
-    });
-
-    /* istanbul ignore else */
-    if (history.pushState) {
-        window.addEventListener("popstate", function(e)  {
-            var stateIndex = e.state;
-            // numeric value indicates better-ajaxify state
-            if (typeof stateIndex === "number") {
-                DOM.fire("ajaxify:load", stateData[stateIndex]);
-            }
-        });
-        // update initial state address url
-        history.replaceState(0, DOM.get("title"));
-        // destroy current url state when user leaves
-        window.addEventListener("beforeunload", function()  {
-            history.replaceState(null, document.title, currentState.url);
-        }, false);
-    } else {
-        // when url should be changed don't start request in old browsers
-        DOM.on("ajaxify:send", ["target", "defaultPrevented"], function(sender, canceled)  {
-            if (!canceled) {
-                // trigger native element behavior in legacy browsers
-                if (sender.matches("form")) {
-                    sender[0].submit();
-                } else if (sender.matches("a")) {
-                    sender[0].click();
-                }
-            }
-        });
+      }, false);
     }
-}(window.DOM, window.XHR, window.location));
+
+    function dispatchAjaxifyEvent(el, type, detail) {
+      var e = document.createEvent("CustomEvent");
+      e.initCustomEvent("ajaxify:" + type, true, true, detail || null);
+      return el.dispatchEvent(e);
+    }
+
+    attachNonPreventedListener(document, "click", function (e) {
+      var body = document.body;
+
+      for (var el = e.target; el && el !== body; el = el.parentNode) {
+        if (el.nodeName.toLowerCase() === "a") {
+          var targetUrl = el.href;
+
+          if (!el.target && targetUrl && targetUrl.indexOf("http") === 0) {
+            var currentUrl = location.href;
+
+            if (targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
+              dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl)); // prevent default behavior for links
+
+              e.preventDefault();
+            }
+          }
+
+          break;
+        }
+      }
+    });
+    attachNonPreventedListener(document, "submit", function (e) {
+      var el = e.target;
+      var targetUrl = el.action;
+
+      if (!el.target || !targetUrl || targetUrl.indexOf("http") === 0) {
+        var formData = new FormData(el);
+
+        if (dispatchAjaxifyEvent(el, "serialize", formData)) {
+          var formMethod = el.method.toUpperCase() || "GET";
+          var formEnctype = el.getAttribute("enctype") || el.enctype;
+          var requestOptions = {
+            method: formMethod,
+            headers: {
+              "Content-Type": formEnctype
+            }
+          };
+
+          if (formEnctype === "multipart/form-data") {
+            requestOptions.body = formData;
+          } else {
+            var searchParams = new URLSearchParams(formData);
+
+            if (requestOptions.method === "GET") {
+              targetUrl += (~targetUrl.indexOf("?") ? "&" : "?") + searchParams;
+            } else if (formEnctype !== "application/json") {
+              requestOptions.body = searchParams.toString();
+            } else {
+              var jsonData = {};
+              searchParams.forEach(function (value, key) {
+                if (Array.isArray(jsonData[key])) {
+                  jsonData[key].push(value);
+                } else if (key in jsonData) {
+                  jsonData[key] = [jsonData[key], value];
+                } else {
+                  jsonData[key] = value;
+                }
+              });
+              requestOptions.body = JSON.stringify(jsonData);
+            }
+          }
+
+          dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl, requestOptions)); // prevent default behavior for forms
+
+          e.preventDefault();
+        }
+      }
+    });
+    attachNonPreventedListener(document, "ajaxify:fetch", function (e) {
+      var domElement = e.target;
+      var req = e.detail;
+      fetch(req).then(function (res) {
+        dispatchAjaxifyEvent(domElement, "load", res);
+      }).catch(function (err) {
+        if (dispatchAjaxifyEvent(domElement, "error", err)) {
+          throw err;
+        }
+      });
+    });
+    attachNonPreventedListener(document, "ajaxify:load", function (e) {
+      var domElement = e.target;
+      var res = e.detail;
+      res.text().then(function (html) {
+        var doc = parser.parseFromString(html, "text/html");
+
+        if (dispatchAjaxifyEvent(domElement, "render", doc)) {
+          if (res.url !== location.href.split("#")[0]) {
+            // update URL in address bar
+            history.pushState(domStates.length, doc.title, res.url);
+          } else {
+            history.replaceState(domStates.length - 1, doc.title, res.url);
+          }
+        }
+      }).catch(function (err) {
+        if (dispatchAjaxifyEvent(domElement, "error", err)) {
+          throw err;
+        }
+      });
+    });
+    attachNonPreventedListener(document, "ajaxify:render", function (e) {
+      var newDomState = e.detail;
+      lastDomState.body = document.body;
+      lastDomState.title = document.title;
+
+      if (domStates.indexOf(lastDomState) >= 0) {
+        lastDomState = newDomState;
+      } else {
+        domStates.push(lastDomState); // make sure that next state will be a new object
+
+        lastDomState = {};
+      } // update HTML
+
+
+      document.documentElement.replaceChild(newDomState.body, document.body); // update page title
+
+      document.title = newDomState.title;
+    });
+    attachNonPreventedListener(window, "popstate", function (e) {
+      var stateIndex = e.state; // numeric value indicates better-ajaxify state
+
+      if (typeof stateIndex === "number") {
+        var domState = domStates[stateIndex];
+
+        if (domState) {
+          dispatchAjaxifyEvent(document, "render", domState);
+        } else {
+          dispatchAjaxifyEvent(document, "fetch", new Request(location.href));
+        }
+      } // FIXME: trigger navigation request when /a -> /b#hash
+
+    }); // update initial state address url
+
+    history.replaceState(0, document.title);
+  })(window);
+})();

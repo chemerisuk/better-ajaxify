@@ -1,0 +1,162 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+}
+
+html {
+    background: #EEE;
+}
+
+body {
+    font-family: system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Droid Sans,Helvetica Neue;
+    color: #393838;
+}
+
+#hamburger {
+    position: absolute;
+    left: 0.75rem;
+    height: 3rem;
+    width: 3rem;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    outline: 0;
+
+    background: url(./menu.svg) center no-repeat;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+nav, main {
+    height: 100%;
+    box-sizing: border-box;
+}
+
+nav {
+    /* prevent long press menu on ios */
+    -webkit-touch-callout: none;
+    /* disable text selection */
+    -webkit-user-select: none;
+
+    background: #578cdb;
+    color: #FFF;
+
+    position: absolute;
+    z-index: 1;
+
+    padding: 1.5em;
+    width: 80%;
+}
+
+nav > .logo {
+    font-size: 150%;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+nav a {
+    color: inherit;
+    font-size: larger;
+    text-decoration: none;
+    display: block;
+    padding: 0.75em 0;
+}
+
+html:not([aria-busy=true]) nav li[aria-selected=true],
+html[aria-busy=true] nav a:focus {
+    background: #FFF;
+    color: black;
+}
+
+@keyframes slide-in {
+    from { transform: translate3d(-100%,0,0); }
+    to { transform: translate3d(0,0,0); }
+}
+
+main {
+    background: #FFF;
+    padding: 1.5em;
+}
+
+html[aria-busy=true] main {
+    pointer-events: none;
+}
+
+html[aria-busy=true]::before {
+    content: url(spinner.svg);
+    border: 1px solid;
+    opacity: 0.5;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate3d(-50%, -50%, 0);
+}
+
+main a:link {
+    color: #578cdb;
+}
+
+@media only screen and (max-width: 600px) {
+    main {
+        padding-top: 3rem;
+    }
+
+    nav {
+        transform: translate3d(-100%, 0, 0);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    #hamburger:hover + nav,
+    #hamburger:focus + nav {
+        transform: translate3d(0, 0, 0);
+    }
+
+    head {
+        display: block;
+    }
+
+    title {
+        display: block;
+        position: absolute;
+        width: 100%;
+        text-align: center;
+        line-height: 3rem;
+        font-weight: bold;
+        font-family: "Open Sans", sans-serif;
+        background: #eee;
+        border-bottom: 1px solid #ccc;
+    }
+}
+
+@media only screen and (min-width: 600px) {
+    body {
+        width: 55rem;
+    }
+
+    #hamburger {
+        visibility: hidden;
+    }
+
+    main {
+        overflow: scroll;
+        margin-left: 15em;
+        width: 40em;
+        border-right: 1px solid gray;
+        animation-duration: 0.3s;
+        animation-timing-function: ease-in-out;
+    }
+
+    html[aria-busy] main {
+        animation-name: slide-in;
+    }
+
+    nav {
+        width: 15em;
+    }
+}
