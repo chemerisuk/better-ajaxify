@@ -13,7 +13,6 @@ The library helps to solve the performance problem for HTML pages and also impro
 - [Links](#links)
 - [Forms](#forms)
 - [Custom events](#custom-events)
-- [Browser support](#browser-support)
 
 <!-- /MarkdownTOC -->
 
@@ -41,7 +40,14 @@ In some cases regular <code>&lt;a&gt;</code> behavior preserved:
 * when <code>&lt;a&gt;</code> has non-empty <code>target</code> attribute;</li>
 * when <code>&lt;a&gt;</code> has non-<code>http(s)</code> url as the <code>href</code> attribute value (<code>tel:</code>, <code>mailto:</code> etc.).
 
-Methods from the list above can be used in markup. When you need to keep regular <code>&lt;a&gt;</code> behavior in JavaScript - call method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault" target="_blank"><code>Event#preventDefault</code></a> inside your <code>click</code> event handler for an appropriate element.
+To disable library for a particular <code>&lt;a&gt;</code> element you could also call method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault" target="_blank"><code>Event#preventDefault</code></a> in the <code>click</code> event listener:
+
+```js
+myLink.addEventListener("click", function(e) {
+  // call preventDefault to stop ajaxify from invoking a fetch request
+  e.preventDefault();
+}, false);
+```
 
 ## Forms
 HTML element <code>&lt;form&gt;</code> serializes user input data and to sumbits it to new server url specified in the <code>action</code> attribute. Then browser triggers full page reload with the new url. Library modifies this behavior to prevent a white flash. Request to server is made using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API" target="_blank">Fetch API</a>, and response body replaces the current document without a full page reload.
@@ -51,30 +57,25 @@ In some cases regular <code>&lt;form&gt;</code> behavior is not modified:
 * when a <code>&lt;form&gt;</code> has non-empty <code>target</code> attribute;
 * when a <code>&lt;form&gt;</code> has non-<code>http(s)</code> url as the <code>action</code> attribute value (<code>tel:</code>, <code>mailto:</code> etc.).
         
-Methods from the list above can be used in markup. When you need to keep regular <code>&lt;form&gt;</code> behavior in JavaScript - call method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault" target="_blank"><code>Event#preventDefault</code></a> inside your <code>submit</code> event handler for an appropriate element.
+To disable library for a particular <code>&lt;form&gt;</code> element you could also call method <a href="https://developer.mozilla.org/en-US/docs/Web/API/Event/preventDefault" target="_blank"><code>Event#preventDefault</code></a> in the <code>submit</code> event listener:
+
+```js
+myForm.addEventListener("submit", function(e) {
+  // call preventDefault to stop ajaxify from invoking a fetch request
+  e.preventDefault();
+}, false);
+```
 
 ## Custom events
-The library exposes set of custom events for advanced interaction.
+The library introduces set of new custom events.
 
 | Event name | Type of `Event#detail` | Description |
 | ---------- | --------- | ----------- |
-| `ajaxify:serialize` | [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) | Event is trigerred for forms only and contains user input data |
-| `ajaxify:fetch` | [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) | Event is trigerred when a navigation AJAX request started with request details |
-| `ajaxify:load` | [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) | Event is trigerred when a navigation AJAX request ends and contains server response data  |
-| `ajaxify:render` | [`Document`](https://developer.mozilla.org/en-US/docs/Web/API/Document) | Triggered when a web page ready to update it's visual state to a new one |
-
-## Browser support
-#### Desktop
-* Chrome
-* Safari 6.0+
-* Firefox 16+
-* Opera 12.10+
-* Internet Explorer 8+ (see [notes](https://github.com/chemerisuk/better-dom#notes-about-old-ies))
-
-#### Mobile
-* iOS Safari 6+
-* Android 2.3+
-* Chrome for Android
+| `ajaxify:serialize` | [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) | Trigerred _only_ for forms and contains user input data |
+| `ajaxify:fetch` | [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) | Trigerred when a navigation AJAX request starts |
+| `ajaxify:load` | [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) | Trigerred when a navigation AJAX request ends |
+| `ajaxify:error` | [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) | Trigerred when an error happened during a navigation AJAX request |
+| `ajaxify:render` | [`Document`](https://developer.mozilla.org/en-US/docs/Web/API/Document) | Triggered when the current page is ready to update visual state |
 
 [status-url]: https://github.com/chemerisuk/better-ajaxify/actions
 [status-image]: https://github.com/chemerisuk/better-ajaxify/workflows/Node.js%20CI/badge.svg?branch=master
