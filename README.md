@@ -77,6 +77,47 @@ The library introduces set of new custom events.
 | `ajaxify:error` | [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) | Trigerred when an error happened during a navigation AJAX request |
 | `ajaxify:render` | [`Document`](https://developer.mozilla.org/en-US/docs/Web/API/Document) | Triggered when the current page is ready to update visual state |
 
+### `ajaxify:fetch`
+Custom event `ajaxify:fetch` used to modify AJAX request construction under some obstacles. For instance code below uses `sessionStorage` as a cache source with responses from server so no network used for repeated requests:
+
+```js
+document.addEventListener("ajaxify:fetch", function(e) {
+    const req = e.detail;
+    // cache only GET responses
+    if (req.method !== "GET") return;
+
+    const html = sessionStorage[req.url];
+    if (html) {
+        e.preventDefault();
+        // construct new Response object with cached response content
+        const res = new Response(html);
+        Object.defineProperty(res, "url", {get: () => req.url});
+        
+        const event = document.createEvent("CustomEvent");
+        event.initCustomEvent("ajaxify:load", true, true, res);
+        // fire ajaxify:load to continue flow of changing the current page state
+        document.dispatchEvent(event);
+    }
+}, true);
+```
+
+### `ajaxify:load`
+Custom event `ajaxify:load` used to modify how to process server responses. For instance code below stores a new key-value pair in `sessionStorage` to cache server responses on client side:
+
+```js
+document.addEventListener("ajaxify:load", function(e) {
+    const res = e.detail;
+    // cache only GET responses
+    if (req.method !== "GET") return;
+    
+    if (res.ok && !res.bodyUsed) {
+        res.clone().text().then(html => {
+            sessionStorage[res.url] = html;
+        });
+    }
+}, true);
+```
+
 [status-url]: https://github.com/chemerisuk/better-ajaxify/actions
 [status-image]: https://github.com/chemerisuk/better-ajaxify/workflows/Node.js%20CI/badge.svg?branch=master
 
