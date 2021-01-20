@@ -7,6 +7,16 @@
     const URLSearchParams = window.URLSearchParams;
     // do not enable the plugin for old browsers
     if (!fetch || !Request || !URLSearchParams) return;
+	
+    // poly fill for startsWith
+    if (!String.prototype.startsWith) {
+        Object.defineProperty(String.prototype, 'startsWith', {
+            value: function(search, rawPos) {
+                var pos = rawPos > 0 ? rawPos|0 : 0;
+                return this.substring(pos, pos + search.length) === search;
+            }
+        });
+    }
 
     const parser = new DOMParser();
     const domStates = []; // in-memory storage for states
@@ -27,19 +37,39 @@
     }
 
     attachNonPreventedListener(document, "click", (e) => {
+        // ignore ctrl / meta clicks (may be opening in new tab or window)
+        if (e.ctrlKey || e.metaKey) {
+            return;
+        }
+		
         const body = document.body;
-
         for (var el = e.target; el && el !== body; el = el.parentNode) {
             if (el.nodeName.toLowerCase() === "a") {
+                // ignore links with a .no-ajaxy class
+                if (el.classList.contains('no-ajaxy')) {
+                    break;
+                }
                 const targetUrl = el.href;
 
-                if (!el.target && targetUrl && targetUrl.indexOf("http") === 0) {
+                if (!el.target && targetUrl && targetUrl.startsWith("http")) {
                     const currentUrl = location.href;
+                    const currentSplit = currentUrl.split("#",2);
+                    const targetSplit = targetUrl.split("#",2);
 
-                    if (targetUrl.split("#")[0] !== currentUrl.split("#")[0]) {
+                    if (targetSplit[0] !== currentSplit[0]) {
                         dispatchAjaxifyEvent(el, "fetch", new Request(targetUrl));
                         // prevent default behavior for links
                         e.preventDefault();
+                    } else if (targetSplit[0] == currentSplit[0]) { //on same base url
+                        if (targetSplit.length > 1 && currentSplit.length > 1) {
+                            if (targetSplit[1] == currentSplit[1]) {
+                                e.preventDefault();
+                            } else {
+                                // different anchors do default
+                            }
+                        } else if (targetSplit.length == 1 && currentSplit.length == 1) {
+                            e.preventDefault();
+                        }
                     }
                 }
 
@@ -52,7 +82,7 @@
         const el = e.target;
         let targetUrl = el.action;
 
-        if (!el.target || !targetUrl || targetUrl.indexOf("http") === 0) {
+        if (!el.target || !targetUrl || targetUrl.startsWith("http")) {
             const formData = new FormData(el);
 
             if (dispatchAjaxifyEvent(el, "serialize", formData)) {
