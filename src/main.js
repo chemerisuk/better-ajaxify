@@ -138,6 +138,12 @@
             // make sure that next state will be a new object
             lastDomState = {};
         }
+        dispatchAjaxifyEvent(document, "update", newDomState);
+    });
+
+    attachNonPreventedListener(document, "ajaxify:update", (e) => {
+        const newDomState = e.detail;
+
         // update HTML
         document.documentElement.replaceChild(newDomState.body, document.body);
         // update page title
