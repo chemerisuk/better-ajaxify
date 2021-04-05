@@ -126,6 +126,7 @@
     });
 
     attachNonPreventedListener(document, "ajaxify:render", (e) => {
+        const domElement = e.target;
         const newDomState = e.detail;
 
         lastDomState.body = document.body;
@@ -138,7 +139,7 @@
             // make sure that next state will be a new object
             lastDomState = {};
         }
-        dispatchAjaxifyEvent(document, "update", newDomState);
+        dispatchAjaxifyEvent(domElement, "update", newDomState);
     });
 
     attachNonPreventedListener(document, "ajaxify:update", (e) => {

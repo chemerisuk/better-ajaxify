@@ -76,6 +76,7 @@ The library introduces set of new custom events.
 | `ajaxify:load` | [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) | Trigerred when a navigation AJAX request ends |
 | `ajaxify:error` | [`Error`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error) | Trigerred when an error happened during a navigation AJAX request |
 | `ajaxify:render` | [`Document`](https://developer.mozilla.org/en-US/docs/Web/API/Document) | Triggered when the current page is ready to update visual state |
+| `ajaxify:update` | [`Document`](https://developer.mozilla.org/en-US/docs/Web/API/Document) | Triggered when the current page finally updates visual state |
 
 ### `ajaxify:fetch`
 Custom event `ajaxify:fetch` used to modify AJAX request construction under some obstacles. For instance code below uses `sessionStorage` as a cache source with responses from server so no network used for repeated requests:
@@ -115,6 +116,25 @@ document.addEventListener("ajaxify:load", function(e) {
             sessionStorage[res.url] = html;
         });
     }
+}, true);
+```
+
+### `ajaxify:update`
+Custom event `ajaxify:update` used to modify the way the DOM gets updated. For instance code below updates only a certain element:
+
+```js
+document.addEventListener("ajaxify:update", function(e) {
+    // prevent default DOM update
+    e.preventDefault();
+
+    const newDomState = e.detail;
+    const oldElementState = document.getElementById("ajaxify");
+    const newElementState = newDomState.getElementById("ajaxify");
+
+    // update #ajaxify element
+    oldElementState.parentNode.replaceChild(newElementState, oldElementState);
+    // update page title
+    document.title = newDomState.title;
 }, true);
 ```
 
