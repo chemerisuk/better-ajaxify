@@ -126,6 +126,7 @@
     });
 
     attachNonPreventedListener(document, "ajaxify:render", (e) => {
+        const domElement = e.target;
         const newDomState = e.detail;
 
         lastDomState.body = document.body;
@@ -138,6 +139,12 @@
             // make sure that next state will be a new object
             lastDomState = {};
         }
+        dispatchAjaxifyEvent(domElement, "update", newDomState);
+    });
+
+    attachNonPreventedListener(document, "ajaxify:update", (e) => {
+        const newDomState = e.detail;
+
         // update HTML
         document.documentElement.replaceChild(newDomState.body, document.body);
         // update page title

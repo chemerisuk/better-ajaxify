@@ -1,8 +1,8 @@
 /**
  * better-ajaxify: A simple PJAX engine for websites
- * @version 3.0.0-beta.5 Wed, 18 Nov 2020 13:38:12 GMT
+ * @version 3.0.0-beta.5 Mon, 05 Apr 2021 15:21:07 GMT
  * @link https://github.com/chemerisuk/better-ajaxify
- * @copyright 2020 Maksim Chemerisuk
+ * @copyright 2021 Maksim Chemerisuk
  * @license MIT
  */
 (function () {
@@ -136,6 +136,7 @@
       });
     });
     attachNonPreventedListener(document, "ajaxify:render", function (e) {
+      var domElement = e.target;
       var newDomState = e.detail;
       lastDomState.body = document.body;
       lastDomState.title = document.title;
@@ -146,8 +147,12 @@
         domStates.push(lastDomState); // make sure that next state will be a new object
 
         lastDomState = {};
-      } // update HTML
+      }
 
+      dispatchAjaxifyEvent(domElement, "update", newDomState);
+    });
+    attachNonPreventedListener(document, "ajaxify:update", function (e) {
+      var newDomState = e.detail; // update HTML
 
       document.documentElement.replaceChild(newDomState.body, document.body); // update page title
 
